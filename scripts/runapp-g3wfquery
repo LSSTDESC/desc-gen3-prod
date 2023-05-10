@@ -14,9 +14,9 @@ HFG=$2
 
 SFIL=current-status.txt
 myecho() {
-  MSG=$1
-  echo $MSG >$SFIL
-  echo $MSG
+  MSG="$*"
+  echo "$MSG" >$SFIL
+  echo "$MSG"
 }
 
 START="g3wfquery"
@@ -25,7 +25,7 @@ if [ -z "$CFG" -o "$CFG" = "-h" ]; then
   echo Usage: $(basename $0) CFG [HFG]
   echo "  CFG = $START-FLD1-FLD2-..."
   echo "    FLD = cvmfs to use cvmfs build"
-  echo "          shift to use shifter build"
+  echo "          shifter to use shifter build"
   echo "          visit:VV to select visit VV"
   echo "          visit:VV1:VV2 to select visits in range[VV1, VV2]"
   echo "  HFG = FLD1-FLD2-..."
@@ -33,17 +33,13 @@ if [ -z "$CFG" -o "$CFG" = "-h" ]; then
   exit 0
 fi
 
-# Parse CFG to get query.
+myecho "echo Configuring with desc-gen3-prod version $(desc-gen3-prod-version)"
+
+# Parse CFG to get LSST version and query.
 FLDS=($(echo $CFG | tr "-" "\n"))
 NFLD=${#FLDS[@]}
-if [ $NFLD -eq 0 -o ${FLDS[0]} != $START ]; then
-  myecho ERROR: Config must be $START or start with $START-
-  exit 11
-fi
-SRC=shift
 QRY=
-if [ $NFLD -gt 1 ]; then
-  FLDS=(${FLDS[@]:1})
+if [ $NFLD -gt 0 ]; then
   for  FLD in ${FLDS[@]}; do
     VALS=($(echo $FLD | tr ":" "\n" ))
     NVAL=${#VALS[@]}
@@ -72,20 +68,26 @@ if [ $NFLD -gt 1 ]; then
   done
 fi
 
-if [ -z "$QRY" ]; then
-  myecho ERROR: Query must be provided.
+if [ -z "$LVER" ]; then
+  myecho ERROR: LSST version must be provided.
   exit 15
 fi
-myecho Query: $QRY
+if [ -z "$QRY" ]; then
+  myecho ERROR: Query must be provided.
+  exit 16
+fi
+myecho LSST version: $LVER
+myecho Query: "$QRY"
 
 # Parse HFG to get code source and LSST version.
 FLDS=($(echo $HFG | tr "-" "\n"))
 NFLD=${#FLDS[@]}
+SRC=shifter
 LVER=w_2023_18
 if [ $NFLD -gt 0 ]; then
   FLDS=(${FLDS[@]:1})
   for  FLD in ${FLDS[@]}; do
-    if [ FLD = shift ]; then
+    if [ $FLD = shifter ]; then
       SRC=shifter
     elif [ $FLD = cvmfs ]; then
       SRC=cvmfs
@@ -96,13 +98,16 @@ if [ $NFLD -gt 0 ]; then
   done
 fi
 
-if [ $SRC = shift ]; then
+if [ -z "$SRC" ]; then
+  myecho "ERROR: Code source must be provided."
+  exit 14
+elif [ $SRC = shifter ]; then
   COM=g3wf-run-shifter
 elif [ $SRC = cvmfs ]; then
   COM=g3wf-run-cvmfs
 else
   myecho ERROR: Invalid source: $SRC.
-  exit 14
+  exit 15
 fi
 COM="$COM $LVER ./run"
 
@@ -112,8 +117,8 @@ RFIL=./run
 echo "#!/bin/bash" > $RFIL
 echo "pip install -t local git+https://github.com/LSSTDESC/desc-gen3-prod" >>$RFIL
 echo 'PATH=./local/bin:$PATH' >>$RFIL
-echo 'echo Running desc-gen3-prod version: $(desc-gen3-prod-version)' >>$RFIL
-echo "g3wf-query-dc2 query $QRY" >>$RFIL
+echo 'echo Running with desc-gen3-prod version $(desc-gen3-prod-version)' >>$RFIL
+echo "g3wf-query-dc2 query \"$QRY"\" >>$RFIL
 chmod +x ./run
 
 myecho Executing $COM
