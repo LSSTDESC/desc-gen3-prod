@@ -85,7 +85,6 @@ NFLD=${#FLDS[@]}
 SRC=shifter
 LVER=w_2023_18
 if [ $NFLD -gt 0 ]; then
-  FLDS=(${FLDS[@]:1})
   for  FLD in ${FLDS[@]}; do
     if [ $FLD = shifter ]; then
       SRC=shifter
