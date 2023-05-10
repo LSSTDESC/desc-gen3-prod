@@ -1,4 +1,4 @@
-build
+build/
 *.egg-info
 shifter-command
 job*
