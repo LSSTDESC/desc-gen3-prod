@@ -33,7 +33,7 @@ if [ -z "$CFG" -o "$CFG" = "-h" ]; then
   exit 0
 fi
 
-myecho "echo Configuring with desc-gen3-prod version $(desc-gen3-prod-version)"
+myecho "Configuring with desc-gen3-prod version $(desc-gen3-prod-version)"
 
 # Parse CFG to get LSST version and query.
 FLDS=($(echo $CFG | tr "-" "\n"))
