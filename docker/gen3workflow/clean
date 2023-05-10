@@ -1,0 +1,9 @@
+# clean
+#
+# David Adams
+# January 2023
+#
+# Run this to remove old images and deal with docker
+# out of space errors.
+
+docker system prune --all --force

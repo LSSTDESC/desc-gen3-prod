@@ -1,0 +1,11 @@
+from lsstsqre/centos:7-stack-lsst_distrib-%LSSTVERSION%
+
+USER root
+RUN  yum --assumeyes --quiet install vim
+USER lsst
+
+RUN echo source /opt/lsst/software/stack/loadLSST.bash >setup.sh
+RUN echo setup lsst_apps >>setup.sh
+RUN echo "export PS1='lsst:%LSSTVERSION%> '" >> setup.sh
+RUN echo "export LSSTVERSION='%LSSTVERSION%> '" >> setup.sh
+

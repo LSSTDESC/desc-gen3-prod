@@ -1,0 +1,17 @@
+LVER=$1
+VERS=$2
+if [ -z "$VERS" ]; then
+  echo Usage: $0 VERSION
+  exit 0
+fi
+NAME=$(basename $PWD)-$LVER
+LOCNAME=$NAME:$VERS
+TAGNAME=dladams/$NAME:$VERS
+echo
+echo Tagging $TAGNAME
+docker image tag $LOCNAME $TAGNAME
+echo
+echo Pushing $TAGNAME
+docker image push $TAGNAME
+echo
+docker image ls

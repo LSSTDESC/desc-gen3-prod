@@ -1,0 +1,27 @@
+from lsstsqre/centos:7-stack-lsst_distrib-%LSSTVERSION%
+
+USER root
+RUN  yum --assumeyes --quiet install vim
+USER lsst
+
+RUN echo source /opt/lsst/software/stack/loadLSST.bash >setup.sh
+RUN echo setup lsst_apps >>setup.sh
+RUN echo "export PS1='lsst:%LSSTVERSION%> '" >> setup.sh
+RUN echo "export LSSTVERSION='%LSSTVERSION%> '" >> setup.sh
+
+RUN source setup.sh &&\
+    pip install pep8 &&\
+    pip install pylint &&\
+    pip install ipython &&\
+    pip install nose &&\
+    pip install jupyter &&\
+    pip install -U --no-deps 'parsl[monitoring,workqueue] @ git+https://github.com/parsl/parsl@desc' &&\
+    pip install typeguard &&\
+    pip install tblib &&\
+    pip install paramiko &&\
+    pip install dill &&\
+    pip install globus-sdk &&\
+    pip install sqlalchemy_utils
+
+RUN source setup.sh &&\
+    conda install -c conda-forge ndcctools=7.3.5=py310hee97dad_2 --no-deps

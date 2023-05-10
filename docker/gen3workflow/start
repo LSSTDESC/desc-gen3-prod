@@ -1,0 +1,57 @@
+#!/bin/bash
+
+# Read flags.
+HELP=
+DOPTS=
+while [ $# -gt 0 ]; do
+  ARG=$1
+  if [ ${ARG:0:2} = -- ]; then
+    FLG=${ARG:2}
+    shift
+    echo Invalid flag $ARG
+    exit 1
+  elif [ ${ARG:0:1} = - ]; then
+    FLG=${ARG:1}
+    shift
+    if [ $FLG == 'h' ]; then
+      HELP=true
+    elif [ $FLG == 'root' ]; then
+      DOPTS="$DOPTS --user root"
+    else
+      echo Invalid flag $ARG
+      exit 1
+    fi
+  else
+    break
+  fi
+done
+
+NAME=$(basename $(pwd))
+
+if [ -n "$HELP" ]; then
+  echo Usage: $0 [-h] [-root] TAG COPTS
+  echo "  TAG is the $NAME image version."
+  echo "  -root to run container as root"
+  echo "  COPTS are the arguments passed to the container"
+  exit 0
+fi
+
+LVER=$1
+shift
+TAG=$1
+shift
+# Remaining arguments are passed to the container.
+COPTS="$*"
+
+
+FROM=$NAME-$LVER:$TAG
+CNAME=$NAME
+
+
+echo Starting $CNAME with $FROM
+COM="docker run --name $CNAME --rm $DOPTS -it $FROM $COPTS"
+echo "Command: $COM"
+echo
+echo
+$COM
+
