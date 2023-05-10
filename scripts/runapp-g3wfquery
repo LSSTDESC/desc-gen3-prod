@@ -12,6 +12,13 @@ THISDIR=$(dirname $THIS)
 CFG=$1
 HFG=$2
 
+SFIL=current-status.txt
+myecho() {
+  MSG=$1
+  echo $MSG >$SFIL
+  echo $MSG
+}
+
 START="g3wfquery"
 
 if [ -z "$CFG" -o "$CFG" = "-h" ]; then
@@ -30,7 +37,7 @@ fi
 FLDS=($(echo $CFG | tr "-" "\n"))
 NFLD=${#FLDS[@]}
 if [ $NFLD -eq 0 -o ${FLDS[0]} != $START ]; then
-  echo ERROR: Config must be $START or start with $START-
+  myecho ERROR: Config must be $START or start with $START-
   exit 11
 fi
 SRC=shift
@@ -43,7 +50,7 @@ if [ $NFLD -gt 1 ]; then
     NAM=${VALS[0]}
     if [ $NAM = visit ]; then
       if [ $NVAL -lt 2 -o $NVAL -gt 3 ]; then
-        echo ERROR: Invalid config field: $FLD
+        myecho ERROR: Invalid config field: $FLD
         exit 12
       fi
       VAL1=${VALS[1]}
@@ -58,7 +65,7 @@ if [ $NFLD -gt 1 ]; then
       if [ -n "$NEWVER" ]; then
         LVER=$NEWVER
       else
-        echo ERROR: Invalid config field: $FLD
+        myecho ERROR: Invalid config field: $FLD
         exit 13
       fi
     fi
@@ -66,10 +73,10 @@ if [ $NFLD -gt 1 ]; then
 fi
 
 if [ -z "$QRY" ]; then
-  echo ERROR: Query must be provided.
+  myecho ERROR: Query must be provided.
   exit 15
 fi
-echo Query: $QRY
+myecho Query: $QRY
 
 # Parse HFG to get code source and LSST version.
 FLDS=($(echo $HFG | tr "-" "\n"))
@@ -78,13 +85,12 @@ LVER=w_2023_18
 if [ $NFLD -gt 0 ]; then
   FLDS=(${FLDS[@]:1})
   for  FLD in ${FLDS[@]}; do
-    echo $FLD
     if [ FLD = shift ]; then
       SRC=shifter
     elif [ $FLD = cvmfs ]; then
       SRC=cvmfs
     else
-      echo ERROR: Invalid howfig field: $FLD
+      myecho ERROR: Invalid howfig field: $FLD
       exit 13
     fi
   done
@@ -95,11 +101,18 @@ if [ $SRC = shift ]; then
 elif [ $SRC = cvmfs ]; then
   COM=g3wf-run-cvmfs
 else
-  echo ERROR: Invalid source: $SRC.
+  myecho ERROR: Invalid source: $SRC.
   exit 14
 fi
-COM="$COM $LVER g3wf-query-dc2 $QRY"
-echo Executing $COM
+COM="$COM $LVER ./run"
+
+RFIL=./run
+echo "#!/bin/bash" > $RFIL
+echo "pip install -t local git+https://github.com/LSSTDESC/desc-gen3-prod" >>$RFIL
+echo 'PATH=./local/bin:$PATH' >>$RFIL
+echo "g3wf-query-dc2 $QRY" >>$RFIL
+
+myecho Executing $COM
 $COM
 
 exit $?
