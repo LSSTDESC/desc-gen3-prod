@@ -1,0 +1,32 @@
+#!/usr/bin/env python3
+
+# g3wf-convert-lsst-version
+#
+#
+# David Adams
+# May 2023
+#
+# Convert a nickname into a full LSST version tag.
+#
+# w_20YY_WW --> w_20YY_WW
+#     wYYWW --> w_20YY_WW
+
+import sys
+if len(sys.argv) != 2 or sys.argv[1] == "-h":
+    sys.stderr.write(f"Usage: {sys.argv[0]} NAME\n")
+    exit(1)
+
+import re
+
+nam = sys.argv[1]
+
+if re.fullmatch('w_20\d\d_\d\d', nam) is not None:
+    print(nam)
+    exit(0)
+
+if re.fullmatch('w\d\d\d\d', nam) is not None:
+    print(f"w_20{nam[1:2]}_{nam[3:4]}")
+    exit(0)
+
+sys.stderr.write(f"Invalid name: {nam}\n")
+exit(2)

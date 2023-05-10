@@ -1,0 +1,42 @@
+LVER=$1
+MYNAME=${BASH_SOURCE[0]}
+export PS1="Failed $MYNAME> "
+
+if [ -z "$LVER" -o "$LVER" = "-h" ]; then
+  echo Usage: source $MYNAME LSST_VERSION
+else
+  SUPFIL=/cvmfs/sw.lsst.eu/linux-x86_64/lsst_distrib/$LVER/loadLSST-ext.bash
+  if [ ! -r $SUPFIL ]; then
+    echo $MYNAME: LSST setup not found: $SUPFIL
+  else
+    echo $MYNAME: Setting up lsst_distrib $LVER
+    source /cvmfs/sw.lsst.eu/linux-x86_64/lsst_distrib/$LVER/loadLSST-ext.bash
+    setup lsst_distrib
+    export OMP_NUM_THREADS=1
+    export NUMEXPR_MAX_THREADS=1
+    wq_bas=$HOME/gen3workflow/lsst_distrib
+    if [ -r $wq_bas ]; then
+      mkdir -p $wq_bas
+    fi
+    wq_env=$wq_bas/$LVER
+    if [ -r $wq_env ]; then
+      echo $MYNAME: Activating conda env $wq_env
+      conda activate --stack ${wq_env}
+    else
+      echo $MYNAME: Updating conda
+      conda update -n base -c conda-forge -y conda
+      echo $MYNAME: Creating conda env $wq_env
+      conda create -y --prefix ${wq_env}
+      echo $MYNAME: Activating conda env $wq_env
+      conda activate --stack ${wq_env}
+      echo $MYNAME: Installing ndcctoolw
+      conda install -y -c conda-forge ndcctools=7.3.0=py38h4630a5e_0 --no-deps
+      pip install --prefix ${wq_env} --no-deps 'parsl[monitoring,workqueue] @ git+https://github.com/parsl/parsl@desc'
+      pip install --prefix ${wq_env} typeguard tblib paramiko dill globus-sdk sqlalchemy_utils zmq
+    fi
+    export PYTHONPATH=${wq_env}/lib/python3.8/site-packages:${PYTHONPATH}
+    export PATH=${wq_env}/bin:${PATH}
+    export PS1="cvmfs $LVER> "
+  fi
+fi
+

@@ -1,0 +1,19 @@
+#!/bin/bash
+
+LVER=$1
+shift
+COM=$*
+MYCOM=$BASH_SOURCE
+MYNAME=$(basename $MYCOM)
+
+if [ -z "$LVER" ]; then
+  echo Usage: $MYCOM LSST_VERSION COM
+  exit 0
+fi
+
+if [ -n "$COM" ]; then
+  MYECHO=$(echo $MYNAME: Running command $COM)
+  (source g3wf-setup-cvmfs $LVER; echo $MYECHO; /bin/bash -c "$COM")
+else
+  (source g3wf-setup-cvmfs $LVER; /bin/bash)
+fi

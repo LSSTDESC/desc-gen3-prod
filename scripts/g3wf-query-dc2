@@ -1,0 +1,71 @@
+#!/usr/bin/env python3
+
+import time
+t0 = time.time()
+
+def myprint(msg):
+    dtim = time.time() - t0
+    tmsg = f"{dtim:6.1f}: {msg}"
+    print(msg)
+    with open('current-status.txt', 'w') as ofil:
+        ofil.write(f"{tmsg}\n")
+
+import sys
+argv = sys.argv
+if len(argv) < 2:
+    print(f"Usage: {argv[0]} OPT")
+    print(f"  OPT = help XXX: Python help on XXX")
+    print(f"        dim: Show all dimension names")
+    print(f"        query QRY: Return # refs matchin QRY")
+    exit(1)
+
+myprint(f"{time.time()-t0:6.1f}: Importing the Butler.")
+from lsst.daf.butler import Butler
+
+repo = '/global/cfs/cdirs/lsst/production/gen3/DC2/Run2.2i/repo'
+col = 'LSSTCam-imSim/raw/all'
+myprint(f"Creating Butler")
+butler = Butler(repo, collections=[col])
+reg = butler.registry
+opt = argv[1]
+if opt == 'test':
+    argv = [sys.argv[0], 'query', 'visit=231', '10']
+    opt = argv[1]
+myprint(f"Executing {opt}")
+if opt == 'help':
+    code = f"help({argv[2]})"
+    print(f"Executing {code}")
+    exec(code)
+    msgend = "Gave help."
+elif opt == 'dim':
+    ndim = 0
+    for dim in reg.dimensions.getStaticDimensions():
+        print(f"  {dim}")
+        ndim = ndim + 1
+    msgend = "Found {ndim} dimensions."
+elif opt == 'query':
+    '''Process a query, e.g. "visit=231"'''
+    typ = "raw"
+    query = argv[2]
+    if len(argv) > 3:
+        maxref = int(argv[3])
+    else:
+        maxref = 4
+    myprint(f"Fetching refs.")
+    rawrefs = reg.queryDatasets(typ, where=query)
+    myprint(f"Listing refs.")
+    lstrefs = list(rawrefs)
+    myprint(f"Filtering {len(lstrefs)} refs.")
+    refs = set(lstrefs)
+    nref = len(refs)
+    nsref = min(maxref,nref) if maxref >= 0 else nref
+    myprint(f"Displaying {nsref} of {nref} refs for \"{query}\":")
+    iref = 0
+    for ref in refs:
+        iref += 1
+        if iref > nsref: break
+        myprint(ref.dataId.full)
+    msgend = f"Found {nref} matching datasets."
+else:
+    msgend = f"ERROR: Invalid option: {opt}"
+myprint(msgend)

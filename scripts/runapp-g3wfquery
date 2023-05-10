@@ -1,0 +1,105 @@
+#!/bin/bash
+
+# runapp-g3wfquery
+#
+# David Adams
+# May 2023
+#
+# Performs a query on DC2 data
+
+THIS=$0
+THISDIR=$(dirname $THIS)
+CFG=$1
+HFG=$2
+
+START="g3wfquery"
+
+if [ -z "$CFG" -o "$CFG" = "-h" ]; then
+  echo Usage: $(basename $0) CFG [HFG]
+  echo "  CFG = $START-FLD1-FLD2-..."
+  echo "    FLD = cvmfs to use cvmfs build"
+  echo "          shift to use shifter build"
+  echo "          visit:VV to select visit VV"
+  echo "          visit:VV1:VV2 to select visits in range[VV1, VV2]"
+  echo "  HFG = FLD1-FLD2-..."
+  echo "    FLD = wYYWW to use weekly build w_20YY_WW"
+  exit 0
+fi
+
+# Parse CFG to get query.
+FLDS=($(echo $CFG | tr "-" "\n"))
+NFLD=${#FLDS[@]}
+if [ $NFLD -eq 0 -o ${FLDS[0]} != $START ]; then
+  echo ERROR: Config must be $START or start with $START-
+  exit 11
+fi
+SRC=shift
+QRY=
+if [ $NFLD -gt 1 ]; then
+  FLDS=(${FLDS[@]:1})
+  for  FLD in ${FLDS[@]}; do
+    VALS=($(echo $FLD | tr ":" "\n" ))
+    NVAL=${#VALS[@]}
+    NAM=${VALS[0]}
+    if [ $NAM = visit ]; then
+      if [ $NVAL -lt 2 -o $NVAL -gt 3 ]; then
+        echo ERROR: Invalid config field: $FLD
+        exit 12
+      fi
+      VAL1=${VALS[1]}
+      if [ $NVAL -gt 2 ]; then
+          VAL2=${VALS[2]}
+          QRY="visit>=$VAL1 AND visit<=$VAL2"
+      else
+        QRY="visit=$VAL1"
+      fi
+    else
+      NEWVER=$(g3wf-convert-lsst-version $FLD)
+      if [ -n "$NEWVER" ]; then
+        LVER=$NEWVER
+      else
+        echo ERROR: Invalid config field: $FLD
+        exit 13
+      fi
+    fi
+  done
+fi
+
+if [ -z "$QRY" ]; then
+  echo ERROR: Query must be provided.
+  exit 15
+fi
+echo Query: $QRY
+
+# Parse HFG to get code source and LSST version.
+FLDS=($(echo $HFG | tr "-" "\n"))
+NFLD=${#FLDS[@]}
+LVER=w_2023_18
+if [ $NFLD -gt 0 ]; then
+  FLDS=(${FLDS[@]:1})
+  for  FLD in ${FLDS[@]}; do
+    echo $FLD
+    if [ FLD = shift ]; then
+      SRC=shifter
+    elif [ $FLD = cvmfs ]; then
+      SRC=cvmfs
+    else
+      echo ERROR: Invalid howfig field: $FLD
+      exit 13
+    fi
+  done
+fi
+
+if [ $SRC = shift ]; then
+  COM=g3wf-run-shifter
+elif [ $SRC = cvmfs ]; then
+  COM=g3wf-run-cvmfs
+else
+  echo ERROR: Invalid source: $SRC.
+  exit 14
+fi
+COM="$COM $LVER g3wf-query-dc2 $QRY"
+echo Executing $COM
+$COM
+
+exit $?

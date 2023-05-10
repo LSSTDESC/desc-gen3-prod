@@ -1,0 +1,28 @@
+#!/bin/bash
+
+LVER=$1
+shift
+COM="$*"
+MYNAME=$(basename ${BASH_SOURCE[0]})
+export PS1="Failed $MYNAME> "
+IVER=04
+
+if [ -z "$LVER" ]; then
+  echo Usage: source $MYNAME LSST_VERSION
+else
+  IMG=$(whoami)/gen3workflow-$LVER:$IVER
+  echo $MYNAME: Loading shifter image $IMG
+  export PS1="shifter $LVER> "
+  if [ -z "$COM" ]; then
+    COM=/bin/bash
+  else
+    echo $MYNAME: Running command $COM
+  fi
+  CFIL=$(pwd)/shifter-command
+  echo "#!/bin/bash" >$CFIL
+  echo source /opt/lsst/software/stack/setup.sh >>$CFIL
+  echo $COM >>$CFIL
+  chmod +x $CFIL
+  shifter --image=$IMG $CFIL
+fi
+
