@@ -110,7 +110,9 @@ RFIL=./run
 echo "#!/bin/bash" > $RFIL
 echo "pip install -t local git+https://github.com/LSSTDESC/desc-gen3-prod" >>$RFIL
 echo 'PATH=./local/bin:$PATH' >>$RFIL
+echo 'echo desc-gen3-prod version: $(desc-gen3-prod-version)' >>$RFIL
 echo "g3wf-query-dc2 $QRY" >>$RFIL
+chmod +x ./run
 
 myecho Executing $COM
 $COM
