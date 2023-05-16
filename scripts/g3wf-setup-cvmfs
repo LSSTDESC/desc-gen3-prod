@@ -33,8 +33,10 @@ else
       conda install -y -c conda-forge ndcctools=7.3.0=py38h4630a5e_0 --no-deps
       pip install --prefix ${wq_env} --no-deps 'parsl[monitoring,workqueue] @ git+https://github.com/parsl/parsl@desc'
       pip install --prefix ${wq_env} typeguard tblib paramiko dill globus-sdk sqlalchemy_utils zmq
+      pip install --prefix ${wq_env} git+https://github.com/LSSTDESC/desc-wfmon
     fi
     export PYTHONPATH=${wq_env}/lib/python3.8/site-packages:${PYTHONPATH}
+    export PYTHONPATH=${wq_env}/lib/python3.10/site-packages:${PYTHONPATH}
     export PATH=${wq_env}/bin:${PATH}
     export PS1="cvmfs $LVER> "
   fi

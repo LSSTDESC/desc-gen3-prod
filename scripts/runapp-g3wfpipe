@@ -209,7 +209,6 @@ TMIN=STIM
 RFIL=./run
 echo "#!/bin/bash" > $RFIL
 echo "pip install -t local git+https://github.com/LSSTDESC/desc-gen3-prod" >>$RFIL
-echo "pip install -t local git+https://github.com/LSSTDESC/desc-prod" >>$RFIL
 echo 'PATH=./local/bin:$PATH' >>$RFIL
 echo 'echo Running with desc-gen3-prod version $(desc-gen3-prod-version)' >>$RFIL
 echo "g3wfpipe-run start" >>$RFIL
