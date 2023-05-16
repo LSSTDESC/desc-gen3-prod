@@ -211,6 +211,10 @@ echo "#!/bin/bash" > $RFIL
 echo "pip install -t local git+https://github.com/LSSTDESC/desc-gen3-prod" >>$RFIL
 echo 'PATH=./local/bin:$PATH' >>$RFIL
 echo 'echo Running with desc-gen3-prod version $(desc-gen3-prod-version)' >>$RFIL
+echo 'git clone https://github.com/LSSTDESC/gen3_workflow.git' >>$RFIL
+echo 'cd gen3_workflow' >>$RFIL
+echo 'setup -r . -j' >>$RFIL
+echo 'cd ..' >>$RFIL
 echo "g3wfpipe-run start" >>$RFIL
 chmod +x ./run
 
