@@ -25,4 +25,4 @@ if [ "$ARG" = start ]; then
   fi
 fi
 echo $THIS: Starting pipeline
-python $THIS.py $ARG
+$THIS.py $ARG
