@@ -1,0 +1,220 @@
+#!/bin/sh
+
+# runapp-g3wfpipe
+#
+# David Adams
+# May 2023
+# Run a DESC gen3 pipline processing job.
+# This script is called without two arguments config and howfig, each of which is split
+# '-' as a separator to obtain the configuration fields NAM:VAL or NAM:VAL1:VAL2
+# Config fields:
+#   pipe: Specifies the processing tasks. See PIPEVAL below. E.g. isr, ccd, drp, ...
+#   wYYWW: Use LSST release w_20YY_WW
+#   The query for which data to process is and of one or more of the following:
+#     visit: Which visits to process. Either VAL or [VAL1,VAL2]
+#     tract: Which tracts to process. Either VAL or [VAL1,VAL2]
+#     patch: Which patchess to process. Either VAL or [VAL1,VAL2]
+# Howfig fields:
+#   exec: Parsl executor wq, ht or tp. Also wqMM to run WorkQueue with MM GB memor=y limit.
+#   code source: cvmfs of shifter
+#   batch time limit: btTT where TT is time limit in minutes
+#   memory limit [GB]: memMMM
+
+if [ $# -ne 2 ]; then
+  echo Usage: $0 CFG HFG
+  echo CFG = CF1-CF2-... where CFi is any of
+  echo "  pipe:PIPELINE, e.g. pipe:isr"
+  echo "  visit:NNN: Visit for query e.g. visit:123456"
+  echo "  tract:NNN: Tract for query e.g. tract:4248"
+  echo "  patch:NNN: Patch for query e.g. patch:85"
+  echo "  wYYWW: Use LSSST release w_20YY_WW"
+  echo HFG = HF1-HF2-... where HFi is any of
+  echo "  exec:XX where XX = wq, tp or wqMM"
+  echo "  cvmfs: Code taken from cvmfs"
+  echo "  shifter: Code taken from shifter"
+  exit 1
+fi
+
+DBG=0
+SFIL=current-status.txt
+
+myecho() {
+  MSG="$*"
+  echo "$MSG" >$SFIL
+  echo "$MSG"
+}
+
+err_echo() {
+  MSG="$*"
+  echo "$MSG" >$SFIL
+  echo "$MSG" >&2
+}
+
+dbg_echo() {
+  if [ $DBG -gt 0 ]; then
+    echo $*
+  fi
+}
+
+decode_query() {
+  VALS=(${1//:/ })
+  NAM=${VALS[0]}
+  VAL1=${VALS[1]}
+  VAL2=${VALS[2]}
+  VAL3=${VALS[3]}
+  if [ -z "$VAL1" -o -n "$VAL3" ]; then
+    err_echo Invalid query field: $1
+    exit 2
+  fi
+  if [ -n "$VAL2" ]; then
+    echo "$NAM in ($VAL1..$VAL2)"
+  else
+    echo "$NAM=$VAL1"
+  fi
+}
+
+CFG=$1
+HFG=$2
+COPTS=(${CFG//-/ })
+HOPTS=(${HFG//-/ })
+
+# We use extended globbing below.
+shopt -s extglob
+
+# Parse the config.
+PIPE=
+QUER=
+LVER=
+for OPT in ${COPTS[@]}; do
+  dbg_echo Parsing option $OPT
+  if [[ $OPT == pipe:?* ]]; then
+    if [ -n "$PIPE" ]; then
+      myecho ERROR: Duplicate pipeline specification: $PIPE $OPT
+      exit 1
+    fi
+    PIPE=${OPT:5}
+  elif [[ $OPT == +(visit|tract|patch):?* ]]; then
+    NEWQUERY=$(decode_query $OPT)
+    if [ -n "$QUER" ]; then
+      QUER="$QUER and $NEWQUERY"
+    else
+      QUER="$NEWQUERY"
+    fi
+  else
+    NEWVER=$(g3wf-convert-lsst-version $OPT)
+    if [ -n "$NEWVER" ]; then
+      LVER=$NEWVER
+    else
+      myecho ERROR: Invalid config field: $FLD
+      exit 3
+    fi
+  fi
+done
+
+PIPEVAL=
+if [ -n "$PIPE" ]; then
+  if [ $PIPE = drp ]; then
+    PIPEVAL=
+  elif [ $PIPE = sf ]; then
+    PIPEVAL="detection,mergeDetections,deblend,measure,mergeMeasurements,forcedPhotCoadd,writeObjectTable,transformObjectTable,consolidateObjectTable"
+  elif [ $PIPE = ccd ]; then
+    PIPEVAL="isr,characterizeImage,calibrate"
+  else
+    PIPEVAL=$PIPE
+  fi
+  if [ -n "$PIPEVAL" ]; then PIPEVAL="#$PIPEVAL"; fi
+  echo Pipeline: $PIPEVAL
+else
+  echo "ERROR: Pipeline (pipeXXX) must be specified."
+  exit 1
+fi
+
+if [ -n "$QUER" ]; then
+  echo "    Query: $QUER"
+else
+  echo ERROR: Query not found.
+  exit 1
+fi
+
+if [ -n "$LVER" ]; then
+  echo " LSST release:y: $LVER"
+else
+  echo "ERROR: LSST release mt be supplied."
+  exit 1
+fi
+
+# Parse the howfig.
+CSRC=
+EXEC=wq
+for OPT in ${HOPTS[@]}; do
+  if [ $OPT = shifter ]; then
+    CSRC=shifter
+  elif [ $OPT = cvmfs ]; then
+    CSRC=cvmfs
+  else
+    myecho ERROR: Invalid howfig field: $OPT
+    exit 13
+  fi
+done
+
+if [ -z "$CSRC" ]; then
+  myecho "ERROR: Code source must be provided."
+  exit 14
+elif [ $CSRC = shifter ]; then
+  COM=g3wf-run-shifter
+elif [ $CSRC = cvmfs ]; then
+  COM=g3wf-run-cvmfs
+else
+  myecho ERROR: Invalid source: $CSRC.
+  exit 15
+fi
+COM="$COM $LVER ./run"
+
+echo Code source: $CSRC
+
+if [ -n "$EXEC" ]; then
+  echo "    Executor: $EXEC"
+  if [ ${EXEC:0:2} = wq ]; then
+    EXECVAL=WorkQueue
+    MEGB=${EXEC:2}
+  else
+    echo ERROR: Invalid executor: $EXEC
+    exit 1
+  fi
+else
+  echo ERROR: Executor not found.
+  exit 1
+fi
+
+g3wfpipe-template \
+  | sed s/%PAYLOAD%/$PIPE/g \
+  | sed s/%PIPE%/$PIPEVAL/g \
+  | sed s/%QUERY%/"$QUER"/g \
+  | sed s/%EXEC%/$EXECVAL/g \
+  | sed s/%MEM%/$MEGB/g \
+  | sed s/%NNOD%/$NNOD/g \
+  | sed s/%LOGINIT%/$LOGINIT/g \
+  | sed s/%RMIENABLE%/$RMIE/g \
+  | sed s/%RMIINTERVAL%/$RMII/g \
+  | sed s/%USER%/$USERNAME/g \
+  >config.yaml
+
+if [ -z "$STIM" ]; then
+  STIM=60
+fi
+TMIN=STIM
+
+# Create the run script.
+# It installs desc-gen3-prod and then runs the query.
+RFIL=./run
+echo "#!/bin/bash" > $RFIL
+echo "pip install -t local git+https://github.com/LSSTDESC/desc-gen3-prod" >>$RFIL
+echo 'PATH=./local/bin:$PATH' >>$RFIL
+echo 'echo Running with desc-gen3-prod version $(desc-gen3-prod-version)' >>$RFIL
+echo "g3wfpipe-run start" >>$RFIL
+chmod +x ./run
+
+myecho Executing $COM
+$COM
+
+exit $?

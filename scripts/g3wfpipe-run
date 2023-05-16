@@ -1,0 +1,28 @@
+#!/bin/bash
+
+# g3wfpipe-run
+#
+# David Adams
+# May 2023
+
+THIS=$(basename $0)
+ARG=${1:-start}
+
+# There were warnings in the QG generation.
+echo NUMEXPR_MAX_THREADS=$NUMEXPR_MAX_THREADS
+
+if [ "$ARG" = start ]; then
+  SYMFIL='./sysmon.csv'
+  FRQFIL='./frqmon.csv'
+  if test -r $SYMFIL; then
+    echo $THIS: Sysmon file $SYMFIL already exists.
+    exit 0
+  else
+    echo $THIS: Starting sysmon
+    desc-sysmon-reporter "fnam='$SYMFIL';log='sysmon.log';dt=5;frqfnam='$FRQFIL'" &
+    PID=$!
+    echo $PID>sysmon.pid
+  fi
+fi
+echo $THIS: Starting pipeline
+python $THIS.py $ARG
