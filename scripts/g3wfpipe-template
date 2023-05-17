@@ -1,14 +1,14 @@
-echo  'includeConfigs:
+echo  "includeConfigs:
   - ${GEN3_WORKFLOW_DIR}/python/desc/gen3_workflow/etc/bps_drp_baseline.yaml
   - ${GEN3_WORKFLOW_DIR}/examples/bps_DC2-3828-y1_resources.yaml
 
-pipelineYaml: "${DRP_PIPE_DIR}/ingredients/LSSTCam-imSim/DRP.yaml%PIPE%"
+pipelineYaml: \"${DRP_PIPE_DIR}/ingredients/LSSTCam-imSim/DRP.yaml%PIPE%\"
 
 payload:
   inCollection: LSSTCam-imSim/defaults
   payloadName: %PAYLOAD%
   butlerConfig: /global/cfs/cdirs/lsst/production/gen3/DC2/Run2.2i/repo
-  dataQuery: "visit>0 and skymap='DC2' and %QUERY%"
+  dataQuery: \"visit>0 and skymap='DC2' and %QUERY%\"
 
 parsl_config:
   retries: 1
@@ -23,11 +23,11 @@ parsl_config:
   executor: %EXEC%
   provider: Local
   nodes_per_block: %NNOD%
-  worker_options: "--memory=%MEM%000"
+  worker_options: \"--memory=%MEM%000\"
 
 operator: %USER%
-commandPrepend: "time perf stat -d"
+commandPrepend: \"time perf stat -d\"
 
 # Default task properties.
 requestCpus: 1
-requestMemory: 1000'
+requestMemory: 1000"
