@@ -81,7 +81,7 @@ if startJob:
       if not finalizeJob: msuf = msuf + 'out'
       msuf = msuf + ' finalization'
       logmsg(f"Starting workflow {msuf}")
-      pg.run(block=blockJob, finalize=finalizeJob)
+      pg.run(block=blockJob)
       finalizeJob = False
       restartJob = False
       logmsg("Workflow started.")
@@ -101,7 +101,7 @@ if restartJob:
 if finalizeJob:
     logmsg()
     logmsg('Finalizing job...')
-    pg.run(block=True, finalize=True)
+    pg.finalize()
     logmsg('Finalizing done')
 
 if showStatus:
