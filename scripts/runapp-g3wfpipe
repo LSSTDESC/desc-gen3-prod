@@ -178,6 +178,11 @@ if [ -n "$EXEC" ]; then
   if [ ${EXEC:0:2} = wq ]; then
     EXECVAL=WorkQueue
     MEGB=${EXEC:2}
+    # Make sure the memory limit is not blank and is numeric.
+    if ! [ "$MEGB" -eq "$MEGB" ] 2>/dev/null; then
+      echo Assigning default work_queue memory.
+      MEGB=2
+    fi
   else
     echo ERROR: Invalid executor: $EXEC
     exit 1
