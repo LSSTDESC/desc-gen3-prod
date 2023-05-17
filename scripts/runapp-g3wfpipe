@@ -85,6 +85,7 @@ shopt -s extglob
 PIPE=
 QUER=
 LVER=
+NNOD=1
 for OPT in ${COPTS[@]}; do
   dbg_echo Parsing option $OPT
   if [[ $OPT == pipe:?* ]]; then
