@@ -5,7 +5,8 @@
 # David Adams
 # May 2023
 
-THIS=$(basename $0)
+THISBAS=$(basename $0)
+THISPTH=$0
 ARG=${1:-start}
 
 # There were warnings in the QG generation.
@@ -15,14 +16,14 @@ if [ "$ARG" = start ]; then
   SYMFIL='./sysmon.csv'
   FRQFIL='./frqmon.csv'
   if test -r $SYMFIL; then
-    echo $THIS: Sysmon file $SYMFIL already exists.
+    echo $THISBAS: Sysmon file $SYMFIL already exists.
     exit 0
   else
-    echo $THIS: Starting sysmon
+    echo $THISBAS: Starting sysmon
     desc-sysmon-reporter "fnam='$SYMFIL';log='sysmon.log';dt=5;frqfnam='$FRQFIL'" &
     PID=$!
     echo $PID>sysmon.pid
   fi
 fi
-echo $THIS: Starting pipeline
-$THIS.py $ARG
+echo $THISBAS: Starting pipeline
+$THISPTH.py $ARG

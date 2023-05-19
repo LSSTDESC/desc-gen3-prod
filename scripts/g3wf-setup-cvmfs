@@ -31,7 +31,7 @@ else
       conda activate --stack ${wq_env}
       echo $MYNAME: Installing ndcctoolw
       conda install -y -c conda-forge ndcctools=7.3.0=py38h4630a5e_0 --no-deps
-      pip install --prefix ${wq_env} --no-deps 'parsl[monitoring,workqueue] @ git+https://github.com/parsl/parsl@desc'
+      pip install -I --prefix ${wq_env} --no-deps 'parsl[monitoring,workqueue] @ git+https://github.com/parsl/parsl@desc'
       pip install --prefix ${wq_env} typeguard tblib paramiko dill globus-sdk sqlalchemy_utils zmq
       pip install --prefix ${wq_env} git+https://github.com/LSSTDESC/desc-wfmon
     fi

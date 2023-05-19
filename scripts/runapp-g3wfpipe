@@ -86,6 +86,7 @@ PIPE=
 QUER=
 LVER=
 NNOD=1
+USER=$(whoami)
 for OPT in ${COPTS[@]}; do
   dbg_echo Parsing option $OPT
   if [[ $OPT == pipe:?* ]]; then
@@ -202,7 +203,7 @@ g3wfpipe-template \
   | sed s/%LOGINIT%/$LOGINIT/g \
   | sed s/%RMIENABLE%/$RMIE/g \
   | sed s/%RMIINTERVAL%/$RMII/g \
-  | sed s/%USER%/$USERNAME/g \
+  | sed s/%USER%/$USER/g \
   >config.yaml
 
 if [ -z "$STIM" ]; then
@@ -219,8 +220,8 @@ echo 'PATH=./local/bin:$PATH' >>$RFIL
 echo 'echo Running with desc-gen3-prod version $(desc-gen3-prod-version)' >>$RFIL
 echo 'git clone https://github.com/LSSTDESC/gen3_workflow.git' >>$RFIL
 echo 'cd gen3_workflow' >>$RFIL
-echo 'setup -r . -j' >>$RFIL
 echo 'cd ..' >>$RFIL
+echo 'setup -r gen3_workflow -j' >>$RFIL
 echo "g3wfpipe-run start" >>$RFIL
 chmod +x ./run
 

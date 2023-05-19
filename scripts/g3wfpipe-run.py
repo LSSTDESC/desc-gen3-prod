@@ -3,9 +3,6 @@
 import os
 import sys
 import time
-import parsl
-from desc.wfmon import MonDbReader
-import desc.sysmon
 
 startJob = False
 restartJob = False
@@ -27,8 +24,9 @@ def logmsg(*msgs):
     out.close()
     print(dmsg, flush=True)
 
+logmsg(f"Executing {__file__}")
 for opt in sys.argv[1:]:
-    logmsg("ARG", opt)
+    logmsg("Processing argument", opt)
     if opt in ["-h", "help"]:
         logmsg('Usage:', sys.argv[0], '[OPTS]')
         logmsg('  OPTS = start, restart, status, tables, help')
@@ -40,9 +38,16 @@ for opt in sys.argv[1:]:
     elif opt == 'tables':
         showParslTables = True
     elif opt == 'test': doTest = True
+    elif opt == 'path':
+        for dir in os.getenv('PYTHONPATH').split(':'): print(dir)
+        exit(0)
     else:
         logmsg('Invalid option', opt)
         sys.exit()
+
+import parsl
+from desc.wfmon import MonDbReader
+import desc.sysmon
 
 logmsg(f"parsl version is {parsl.VERSION}")
 logmsg(f"parsl location is {parsl.__file__}")
