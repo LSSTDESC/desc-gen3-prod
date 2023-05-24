@@ -16,7 +16,22 @@ doTest = False
 
 thisdir = os.getcwd()
 
+def logmsglist(msgs, update_status=False):
+    out = open('runapp-g3wfpipe.log', 'a')
+    dmsg = time.strftime('%Y-%m-%d %H:%M:%S:')
+    rmsg = msgs[0] if len(msgs) else ''
+    for msg in msgs[1:]:
+        rmsg += ' ' + str(msg)
+    dmsg += rmsg
+    out.write(dmsg + '\n')
+    out.close()
+    print(dmsg, flush=True)
+    if update_status:
+        fstat = open(statfilename, 'w')
+        fstat.write(rmsg + '\n')
+
 def logmsg(*msgs, update_status=False):
+    logmsglist(list(msgs), update_status)
     out = open('runapp-g3wfpipe.log', 'a')
     dmsg = time.strftime('%Y-%m-%d %H:%M:%S:')
     for msg in msgs:
@@ -29,7 +44,7 @@ def logmsg(*msgs, update_status=False):
         fstat.write(dmsg + '\n')
 
 def statlogmsg(*msgs):
-    logmsg(msgs, update_status=True)
+    logmsglist(list(msgs), update_status=True)
 
 statlogmsg(f"Executing {__file__}")
 for opt in sys.argv[1:]:
@@ -116,7 +131,7 @@ if doProc:
     statlogmsg(f"Workflow task count: {ntsk}")
     ndone = 0
     time0 = time.time()
-    tmax = 500
+    tmax = 1000
     while ndone < ntsk:
         ndone = 0
         for fut in futures:
