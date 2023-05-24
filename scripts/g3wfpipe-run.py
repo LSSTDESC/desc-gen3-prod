@@ -106,7 +106,7 @@ if doInit:
         sys.exit(1)
     else:
         logmsg()
-        statlogmsg("Creating quantum graph with " + bpsfile)
+        statlogmsg("Creating quantum graph.")
         pg = start_pipeline(bpsfile)
         try:
             if pg.qgraph() is None:
