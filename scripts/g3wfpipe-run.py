@@ -25,7 +25,7 @@ def logmsg(*msgs, update_status=False):
     out.close()
     print(dmsg, flush=True)
     if update_status:
-        fstat = open(statfilename, w)
+        fstat = open(statfilename, 'w')
         fstat.write(dmsg + '\n')
 
 def statlogmsg(*msgs):
