@@ -129,7 +129,7 @@ if doProc:
             sys.exit(1)
     statlogmsg(f"Workflow complete: {ndone}/{ntsk} tasks.")
 
-if finalizeJob:
+if doFina:
     statlogmsg()
     logmsg('Finalizing job...')
     pg.finalize()

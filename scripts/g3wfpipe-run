@@ -7,12 +7,12 @@
 
 THISBAS=$(basename $0)
 THISPTH=$0
-ARG=${1:-start}
+ARGS="$*"
 
 # There were warnings in the QG generation.
 echo NUMEXPR_MAX_THREADS=$NUMEXPR_MAX_THREADS
 
-if [ "$ARG" = start ]; then
+if echo $ARGS | grep proc >/dev/null; then
   SYMFIL='./sysmon.csv'
   FRQFIL='./frqmon.csv'
   if test -r $SYMFIL; then
@@ -25,5 +25,5 @@ if [ "$ARG" = start ]; then
     echo $PID>sysmon.pid
   fi
 fi
-echo $THISBAS: Starting pipeline
-$THISPTH.py $ARG
+echo $THISBAS: Starting workflow script with args $ARGS
+$THISPTH.py $ARGS
