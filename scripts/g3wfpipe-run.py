@@ -29,7 +29,7 @@ def logmsg(*msgs, update_stat=False):
         fstat.write(dmsg + '\n')
 
 def statlogmsg(*msgs):
-    logmsg(msg, update_status=True)
+    logmsg(msgs, update_status=True)
 
 statlogmsg(f"Executing {__file__}")
 for opt in sys.argv[1:]:
