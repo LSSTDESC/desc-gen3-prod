@@ -4,7 +4,7 @@ import os
 import sys
 import time
 
-statfile = 'current-status.txt'
+statfilename = 'current-status.txt'
 doInit = False
 doProc = False
 doFina = False
@@ -25,7 +25,7 @@ def logmsg(*msgs, update_status=False):
     out.close()
     print(dmsg, flush=True)
     if update_status:
-        fstat = open(statname, w)
+        fstat = open(statfilename, w)
         fstat.write(dmsg + '\n')
 
 def statlogmsg(*msgs):
