@@ -4,9 +4,10 @@ import os
 import sys
 import time
 
-startJob = False
-restartJob = False
-finalizeJob = False
+statfile = 'current-status.txt'
+doInit = False
+doProc = False
+doFina = False
 blockJob=True      # Set false for interactive running.
 showStatus = False
 showParslTables = False
@@ -15,26 +16,33 @@ doTest = False
 
 thisdir = os.getcwd()
 
-def logmsg(*msgs):
-    out = open('dopipe.log', 'a')
+def logmsg(*msgs, stat=False):
+    out = open('runapp-g3wfpipe.log', 'a')
     dmsg = time.strftime('%Y-%m-%d %H:%M:%S:')
     for msg in msgs:
         dmsg += ' ' + str(msg)
     out.write(dmsg + '\n')
     out.close()
     print(dmsg, flush=True)
+    if stat:
+        fstat = open(statname, w)
+        fstat.write(dmsg + '\n')
 
-logmsg(f"Executing {__file__}")
+statlogmsg(f"Executing {__file__}")
 for opt in sys.argv[1:]:
     logmsg("Processing argument", opt)
     if opt in ["-h", "help"]:
         logmsg('Usage:', sys.argv[0], '[OPTS]')
-        logmsg('  OPTS = start, restart, status, tables, help')
+        logmsg('  OPTS = init, proc, finalize, status, tables, help')
         sys.exit()
-    elif opt == 'start': startJob = True
-    elif opt == 'restart': restartJob = True
-    elif opt == 'finalize': finalizeJob = True
-    elif opt == 'status': showStatus = True
+    elif opt == 'init':
+        doInit = True
+    elif opt == 'proc':
+        doProc = True
+    elif opt == 'finalize':
+        doFina = True
+    elif opt == 'status':
+        showStatus = True
     elif opt == 'tables':
         showParslTables = True
     elif opt == 'test': doTest = True
@@ -42,8 +50,8 @@ for opt in sys.argv[1:]:
         for dir in os.getenv('PYTHONPATH').split(':'): print(dir)
         exit(0)
     else:
-        logmsg('Invalid option', opt)
-        sys.exit()
+        statlogmsg(f"Invalid option: '{opt}'")
+        sys.exit(1)
 
 import parsl
 from desc.wfmon import MonDbReader
@@ -67,29 +75,25 @@ pickpath = ''
 for path, dirs, files in os.walk('submit'):
     if pickname in files:
         pickpath = path + '/' + pickname
-        logmsg(f"Pickle path: {pickpath}")
+        logmsg(f"Workflow pickle path: {pickpath}")
+    else:
+        logmsg(f"Workflow pickle not found: {pickpath}")
 
 if doTest:
     logmsg('test')
 
-if startJob:
+if doInit:
     if len(pickpath):
-        logmsg("Remove existing job before starting a new one.")
-        logmsg("Rename submit.")
+        statlogmsg("Remove existing job before starting a new one.")
+        sys.exit(1)
     else:
-      logmsg()
-      logmsg("Starting pipeline with " + bpsfile)
-      #sysmon = desc.sysmon.reporter(fnam='sysmon.csv', log='sysmon.log', dt=1, thr=True)
-      pg = start_pipeline(bpsfile)
-      logmsg()
-      msuf = "with"
-      if not finalizeJob: msuf = msuf + 'out'
-      msuf = msuf + ' finalization'
-      logmsg(f"Starting workflow {msuf}")
-      pg.run(block=blockJob)
-      finalizeJob = False
-      restartJob = False
-      logmsg("Workflow started.")
+        logmsg()
+        statlogmsg("Creating quantum graph with " + bpsfile)
+        pg = start_pipeline(bpsfile)
+        if pg.qgraph() is None:
+            statlogmsg("Quantum graph was not created.")
+        else:
+            statlogmsg("Quantum graph was created.")
 
 if len(pickpath):
     pickpath = f"{thisdir}/{pickpath}"
@@ -97,17 +101,32 @@ if len(pickpath):
     logmsg(time.ctime(), "Using existing pipeline:", pickpath)
     pg = ParslGraph.restore(pickpath)
 
-if restartJob:
+if doProc:
     logmsg()
-    logmsg('Restarting job')
+    statlogmsg('Starting workflow')
     pg.run()
-    logmsg("Workflow restarted.")
+    futures = [job.get_future() for job in pg.values() if not job.dependencies]
+    ntsk = len(futures)
+    statlogmsg(f"Workflow task count: {ntsk}")
+    ndone = 0
+    time0 = time.time()
+    tmax = 500
+    while ndone < ntsk:
+        ndone = 0
+        for fut in futures: if fut.done: ndone += 1
+        statlogmsg(f"Finished {ndone} of {ntsk} tasks.")
+        time.sleep(10)
+        dtim = time.time() - time0
+        if dtim > tmax:
+            statlogmsg(f"Timing out after {dtim} seconds with {ndone}/{ntsk} tasks completed.")
+            sys.exit(1)
+    statlogmsg(f"Workflow complete: {ndone}/{ntsk} tasks.")
 
 if finalizeJob:
-    logmsg()
+    statlogmsg()
     logmsg('Finalizing job...')
     pg.finalize()
-    logmsg('Finalizing done')
+    statlogmsg('Finalizing done')
 
 if showStatus:
     logmsg()

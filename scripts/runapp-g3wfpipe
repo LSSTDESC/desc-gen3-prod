@@ -85,11 +85,19 @@ shopt -s extglob
 PIPE=
 QUER=
 LVER=
-NNOD=1
+DOINIT=false
+DOPROC=false
+DOFINA=false
 USER=$(whoami)
 for OPT in ${COPTS[@]}; do
   dbg_echo Parsing option $OPT
-  if [[ $OPT == pipe:?* ]]; then
+  if [ $OPT == init ]; then
+    DOINIT=true
+  elif [[ $OPT == proc:?* ]]; then
+    DOPROC=true
+  elif [ $OPT == finalize ]; then
+    DOFINA=true
+  elif [[ $OPT == pipe:?* ]]; then
     if [ -n "$PIPE" ]; then
       myecho ERROR: Duplicate pipeline specification: $PIPE $OPT
       exit 1
@@ -107,7 +115,7 @@ for OPT in ${COPTS[@]}; do
     if [ -n "$NEWVER" ]; then
       LVER=$NEWVER
     else
-      myecho ERROR: Invalid config field: $FLD
+      myecho ERROR: Invalid config field: $OPT
       exit 3
     fi
   fi
@@ -147,7 +155,8 @@ fi
 
 # Parse the howfig.
 CSRC=
-EXEC=wq
+NNOD=1
+EXEC=none
 for OPT in ${HOPTS[@]}; do
   if [ $OPT = shifter ]; then
     CSRC=shifter
@@ -179,56 +188,71 @@ COM="$COM $LVER ./run"
 echo Code source: $CSRC
 echo Executor: $CSRC
 
-g3wfpipe-template \
-  | sed s/%PAYLOAD%/$PIPE/g \
-  | sed s/%PIPE%/$PIPEVAL/g \
-  | sed s/%QUERY%/"$QUER"/g \
-  | sed s/%MEM%/$MEGB/g \
-  | sed s/%NNOD%/$NNOD/g \
-  | sed s/%LOGINIT%/$LOGINIT/g \
-  | sed s/%RMIENABLE%/$RMIE/g \
-  | sed s/%RMIINTERVAL%/$RMII/g \
-  | sed s/%USER%/$USER/g \
-  >config.yaml
+WFARGS=
+if [ $DOINIT = true ]; then
 
-echo "" >>config.yaml
-echo "parsl_config:" >>config.yaml
-echo "  retries: 1" >>config.yaml
+  echo Creating config.yaml.
+  g3wfpipe-template \
+    | sed s/%PAYLOAD%/$PIPE/g \
+    | sed s/%PIPE%/$PIPEVAL/g \
+    | sed s/%QUERY%/"$QUER"/g \
+    | sed s/%MEM%/$MEGB/g \
+    | sed s/%NNOD%/$NNOD/g \
+    | sed s/%LOGINIT%/$LOGINIT/g \
+    | sed s/%RMIENABLE%/$RMIE/g \
+    | sed s/%RMIINTERVAL%/$RMII/g \
+    | sed s/%USER%/$USER/g \
+    >config.yaml
+  
+  echo "" >>config.yaml
+  echo "parsl_config:" >>config.yaml
+  echo "  retries: 1" >>config.yaml
 
-#  monitoring: parsl.monitoring.monitoring.MonitoringHub(
-#           hub_address=parsl.addresses.address_by_hostname(),
-#           hub_port=55055,
-#           monitoring_debug=False,
-#           resource_monitoring_enabled=,
-#           resource_monitoring_interval=,
-#       ),
-#  initialize_logging:
-
-if [ ${EXEC:0:2} = wq ]; then
-  MEGB=${EXEC:2}
-  # Make sure the memory limit is not blank and is numeric.
-  if ! [ "$MEGB" -eq "$MEGB" ] 2>/dev/null; then
-    echo Assigning default work_queue memory.
-    MEGB=2
+  #  monitoring: parsl.monitoring.monitoring.MonitoringHub(
+  #           hub_address=parsl.addresses.address_by_hostname(),
+  #           hub_port=55055,
+  #           monitoring_debug=False,
+  #           resource_monitoring_enabled=,
+  #           resource_monitoring_interval=,
+  #       ),
+  #  initialize_logging:
+  
+  if [ ${EXEC:0:2} = wq ]; then
+    MEGB=${EXEC:2}
+    # Make sure the memory limit is not blank and is numeric.
+    if ! [ "$MEGB" -eq "$MEGB" ] 2>/dev/null; then
+      echo Assigning default work_queue memory.
+      MEGB=2
+    fi
+    echo "  executor: WorkQueue" >>config.yaml
+    echo "  provider: Local" >>config.yaml
+    echo "  nodes_per_block: 1" >>config.yaml
+    echo "  worker_options: \"--memory=${MEGB}000\"" >>config.yaml
+  elif [ ${EXEC:0:2} = tp ]; then
+    NTHR=${EXEC:2}
+    if [ -z "$NTHR" ]; then NTHR=1; fi
+    echo "  executor: ThreadPool" >>config.yaml
+    echo "  max_threads: $NTHR" >>config.yaml
+  else
+    myecho ERROR: Executor not found.
+    exit 1
   fi
-  echo "  executor: WorkQueue" >>config.yaml
-  echo "  provider: Local" >>config.yaml
-  echo "  nodes_per_block: 1" >>config.yaml
-  echo "  worker_options: \"--memory=${MEGB}000\"" >>config.yaml
-elif [ ${EXEC:0:2} = tp ]; then
-  NTHR=${EXEC:2}
-  if [ -z "$NTHR" ]; then NTHR=1; fi
-  echo "  executor: ThreadPool" >>config.yaml
-  echo "  max_threads: $NTHR" >>config.yaml
-else
-  echo ERROR: Executor not found.
+
+  WFARGS=init
+fi
+  
+if [ $DOPROC = true ]; then
+  WFARGS="$WFARGS proc"
+fi
+
+if [ $DOFINA = true ]; then
+  WFARGS="$WFARGS finalize"
+fi
+
+if [ -z "$WFARGS" ]; then
+  myecho "ERROR: Configuration must include at least one of init, proc and finalize."
   exit 1
 fi
-
-if [ -z "$STIM" ]; then
-  STIM=60
-fi
-TMIN=STIM
 
 # Create the run script.
 # It installs desc-gen3-prod and then runs the query.
@@ -238,10 +262,8 @@ echo "pip install -t local git+https://github.com/LSSTDESC/desc-gen3-prod" >>$RF
 echo 'PATH=./local/bin:$PATH' >>$RFIL
 echo 'echo Running with desc-gen3-prod version $(desc-gen3-prod-version)' >>$RFIL
 echo 'git clone https://github.com/LSSTDESC/gen3_workflow.git' >>$RFIL
-echo 'cd gen3_workflow' >>$RFIL
-echo 'cd ..' >>$RFIL
 echo 'setup -r gen3_workflow -j' >>$RFIL
-echo "g3wfpipe-run start" >>$RFIL
+echo "g3wfpipe-run $WFARGS" >>$RFIL
 chmod +x ./run
 
 myecho Executing $COM
