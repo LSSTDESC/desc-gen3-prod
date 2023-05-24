@@ -93,6 +93,8 @@ for OPT in ${COPTS[@]}; do
   dbg_echo Parsing option $OPT
   if [ $OPT == init ]; then
     DOINIT=true
+  elif [[ $OPT = proc || $OPT == proc:?* ]]; then
+    DOPROC=true
   elif [[ $OPT == proc:?* ]]; then
     DOPROC=true
   elif [ $OPT == finalize ]; then
