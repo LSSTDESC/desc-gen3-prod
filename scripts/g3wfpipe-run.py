@@ -16,7 +16,7 @@ doTest = False
 
 thisdir = os.getcwd()
 
-def logmsg(*msgs, stat=False):
+def logmsg(*msgs, update_stat=False):
     out = open('runapp-g3wfpipe.log', 'a')
     dmsg = time.strftime('%Y-%m-%d %H:%M:%S:')
     for msg in msgs:
@@ -28,7 +28,10 @@ def logmsg(*msgs, stat=False):
         fstat = open(statname, w)
         fstat.write(dmsg + '\n')
 
-statlogmsg(f"Executing {__file__}")
+def statlogmsg(*msgs):
+    logmsg(msg, update_status=True)
+
+statlogmsg(f"Executing {__file__}"):
 for opt in sys.argv[1:]:
     logmsg("Processing argument", opt)
     if opt in ["-h", "help"]:
