@@ -28,8 +28,19 @@ def logmsg(*msgs, update_status=False):
         fstat = open(statname, w)
         fstat.write(dmsg + '\n')
 
-def statlogmsg(*msgs):
-    logmsg(msgs, update_status=True)
+def statlogmsg(*msgs:
+    out = open('runapp-g3wfpipe.log', 'a')
+    dmsg = time.strftime('%Y-%m-%d %H:%M:%S:')
+    for msg in msgs:
+        dmsg += ' ' + str(msg)
+    out.write(dmsg + '\n')
+    out.close()
+    print(dmsg, flush=True)
+    fstat = open(statname, w)
+    fstat.write(dmsg + '\n')
+
+#def statlogmsg(*msgs):
+#    logmsg(msgs, update_status=True)
 
 statlogmsg(f"Executing {__file__}")
 for opt in sys.argv[1:]:
