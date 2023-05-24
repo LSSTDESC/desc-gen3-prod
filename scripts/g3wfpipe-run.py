@@ -31,7 +31,7 @@ def logmsg(*msgs, update_stat=False):
 def statlogmsg(*msgs):
     logmsg(msg, update_status=True)
 
-statlogmsg(f"Executing {__file__}"):
+statlogmsg(f"Executing {__file__}")
 for opt in sys.argv[1:]:
     logmsg("Processing argument", opt)
     if opt in ["-h", "help"]:
