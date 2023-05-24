@@ -93,10 +93,13 @@ if doInit:
         logmsg()
         statlogmsg("Creating quantum graph with " + bpsfile)
         pg = start_pipeline(bpsfile)
-        if pg.qgraph() is None:
-            statlogmsg("Quantum graph was not created.")
-        else:
-            statlogmsg("Quantum graph was created.")
+        try:
+            if pg.qgraph() is None:
+                statlogmsg("Quantum graph was not created.")
+            else:
+                statlogmsg("Quantum graph was created.")
+        except:
+            pass
 
 if len(pickpath):
     pickpath = f"{thisdir}/{pickpath}"
