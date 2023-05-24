@@ -99,7 +99,7 @@ if doInit:
             else:
                 statlogmsg("Quantum graph was created.")
         except:
-            pass
+            statlogmsg("Check of quantum graph raised an exception.")
 
 if len(pickpath):
     pickpath = f"{thisdir}/{pickpath}"
