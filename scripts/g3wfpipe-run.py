@@ -113,7 +113,8 @@ if doProc:
     tmax = 500
     while ndone < ntsk:
         ndone = 0
-        for fut in futures: if fut.done: ndone += 1
+        for fut in futures:
+            if fut.done(): ndone += 1
         statlogmsg(f"Finished {ndone} of {ntsk} tasks.")
         time.sleep(10)
         dtim = time.time() - time0
