@@ -260,6 +260,7 @@ RFIL=./run
 echo "#!/bin/bash" > $RFIL
 echo "pip install -t local git+https://github.com/LSSTDESC/desc-gen3-prod" >>$RFIL
 echo 'PATH=./local/bin:$PATH' >>$RFIL
+echo 'export PYTHONPATH=./local:$PYTHONPATH' >>$RFIL
 echo 'echo Running with desc-gen3-prod version $(desc-gen3-prod-version)' >>$RFIL
 echo 'git clone https://github.com/LSSTDESC/gen3_workflow.git' >>$RFIL
 echo 'setup -r gen3_workflow -j' >>$RFIL
