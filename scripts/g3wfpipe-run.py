@@ -16,7 +16,7 @@ doTest = False
 
 thisdir = os.getcwd()
 
-def logmsg(*msgs, update_stat=False):
+def logmsg(*msgs, update_status=False):
     out = open('runapp-g3wfpipe.log', 'a')
     dmsg = time.strftime('%Y-%m-%d %H:%M:%S:')
     for msg in msgs:
