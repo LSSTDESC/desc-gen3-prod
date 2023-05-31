@@ -8,6 +8,7 @@ statfilename = 'current-status.txt'
 doInit = False
 doProc = False
 doFina = False
+doQgReport = False
 blockJob=True      # Set false for interactive running.
 showStatus = False
 showParslTables = False
@@ -51,7 +52,7 @@ for opt in sys.argv[1:]:
     logmsg("Processing argument", opt)
     if opt in ["-h", "help"]:
         logmsg('Usage:', sys.argv[0], '[OPTS]')
-        logmsg('  OPTS = init, proc, finalize, status, tables, help')
+        logmsg('  OPTS = init, proc, finalize, qgre, status, tables, help')
         sys.exit()
     elif opt == 'init':
         doInit = True
@@ -59,6 +60,8 @@ for opt in sys.argv[1:]:
         doProc = True
     elif opt == 'finalize':
         doFina = True
+    elif opt == 'qgre':
+        doQgReport = True
     elif opt == 'status':
         showStatus = True
     elif opt == 'tables':
@@ -108,8 +111,9 @@ if doInit:
         logmsg()
         statlogmsg("Creating quantum graph.")
         pg = start_pipeline(bpsfile)
+        qg = pg.qgraph
         try:
-            if pg.qgraph() is None:
+            if qg is None:
                 statlogmsg("Quantum graph was not created.")
             else:
                 statlogmsg("Quantum graph was created.")
@@ -121,10 +125,24 @@ if len(pickpath):
     logmsg()
     logmsg(time.ctime(), "Using existing pipeline:", pickpath)
     pg = ParslGraph.restore(pickpath)
+    qg = pg.qgraph
+
+if doQgReport:
+    if qg is None:
+        statlogmsg("ERROR: Quantum graph not found.")
+        sys.exit(1)
+    fnam = 'qg-report.txt'
+    ofil = open(fnam, 'w')
+    ofil.write(f"          Graph ID: {qg.graphID}\n")
+    ofil.write(f"  Input node count: {len(qg.inputQuanta)}\n")
+    ofil.write(f" Output node count: {len(qg.oputputQuanta)}\n")
 
 if doProc:
     logmsg()
     statlogmsg('Starting workflow')
+    if qg is None:
+        statlogmsg("ERROR: Quantum graph not found.")
+        sys.exit(1)
     pg.run()
     futures = [job.get_future() for job in pg.values() if not job.dependencies]
     ntsk = len(futures)

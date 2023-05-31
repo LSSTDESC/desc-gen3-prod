@@ -88,6 +88,7 @@ LVER=
 DOINIT=false
 DOPROC=false
 DOFINA=false
+DOQGRE=false
 USER=$(whoami)
 for OPT in ${COPTS[@]}; do
   dbg_echo Parsing option $OPT
@@ -99,6 +100,8 @@ for OPT in ${COPTS[@]}; do
     DOPROC=true
   elif [ $OPT == finalize ]; then
     DOFINA=true
+  elif [ $OPT == qgre ]; then
+    DOQGRE=true
   elif [[ $OPT == pipe:?* ]]; then
     if [ -n "$PIPE" ]; then
       myecho ERROR: Duplicate pipeline specification: $PIPE $OPT
@@ -251,8 +254,12 @@ if [ $DOFINA = true ]; then
   WFARGS="$WFARGS finalize"
 fi
 
+if [ $DOQGRE = true ]; then
+  WFARGS="$WFARGS qgre"
+fi
+
 if [ -z "$WFARGS" ]; then
-  myecho "ERROR: Configuration must include at least one of init, proc and finalize."
+  myecho "ERROR: Configuration must include at least one of init, proc, finalize and qgre."
   exit 1
 fi
 
