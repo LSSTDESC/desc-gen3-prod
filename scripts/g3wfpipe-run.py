@@ -106,7 +106,7 @@ pg_pickle_paths = []
 pg_pickle_path = ''
 for path, dirs, files in os.walk(thisdir, followlinks=True):
     if pickname in files:
-        pg_pickle_paths += f"{path}/{pickname}"
+        pg_pickle_paths += [f"{path}/{pickname}"]
 if len(pg_pickle_paths) == 1:
     pg_pickle_path = pg_pickle_paths[0]
     statlogmsg("Found parsl pickle file: {pg_pickle_path}")
