@@ -148,7 +148,7 @@ if doQgReport:
 if doProc:
     logmsg()
     statlogmsg('Starting workflow')
-    if pg.qgraph is None:
+    if not haveQG:
         statlogmsg("ERROR: Quantum graph not found.")
         sys.exit(1)
     pg.run()
