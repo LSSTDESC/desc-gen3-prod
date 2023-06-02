@@ -104,7 +104,7 @@ pickpath = ''
 # Look for parsl graph pickle files.
 pg_pickle_paths = []
 pg_pickle_path = ''
-for path, dirs, files in os.walk(thisdir):
+for path, dirs, files in os.walk(thisdir, followlinks=True):
     if pickname in files:
         pg_pickle_paths += f"{path}/{pickname}"
     if len(pg_pickle_paths) == 1:
