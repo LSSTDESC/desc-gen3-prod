@@ -17,6 +17,15 @@ doWorkflow = True
 doTest = False
 
 thisdir = os.getcwd()
+haveQG = False
+
+def get_haveQG(pg):
+    try:
+        if pg.qgraph is None:
+            return False
+    except:
+        statlogmsg("Check of quantum graph raised an exception.")
+    return True
 
 def logmsglist(msgs, update_status=False):
     out = open('runapp-g3wfpipe.log', 'a')
@@ -84,13 +93,20 @@ from desc.gen3_workflow import ParslGraph
 bpsfile = 'config.yaml'
 pickname = 'parsl_graph_config.pickle'
 pickpath = ''
-# Check if pickle file already exists.
-for path, dirs, files in os.walk('submit'):
+
+# Look for parsl graph pickle files.
+pg_pickle_paths = []
+pg_pickle_path = ''
+for path, dirs, files in os.walk(thisdir):
     if pickname in files:
-        pickpath = path + '/' + pickname
-        logmsg(f"Workflow pickle path: {pickpath}")
-    else:
-        logmsg(f"Workflow pickle not found: {pickpath}")
+        pg_pickle_paths += f"{path}/{pickname}"
+    if len(pg_pickle_paths) == 1:
+        pg_pickle_path = pg_pickle_paths[0]
+        statlogmsg("Found parsl pickle file: {pg_pickle_path}")
+    elif len(pg_pickle_paths):
+        statlogmsg("Found {len(pg_pickle_paths)} parsl pickle files")
+        for path in pg_pickle_paths:
+            logmsg(f"    {path}")
 
 if doTest:
     logmsg('test')
@@ -103,24 +119,24 @@ if doInit:
         logmsg()
         statlogmsg("Creating quantum graph.")
         pg = start_pipeline(bpsfile)
-        qgid = pg.qgraph.graphID
-        statlogmsg(f"Created QG. ID is {qgid}")
-        try:
-            if pg.qgraph is None:
-                statlogmsg("Quantum graph was not created.")
-            else:
-                statlogmsg("Quantum graph was created.")
-        except:
-            statlogmsg("Check of quantum graph raised an exception.")
-
-if len(pickpath):
-    pickpath = f"{thisdir}/{pickpath}"
+        #qgid = pg.qgraph.graphID
+        #statlogmsg(f"Created QG. ID is {qgid}")
+        haveQG = get_haveQG(pg)
+        if haveQG:
+            statlogmsg("Quantum graph was created.")
+        else:
+            statlogmsg("Quantum graph was not created.")
+else:
+    if parsl_pickle_path == '':
+        statlogmsg("Parsl pickle file not found.")
+        sys.exit(1)
     logmsg()
-    logmsg(time.ctime(), "Using existing pipeline:", pickpath)
-    pg = ParslGraph.restore(pickpath)
+    logmsg(time.ctime(), "Using existing pipeline:", parsl_pickle_path)
+    pg = ParslGraph.restore(parsl_pickle_path)
+    haveQG = get_haveQG(pg)
 
 if doQgReport:
-    if pg.qgraph is None:
+    if not haveQG:
         statlogmsg("ERROR: Quantum graph not found.")
         sys.exit(1)
     fnam = 'qg-report.txt'
