@@ -52,8 +52,15 @@ logmsg(f"g3wfpipe version: {dg3prod.version()}")
 for opt in sys.argv[1:]:
     logmsg("Processing argument", opt)
     if opt in ["-h", "help"]:
-        logmsg('Usage:', sys.argv[0], '[OPTS]')
-        logmsg('  OPTS = init, proc, finalize, qgre, status, tables, help')
+        print('Usage:', sys.argv[0], '[OPTS]')
+        print('  Supported valuse for OPTS:')
+        print('    init - Create QG (QuandunGraph).')
+        print('    job:JJJ - Set up to continue processing for job JJJ.')
+        print('    proc - Process tasks in the existing QG.')
+        print('    status - Report on the status of processing for the existing QG.')
+        print('    qgre - Prepare report describing the existing QG.')
+        print('    tables - Prepare report describing the parsl tables.')
+        print('    finalize - Register output datasets for existing QG.')
         sys.exit()
     elif opt == 'init':
         doInit = True

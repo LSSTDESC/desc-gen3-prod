@@ -85,6 +85,7 @@ shopt -s extglob
 PIPE=
 QUER=
 LVER=
+CJOB=
 DOINIT=false
 DOPROC=false
 DOFINA=false
@@ -94,6 +95,8 @@ for OPT in ${COPTS[@]}; do
   dbg_echo Parsing option $OPT
   if [ $OPT == init ]; then
     DOINIT=true
+  elif [[ $OPT == job:.* ]]; then
+    CJOB=${OPT:4}
   elif [[ $OPT = proc || $OPT == proc:?* ]]; then
     DOPROC=true
   elif [[ $OPT == proc:?* ]]; then
@@ -126,8 +129,38 @@ for OPT in ${COPTS[@]}; do
   fi
 done
 
+if [ -n "$CJOB" ]; then
+  if [ $DOINIT = true]; then
+    echo "ERROR: Continuation job may not be initialized."
+    exit 1
+  fi
+  echo "Connecting to job $CJOB."
+  if ! PDIR=$(descprod-get-job $CJOB | grep rundir: | sed 's/ *rundir: //g'); then
+    echo "ERROR: Unable to find continuation job $CJOB"
+    exit 1
+  fi
+  if [ -z "$PDIR" ]; then
+    echo "ERROR: Unable to find name of run directory for continuation job $CJOB"
+    exit 1
+  fi
+  for DIR in $PDIR $PDIR/submit; do
+    if [ ! -r $DIR ]; then
+      echo "ERROR: Unable to find continuation run directory $DIR"
+      exit 1
+    fi
+  done
+  if ! ln -s $PDIR/submit .; then
+    echo "ERROR: Unable to link $PDIR/submit ti $(pwd)"
+    exit 1
+  fi
+fi
+
 PIPEVAL=
 if [ -n "$PIPE" ]; then
+  if [ $DOINIT = false ]; then
+    echo "ERROR: Pipeline (pipeXXX) may only be specified when intialization is run."
+    exit 1
+  fi
   if [ $PIPE = drp ]; then
     PIPEVAL=
   elif [ $PIPE = sf ]; then
@@ -139,15 +172,19 @@ if [ -n "$PIPE" ]; then
   fi
   if [ -n "$PIPEVAL" ]; then PIPEVAL="#$PIPEVAL"; fi
   echo Pipeline: $PIPEVAL
-else
-  echo "ERROR: Pipeline (pipeXXX) must be specified."
+elif [ $DOINIT = true ]; then
+  echo "ERROR: Pipeline (pipeXXX) must be specified if intialization is run."
   exit 1
 fi
 
 if [ -n "$QUER" ]; then
+  if [ $DOINIT = false ]; then
+    echo "ERROR: Query may only be specified when intialization is run."
+    exit 1
+  fi
   echo "    Query: $QUER"
-else
-  echo ERROR: Query not found.
+elif [ $DOINIT = true ]; then
+  echo "ERROR: Query must be provided if intialization is run."
   exit 1
 fi
 
