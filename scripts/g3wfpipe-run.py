@@ -109,7 +109,7 @@ for path, dirs, files in os.walk(thisdir, followlinks=True):
         pg_pickle_paths += [f"{path}/{pickname}"]
 if len(pg_pickle_paths) == 1:
     pg_pickle_path = pg_pickle_paths[0]
-    statlogmsg("Found parsl pickle file: {pg_pickle_path}")
+    statlogmsg(f"Found parsl pickle file: {pg_pickle_path}")
 elif len(pg_pickle_paths):
     statlogmsg(f"Found {len(pg_pickle_paths)} parsl pickle files")
     for path in pg_pickle_paths:
@@ -191,4 +191,4 @@ if showStatus:
     logmsg("Fetching status")
     pg.status()
 
-
+statlogmsg("All steps completed.")
