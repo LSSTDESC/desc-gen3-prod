@@ -1,0 +1,5 @@
+#!/usr/bin/env python3
+
+import dg3prod
+
+print(dg3prod.__version__)
