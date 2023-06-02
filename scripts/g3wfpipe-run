@@ -10,7 +10,7 @@ THISPTH=$0
 ARGS="$*"
 
 # There were warnings in the QG generation.
-echo NUMEXPR_MAX_THREADS=$NUMEXPR_MAX_THREADS
+echo $THISBAS: NUMEXPR_MAX_THREADS=$NUMEXPR_MAX_THREADS
 
 if echo $ARGS | grep proc >/dev/null; then
   SYMFIL='./sysmon.csv'

@@ -34,16 +34,6 @@ def logmsglist(msgs, update_status=False):
 
 def logmsg(*msgs, update_status=False):
     logmsglist(list(msgs), update_status)
-    out = open('runapp-g3wfpipe.log', 'a')
-    dmsg = time.strftime('%Y-%m-%d %H:%M:%S:')
-    for msg in msgs:
-        dmsg += ' ' + str(msg)
-    out.write(dmsg + '\n')
-    out.close()
-    print(dmsg, flush=True)
-    if update_status:
-        fstat = open(statfilename, 'w')
-        fstat.write(dmsg + '\n')
 
 def statlogmsg(*msgs):
     logmsglist(list(msgs), update_status=True)
