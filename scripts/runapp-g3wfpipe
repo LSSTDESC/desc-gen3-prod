@@ -131,12 +131,12 @@ for OPT in ${COPTS[@]}; do
 done
 WFARGS="${WFARGS[*]}"
 
-if [[ -z $DOINIT && -z $CJOB ]]; then
+if [[ $DOINIT = false && -z $CJOB ]]; then
   myecho "ERROR: Configuration must include initialization or continuation."
   exit 1
 fi
 
-if [[ -n $DOINIT && -n $CJOB ]]; then
+if [[ $DOINIT = true && -n $CJOB ]]; then
   myecho "ERROR: Configuration may not include both initialization and continuation."
   exit 1
 fi
