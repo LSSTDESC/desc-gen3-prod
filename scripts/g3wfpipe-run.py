@@ -103,6 +103,8 @@ if doInit:
         logmsg()
         statlogmsg("Creating quantum graph.")
         pg = start_pipeline(bpsfile)
+        qgid = pg.qgraph.graphID
+        statlogmsg(f"Created QG. ID is {qgid}")
         try:
             if pg.qgraph is None:
                 statlogmsg("Quantum graph was not created.")
