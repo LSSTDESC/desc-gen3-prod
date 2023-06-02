@@ -95,7 +95,7 @@ for OPT in ${COPTS[@]}; do
   dbg_echo Parsing option $OPT
   if [ $OPT == init ]; then
     DOINIT=true
-  elif [[ $OPT == job:.* ]]; then
+  elif [[ $OPT =~ job:[0-9]+$ ]]; then
     CJOB=${OPT:4}
   elif [[ $OPT = proc || $OPT == proc:?* ]]; then
     DOPROC=true
