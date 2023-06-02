@@ -24,7 +24,7 @@ def logmsglist(msgs, update_status=False):
     rmsg = msgs[0] if len(msgs) else ''
     for msg in msgs[1:]:
         rmsg += ' ' + str(msg)
-    dmsg += rmsg
+    dmsg += ' ' + rmsg
     out.write(dmsg + '\n')
     out.close()
     print(dmsg, flush=True)
@@ -103,9 +103,8 @@ if doInit:
         logmsg()
         statlogmsg("Creating quantum graph.")
         pg = start_pipeline(bpsfile)
-        qg = pg.qgraph
         try:
-            if qg is None:
+            if pg.qgraph is None:
                 statlogmsg("Quantum graph was not created.")
             else:
                 statlogmsg("Quantum graph was created.")
@@ -117,22 +116,21 @@ if len(pickpath):
     logmsg()
     logmsg(time.ctime(), "Using existing pipeline:", pickpath)
     pg = ParslGraph.restore(pickpath)
-    qg = pg.qgraph
 
 if doQgReport:
-    if qg is None:
+    if pg.qgraph is None:
         statlogmsg("ERROR: Quantum graph not found.")
         sys.exit(1)
     fnam = 'qg-report.txt'
     ofil = open(fnam, 'w')
-    ofil.write(f"          Graph ID: {qg.graphID}\n")
-    ofil.write(f"  Input node count: {len(qg.inputQuanta)}\n")
-    ofil.write(f" Output node count: {len(qg.oputputQuanta)}\n")
+    ofil.write(f"          Graph ID: {pg.qgraph.graphID}\n")
+    ofil.write(f"  Input node count: {len(pg.qgraph.inputQuanta)}\n")
+    ofil.write(f" Output node count: {len(pg.qgraph.oputputQuanta)}\n")
 
 if doProc:
     logmsg()
     statlogmsg('Starting workflow')
-    if qg is None:
+    if pg.qgraph is None:
         statlogmsg("ERROR: Quantum graph not found.")
         sys.exit(1)
     pg.run()
