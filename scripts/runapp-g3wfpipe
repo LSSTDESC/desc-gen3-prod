@@ -129,12 +129,19 @@ for OPT in ${COPTS[@]}; do
     fi
   fi
 done
+WFARGS="${WFARGS[*]}"
+
+if [[ -z $DOINIT && -z $CJOB ]]; then
+  myecho "ERROR: Configuration must include initialization or continuation."
+  exit 1
+fi
+
+if [[ -n $DOINIT && -n $CJOB ]]; then
+  myecho "ERROR: Configuration may not include both initialization and continuation."
+  exit 1
+fi
 
 if [ -n "$CJOB" ]; then
-  if [ $DOINIT = true]; then
-    echo "ERROR: Continuation job may not be initialized."
-    exit 1
-  fi
   echo "Connecting to job $CJOB."
   if ! PDIR=$(descprod-get-job $CJOB | grep rundir: | sed 's/ *rundir: //g'); then
     echo "ERROR: Unable to find continuation job $CJOB"
@@ -174,18 +181,18 @@ if [ -n "$PIPE" ]; then
   if [ -n "$PIPEVAL" ]; then PIPEVAL="#$PIPEVAL"; fi
   echo Pipeline: $PIPEVAL
 elif [ $DOINIT = true ]; then
-  echo "ERROR: Pipeline (pipeXXX) must be specified if intialization is run."
+  echo "ERROR: Pipeline (pipeXXX) must be specified if initialization is run."
   exit 1
 fi
 
 if [ -n "$QUER" ]; then
   if [ $DOINIT = false ]; then
-    echo "ERROR: Query may only be specified when intialization is run."
+    echo "ERROR: Query may only be specified when initialization is run."
     exit 1
   fi
   echo "    Query: $QUER"
 elif [ $DOINIT = true ]; then
-  echo "ERROR: Query must be provided if intialization is run."
+  echo "ERROR: Query must be provided if initialization is run."
   exit 1
 fi
 
@@ -231,9 +238,7 @@ COM="$COM $LVER ./run"
 echo Code source: $CSRC
 echo Executor: $CSRC
 
-WFARGS=
 if [ $DOINIT = true ]; then
-
   echo Creating config.yaml.
   g3wfpipe-template \
     | sed s/%PAYLOAD%/$PIPE/g \
@@ -282,11 +287,6 @@ if [ $DOINIT = true ]; then
   fi
 fi
   
-if [ -z "$WFARGS" ]; then
-  myecho "ERROR: Configuration must include at least one of init, proc, finalize and qgre."
-  exit 1
-fi
-
 # Create the run script.
 # It installs desc-gen3-prod and then runs the query.
 RFIL=./run
