@@ -87,24 +87,25 @@ QUER=
 LVER=
 CJOB=
 DOINIT=false
-DOPROC=false
-DOFINA=false
-DOQGRE=false
+WFARGS=()
 USER=$(whoami)
 for OPT in ${COPTS[@]}; do
   dbg_echo Parsing option $OPT
   if [ $OPT == init ]; then
     DOINIT=true
+    WFARGS+=($OPT)
   elif [[ $OPT =~ job:[0-9]+$ ]]; then
     CJOB=${OPT:4}
-  elif [[ $OPT = proc || $OPT == proc:?* ]]; then
-    DOPROC=true
-  elif [[ $OPT == proc:?* ]]; then
-    DOPROC=true
+  elif [[ $OPT =~ proc:?* ]]; then
+    WFARGS+=($OPT)
   elif [ $OPT == finalize ]; then
-    DOFINA=true
+    WFARGS+=($OPT)
   elif [ $OPT == qgre ]; then
-    DOQGRE=true
+    WFARGS+=($OPT)
+  elif [ $OPT == status ]; then
+    WFARGS+=($OPT)
+  elif [ $OPT == tables ]; then
+    WFARGS+=($OPT)
   elif [[ $OPT == pipe:?* ]]; then
     if [ -n "$PIPE" ]; then
       myecho ERROR: Duplicate pipeline specification: $PIPE $OPT
@@ -279,22 +280,8 @@ if [ $DOINIT = true ]; then
     myecho ERROR: Executor not found.
     exit 1
   fi
-
-  WFARGS=init
 fi
   
-if [ $DOPROC = true ]; then
-  WFARGS="$WFARGS proc"
-fi
-
-if [ $DOFINA = true ]; then
-  WFARGS="$WFARGS finalize"
-fi
-
-if [ $DOQGRE = true ]; then
-  WFARGS="$WFARGS qgre"
-fi
-
 if [ -z "$WFARGS" ]; then
   myecho "ERROR: Configuration must include at least one of init, proc, finalize and qgre."
   exit 1
