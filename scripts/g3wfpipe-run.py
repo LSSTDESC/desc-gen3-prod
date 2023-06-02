@@ -3,6 +3,7 @@
 import os
 import sys
 import time
+import dg3prod
 
 statfilename = 'current-status.txt'
 doInit = False
@@ -48,6 +49,7 @@ def statlogmsg(*msgs):
     logmsglist(list(msgs), update_status=True)
 
 statlogmsg(f"Executing {__file__}")
+logmsg(f"g3wfpipe version: {dg3prod.version()}")
 for opt in sys.argv[1:]:
     logmsg("Processing argument", opt)
     if opt in ["-h", "help"]:
