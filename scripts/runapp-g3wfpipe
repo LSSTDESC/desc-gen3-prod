@@ -89,6 +89,7 @@ CJOB=
 DOINIT=false
 WFARGS=()
 USER=$(whoami)
+DRG_INGDIR=pipelines/_ingredients  # w2321 and later
 for OPT in ${COPTS[@]}; do
   dbg_echo Parsing option $OPT
   if [ $OPT == init ]; then
@@ -126,6 +127,10 @@ for OPT in ${COPTS[@]}; do
     else
       myecho ERROR: Invalid config field: $OPT
       exit 3
+    fi
+    IVER=${OPT:1}
+    if [ $IVER -le 2319 ]; then
+      DRP_INGDIR=ingredients
     fi
   fi
 done
@@ -242,6 +247,7 @@ if [ $DOINIT = true ]; then
   echo Creating config.yaml.
   g3wfpipe-template \
     | sed s/%PAYLOAD%/$PIPE/g \
+    | sed s/%DRP_INGDIR%/$DRP_INGDIR/g \
     | sed s/%PIPE%/$PIPEVAL/g \
     | sed s/%QUERY%/"$QUER"/g \
     | sed s/%MEM%/$MEGB/g \

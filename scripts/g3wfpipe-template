@@ -2,8 +2,7 @@ echo  "includeConfigs:
   - \${GEN3_WORKFLOW_DIR}/python/desc/gen3_workflow/etc/bps_drp_baseline.yaml
   - \${GEN3_WORKFLOW_DIR}/examples/bps_DC2-3828-y1_resources.yaml
 
-#pipelineYaml: \"\${GEN3_WORKFLOW_DIR}/pipelines/DRP.yaml%PIPE%\"
-pipelineYaml: \"\${DRP_PIPE_DIR}/ingredients/LSSTCam-imSim/DRP.yaml%PIPE%\"
+pipelineYaml: \"\${DRP_PIPE_DIR}/%DRP_INGDIR%/LSSTCam-imSim/DRP.yaml%PIPE%\"
 
 payload:
   inCollection: LSSTCam-imSim/defaults
