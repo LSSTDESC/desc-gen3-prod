@@ -212,9 +212,9 @@ for OPT in ${HOPTS[@]}; do
     CSRC=shifter
   elif [ $OPT = cvmfs ]; then
     CSRC=cvmfs
-  elif [ ${OPT:0:2} = wq ]; then
+  elif [ ${OPT:0:3} = wq: ]; then
     EXEC=$OPT
-  elif [ ${OPT:0:2} = tp ]; then
+  elif [ ${OPT:0:3} = tp: ]; then
     EXEC=$OPT
   else
     myecho ERROR: Invalid howfig field: $OPT
@@ -265,8 +265,8 @@ if [ $DOINIT = true ]; then
   #       ),
   #  initialize_logging:
   
-  if [ ${EXEC:0:2} = wq ]; then
-    MEGB=${EXEC:2}
+  if [ ${EXEC:0:3} = wq: ]; then
+    MEGB=${EXEC:3}
     # Make sure the memory limit is not blank and is numeric.
     if ! [ "$MEGB" -eq "$MEGB" ] 2>/dev/null; then
       echo Assigning default work_queue memory.
@@ -276,8 +276,8 @@ if [ $DOINIT = true ]; then
     echo "  provider: Local" >>config.yaml
     echo "  nodes_per_block: 1" >>config.yaml
     echo "  worker_options: \"--memory=${MEGB}000\"" >>config.yaml
-  elif [ ${EXEC:0:2} = tp ]; then
-    NTHR=${EXEC:2}
+  elif [ ${EXEC:0:3} = tp: ]; then
+    NTHR=${EXEC:3}
     if [ -z "$NTHR" ]; then NTHR=1; fi
     echo "  executor: ThreadPool" >>config.yaml
     echo "  max_threads: $NTHR" >>config.yaml
