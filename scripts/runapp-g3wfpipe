@@ -247,7 +247,7 @@ if [ $DOINIT = true ]; then
   echo Creating config.yaml.
   g3wfpipe-template \
     | sed s/%PAYLOAD%/$PIPE/g \
-    | sed s/%DRP_INGDIR%/$DRP_INGDIR/g \
+    | sed "s#%DRP_INGDIR%#$DRP_INGDIR#g" \
     | sed s/%PIPE%/$PIPEVAL/g \
     | sed s/%QUERY%/"$QUER"/g \
     | sed s/%MEM%/$MEGB/g \
