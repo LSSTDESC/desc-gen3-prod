@@ -114,7 +114,8 @@ elif len(pg_pickle_paths):
     statlogmsg(f"Found {len(pg_pickle_paths)} parsl pickle files")
     for path in pg_pickle_paths:
         logmsg(f"    {path}")
-else:
+    sys.exit(1)
+elif not doInit:
     statlogmsg(f"Parsl pickle file not found: {pickname}")
     sys.exit(1)
 
