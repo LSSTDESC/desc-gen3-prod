@@ -89,7 +89,7 @@ CJOB=
 DOINIT=false
 WFARGS=()
 USER=$(whoami)
-DRG_INGDIR=pipelines/_ingredients  # w2321 and later
+DRP_INGDIR=pipelines/_ingredients  # w2321 and later
 for OPT in ${COPTS[@]}; do
   dbg_echo Parsing option $OPT
   if [ $OPT == init ]; then
