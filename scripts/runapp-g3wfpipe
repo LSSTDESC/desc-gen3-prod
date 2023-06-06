@@ -156,7 +156,7 @@ if [ -n "$CJOB" ]; then
     echo "ERROR: Unable to find name of run directory for continuation job $CJOB"
     exit 1
   fi
-  for DIR in $PDIR $PDIR/submit $DIR/runinfo; do
+  for DIR in $PDIR $PDIR/submit $PDIR/runinfo; do
     if [ ! -r $DIR ]; then
       echo "ERROR: Unable to find continuation run directory $DIR"
       exit 1
