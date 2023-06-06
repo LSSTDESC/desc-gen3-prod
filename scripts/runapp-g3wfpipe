@@ -262,9 +262,10 @@ if [ $DOINIT = true ]; then
     | sed s/%USER%/$USER/g \
     >config.yaml
   
-  echo "monitoring: parsl.monitoring.monitoring.MonitoringHub(" >> config.yaml
-  echo "    hub_port=None" >>config.yaml
-  echo ")," >>config.yaml
+  echo >>config.yaml
+  echo "monitoring: parsl.monitoring.monitoring.MonitoringHub(" >>config.yaml
+  echo "        hub_port=None," >>config.yaml
+  echo "    )," >>config.yaml
 
   echo "" >>config.yaml
   echo "parsl_config:" >>config.yaml
