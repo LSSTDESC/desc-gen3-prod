@@ -38,16 +38,16 @@ fi
 DBG=0
 SFIL=current-status.txt
 
-myecho() {
-  MSG="$*"
-  echo "$MSG" >$SFIL
-  echo "$MSG"
-}
-
 err_echo() {
   MSG="$*"
   echo "$MSG" >$SFIL
-  echo "$MSG" >&2
+  echo "ERROR: $MSG" >&2
+}
+
+info_echo() {
+  MSG="$*"
+  echo "$MSG" >$SFIL
+  echo "ERROR: $MSG" >&2
 }
 
 dbg_echo() {
@@ -109,7 +109,7 @@ for OPT in ${COPTS[@]}; do
     WFARGS+=($OPT)
   elif [[ $OPT == pipe:?* ]]; then
     if [ -n "$PIPE" ]; then
-      myecho ERROR: Duplicate pipeline specification: $PIPE $OPT
+      err_echo ERROR: Duplicate pipeline specification: $PIPE $OPT
       exit 1
     fi
     PIPE=${OPT:5}
@@ -125,7 +125,7 @@ for OPT in ${COPTS[@]}; do
     if [ -n "$NEWVER" ]; then
       LVER=$NEWVER
     else
-      myecho ERROR: Invalid config field: $OPT
+      err_echo ERROR: Invalid config field: $OPT
       exit 3
     fi
     IVER=${OPT:1}
@@ -137,12 +137,12 @@ done
 WFARGS="${WFARGS[*]}"
 
 if [[ $DOINIT = false && -z $CJOB ]]; then
-  myecho "ERROR: Configuration must include initialization or continuation."
+  err_echo "Configuration must include initialization or continuation."
   exit 1
 fi
 
 if [[ $DOINIT = true && -n $CJOB ]]; then
-  myecho "ERROR: Configuration may not include both initialization and continuation."
+  err_echo "Configuration may not include both initialization and continuation."
   exit 1
 fi
 
@@ -222,20 +222,20 @@ for OPT in ${HOPTS[@]}; do
   elif [ ${OPT:0:3} = tp: ]; then
     EXEC=$OPT
   else
-    myecho ERROR: Invalid howfig field: $OPT
+    err_echo Invalid howfig field: $OPT
     exit 13
   fi
 done
 
 if [ -z "$CSRC" ]; then
-  myecho "ERROR: Code source must be provided."
+  err_echo "Code source must be provided."
   exit 14
 elif [ $CSRC = shifter ]; then
   COM=g3wf-run-shifter
 elif [ $CSRC = cvmfs ]; then
   COM=g3wf-run-cvmfs
 else
-  myecho ERROR: Invalid source: $CSRC.
+  err_echo Invalid source: $CSRC.
   exit 15
 fi
 COM="$COM $LVER ./run"
@@ -288,7 +288,7 @@ if [ $DOINIT = true ]; then
     echo "  executor: ThreadPool" >>config.yaml
     echo "  max_threads: $NTHR" >>config.yaml
   else
-    myecho ERROR: Executor not found.
+    err_echo Unknown executor: $EXEC
     exit 1
   fi
 fi
@@ -306,7 +306,7 @@ echo 'setup -r gen3_workflow -j' >>$RFIL
 echo "g3wfpipe-run $WFARGS" >>$RFIL
 chmod +x ./run
 
-myecho Executing $COM
+info_echo Executing $COM
 $COM
 
 exit $?
