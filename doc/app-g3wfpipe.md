@@ -2,8 +2,8 @@
 The application g3wfpipe carries out LSST pipeline processing.
 There are three main steps in typical processing:
 * An LSST processing DAG (aka quantum graph or QG) is constructed from a user-supplied data query and
-specification of the pipeline process steps to carry out.
-* The DAG processing is carried out with parsl.
+specification of the pipeline process steps to carry out (init).
+* The DAG processing is carried out with parsl (proc).
 * The output data is registered with the Butler (finalization).
 
 The first and can take a while but runs in a single processs and so are appropriate for a login or workflow machine.
@@ -41,8 +41,10 @@ The howfig fields are
 |---|---|---|
 | cvmfs | Use the cvmfs installtion of the LSST software. | cvmfs |
 | shifter | use the shifter installation of the software. | shifter |
-| tpNN | Parsl ThreadPool executor with NN concurrent processes. | tp:100 |
-| wqMM | Parsl WorQueue executor with totl memeory MM GB. | wq128 |
+| tp:NN | Parsl ThreadPool executor with NN concurrent processes. | tp:100 |
+| wq:MM | Parsl WorQueue executor with totl memory MM GB. | wq:128 |
+| tmax:TTT | Set job timeout of TTT seconds. | tmax:3600 |
+| tmax:TTTU | Set timeout of TTT seconds, minutes, hours or days for U = {s, m, h, d} | tmax:1.5h |
 
 For cvmfs, gen3-workflow and its required extra products are automatically installed in the user's home area at $HOME/gen3workflow/lsst_distrib on top of the specified LSST release.
 This can lead to some delay the first time a release is used and there will likely be problems if another jobs is started during installation.
