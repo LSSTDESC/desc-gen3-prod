@@ -99,9 +99,10 @@ for opt in sys.argv[1:]:
         unit = stmax[-1]
         utims = {'s':1, 'm':60, 'h':3600, 'd':86400}
         if unit in utims:
-            tmax = utims[unit]*int(stmax[0:-1])
+            tmax = utims[unit]*float(stmax[0:-1])
         else:
-            tmax = int(stmax)
+            tmax = float(stmax)
+        logmsg(f"Timeout set to {tmax:.1f} seconds.")
     elif opt == 'test': doTest = True
     elif opt == 'path':
         for dir in os.getenv('PYTHONPATH').split(':'): print(dir)
