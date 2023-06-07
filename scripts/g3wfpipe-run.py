@@ -177,7 +177,7 @@ if doProc:
         time.sleep(10)
         dtim = time.time() - time0
         if dtim > tmax:
-            statlogmsg(f"Timing out after {dtim} seconds with {ndone}/{ntsk} tasks completed.")
+            statlogmsg(f"Timing out after {tim:.1f} seconds with {ndone}/{ntsk} tasks completed.")
             sys.exit(1)
     statlogmsg(f"Workflow complete: {ndone}/{ntsk} tasks.")
 
