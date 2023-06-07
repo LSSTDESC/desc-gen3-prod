@@ -84,7 +84,7 @@ shopt -s extglob
 
 # Parse the config.
 PIPE=
-QUER=
+QUERY=
 LVER=
 CJOB=
 DOINIT=false
@@ -116,10 +116,10 @@ for OPT in ${COPTS[@]}; do
     PIPE=${OPT:5}
   elif [[ $OPT == +(visit|tract|patch):?* ]]; then
     NEWQUERY=$(decode_query $OPT)
-    if [ -n "$QUER" ]; then
-      QUER="$QUER and $NEWQUERY"
+    if [ -n "$QUERY" ]; then
+      QUERY="$QUERY and $NEWQUERY"
     else
-      QUER="$NEWQUERY"
+      QUERY="$NEWQUERY"
     fi
   else
     NEWVER=$(g3wf-convert-lsst-version $OPT)
@@ -147,6 +147,18 @@ if [[ $DOINIT = true && -n $CJOB ]]; then
 fi
 
 if [ -n "$CJOB" ]; then
+  if [[ -n $QUERYE ]]; then
+    echo "ERROR: Pipeline may not be specified for a continuation job."
+    exit 1
+  fi
+  if [[ -n $PIPE ]]; then
+    echo "ERROR: Pipeline may not be specified for a continuation job."
+    exit 1
+  fi
+  if [[ -n $LVER ]]; then
+    echo "ERROR: The LSST release may not be specified for a continuation job."
+    exit 1
+  fi
   echo "Connecting to job $CJOB."
   if ! PDIR=$(descprod-get-job $CJOB | grep rundir: | sed 's/ *rundir: //g'); then
     echo "ERROR: Unable to find continuation job $CJOB"
@@ -156,19 +168,29 @@ if [ -n "$CJOB" ]; then
     echo "ERROR: Unable to find name of run directory for continuation job $CJOB"
     exit 1
   fi
-  for DIR in $PDIR $PDIR/submit $PDIR/runinfo; do
-    if [ ! -r $DIR ]; then
-      echo "ERROR: Unable to find continuation run directory $DIR"
+  if [ ! -r "$PDIR" ]; then
+    echo "ERROR: For job $CJOB, unable to find continuation run directory $PDIR"
+    exit 1
+  fi
+  for FIL in consetup.sh submit runinfo; do
+    SRCFIL=$PDIR/$FIL
+    if [ ! -r $SRCFIL ]; then
+      echo "ERROR: Unable to find continuation source $DIR"
+      exit 1
+    fi
+    if ! ln -s $SRCFIL; then
+      echo "ERROR: Unable to link $SRCFIL to $(pwd)"
       exit 1
     fi
   done
-  if ! ln -s $PDIR/submit .; then
-    echo "ERROR: Unable to link $PDIR/submit to $(pwd)"
-    exit 1
-  fi
-  if ! ln -s $PDIR/runinfo .; then
-    echo "ERROR: Unable to link $PDIR/runinfo to $(pwd)"
-    exit 1
+  # Read the old configuration.
+  # This should define CON_LVER, CON_PIPEVAL, CON_QUERY, CON_CSRC
+  source consetup.sh
+  PIPE=$CON_PIPE
+  QUERY=$CON_QUERY
+  LVER=$CON_LVER
+  if [[ -z $CSRC ]]; then
+    CSRC=$CON_CSRC
   fi
 fi
 
@@ -187,26 +209,27 @@ if [ -n "$PIPE" ]; then
   else
     PIPEVAL=$PIPE
   fi
-  if [ -n "$PIPEVAL" ]; then PIPEVAL="#$PIPEVAL"; fi
   echo Pipeline: $PIPEVAL
+  PIPEVALSPEC=
+  if [ -n "$PIPEVAL" ]; then PIPEVALSPEC="#$PIPEVAL"; fi
 elif [ $DOINIT = true ]; then
   echo "ERROR: Pipeline (pipeXXX) must be specified if initialization is run."
   exit 1
 fi
 
-if [ -n "$QUER" ]; then
+if [ -n "$QUERY" ]; then
   if [ $DOINIT = false ]; then
     echo "ERROR: Query may only be specified when initialization is run."
     exit 1
   fi
-  echo "    Query: $QUER"
+  echo "    Query: $QUERY"
 elif [ $DOINIT = true ]; then
   echo "ERROR: Query must be provided if initialization is run."
   exit 1
 fi
 
 if [ -n "$LVER" ]; then
-  echo " LSST release:y: $LVER"
+  echo " LSST release: $LVER"
 else
   echo "ERROR: LSST release mt be supplied."
   exit 1
@@ -256,8 +279,8 @@ if [ $DOINIT = true ]; then
   g3wfpipe-template \
     | sed s/%PAYLOAD%/$PIPE/g \
     | sed "s#%DRP_INGDIR%#$DRP_INGDIR#g" \
-    | sed s/%PIPE%/$PIPEVAL/g \
-    | sed s/%QUERY%/"$QUER"/g \
+    | sed s/%PIPE%/$PIPEVALSPEC/g \
+    | sed s/%QUERY%/"$QUERY"/g \
     | sed s/%MEM%/$MEGB/g \
     | sed s/%NNOD%/$NNOD/g \
     | sed s/%LOGINIT%/$LOGINIT/g \
@@ -305,6 +328,11 @@ if [ $DOINIT = true ]; then
     err_echo Unknown executor: $EXEC
     exit 1
   fi
+  # Setup for contnuation jobs.
+  echo "CON_CSRC=$CSRC" >consetup.sh
+  echo "CON_LVER=$LVER" >>consetup.sh
+  echo "CON_QUERY=$QUERY" >>consetup.sh
+  echo "CON_PIPE=$PIPE" >>consetup.sh
 fi
   
 # Create the run script.
