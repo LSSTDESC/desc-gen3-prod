@@ -24,11 +24,13 @@ pg = None                 # ParlslGraph used for processing
 pgro = None               # ParslGraph for checking status
 
 def get_pg():
+    global pg
     if pg is None:
         pg = ParslGraph.restore(pg_pickle_path)
     return pg
 
 def get_pgro():
+    global pgro
     if pgro is None:
         pgro = ParslGraph.restore(pg_pickle_path, use_dfk=False)
     return pgro
