@@ -94,7 +94,7 @@ for opt in sys.argv[1:]:
         showStatus = True
     elif opt == 'tables':
         showParslTables = True
-    elif opt == 'tmax':
+    elif opt[0:5] == 'tmax:':
         stmax = opt[5:]
         unit = stmax[-1]
         utims = {'s':1, 'm':60, 'h':3600, 'd':86400}
