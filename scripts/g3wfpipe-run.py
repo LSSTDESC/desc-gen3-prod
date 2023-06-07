@@ -80,7 +80,7 @@ for opt in sys.argv[1:]:
         print('    qgre - Prepare report describing the existing QG.')
         print('    tables - Prepare report describing the parsl tables.')
         print('    finalize - Register output datasets for existing QG.')
-        print('    tmax - Timeout [sec].')
+        print('    tmax - Timeout in sec or tttU with U in {s, m, h, d}.')
         sys.exit()
     elif opt == 'init':
         doInit = True
@@ -94,8 +94,14 @@ for opt in sys.argv[1:]:
         showStatus = True
     elif opt == 'tables':
         showParslTables = True
-    elif opt == 'test':
-        tmax = int(opt[5:])
+    elif opt == 'tmax':
+        stmax = opt[5:]
+        unit = stmax[-1]
+        utims = {'s':1, 'm':60, 'h':3600, 'd':86400}
+        if unit in utims:
+            tmax = utims[unit]*int(stmax[0:-1])
+        else:
+            tmax = int(stmax)
     elif opt == 'test': doTest = True
     elif opt == 'path':
         for dir in os.getenv('PYTHONPATH').split(':'): print(dir)
