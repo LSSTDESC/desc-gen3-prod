@@ -19,6 +19,20 @@ doTest = False
 thisdir = os.getcwd()
 haveQG = False
 
+pg_pickle_path = None     # Full path to the pg pickle file
+pg = None                 # ParlslGraph used for processing
+pgro = None               # ParslGraph for checking status
+
+def get_pg():
+    if pg is None:
+        pg = ParslGraph.restore(pg_pickle_path)
+    return pg
+
+def get_pgro():
+    if pgro is None:
+        pgro = ParslGraph.restore(pg_pickle_path, use_dfk=False)
+    return pgro
+
 def get_haveQG(pg):
     try:
         if pg.qgraph is None:
@@ -143,7 +157,6 @@ else:
         sys.exit(1)
     logmsg()
     logmsg(time.ctime(), "Using existing pipeline:", pg_pickle_path)
-    pg = ParslGraph.restore(pg_pickle_path)
     haveQG = get_haveQG(pg)
 
 if doQgReport:
@@ -177,7 +190,7 @@ if doProc:
         time.sleep(10)
         dtim = time.time() - time0
         if dtim > tmax:
-            statlogmsg(f"Timing out after {tim:.1f} seconds with {ndone}/{ntsk} tasks completed.")
+            statlogmsg(f"Timing out after {dtim:.1f} seconds with {ndone}/{ntsk} tasks completed.")
             sys.exit(1)
     statlogmsg(f"Workflow complete: {ndone}/{ntsk} tasks.")
 
@@ -190,7 +203,7 @@ if doFina:
 if showStatus:
     logmsg()
     statlogmsg("Fetching status")
-    pgro = ParslGraph.restore(pg_pickle_path, use_dfk =False)
+    get_pgro()
     pgro.status()
 
 statlogmsg("All steps completed.")
