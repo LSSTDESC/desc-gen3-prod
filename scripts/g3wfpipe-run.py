@@ -174,6 +174,7 @@ if doQgReport:
 if doProc:
     logmsg()
     statlogmsg('Starting workflow')
+    get_pg()
     if not haveQG:
         statlogmsg("ERROR: Quantum graph not found.")
         sys.exit(1)
@@ -199,6 +200,7 @@ if doProc:
 if doFina:
     statlogmsg()
     statlogmsg('Finalizing job...')
+    get_pg()
     pg.finalize()
     statlogmsg('Finalizing done')
 
