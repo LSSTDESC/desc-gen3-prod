@@ -190,6 +190,7 @@ if doFina:
 if showStatus:
     logmsg()
     logmsg("Fetching status")
-    pg.status()
+    pgro = ParslGraph.restore(pg_pickle_path, use_dfk =False)
+    pgr.status()
 
 statlogmsg("All steps completed.")
