@@ -20,14 +20,18 @@
 #   batch time limit: btTT where TT is time limit in minutes
 #   memory limit [GB]: memMMM
 
-if [ $# -ne 2 ]; then
-  echo Usage: $0 CFG HFG
+if [[ -z $1 || $1 = -h ]]; then
+  echo Usage: $0 CFG [HFG]
   echo CFG = CF1-CF2-... where CFi is any of
   echo "  pipe:PIPELINE, e.g. pipe:isr"
   echo "  visit:NNN: Visit for query e.g. visit:123456"
   echo "  tract:NNN: Tract for query e.g. tract:4248"
   echo "  patch:NNN: Patch for query e.g. patch:85"
   echo "  wYYWW: Use LSSST release w_20YY_WW"
+  echo "  init: Initialize (create DAG)."
+  echo "  proc: Process data."
+  echo "  finalize: Finalize (register output data products)."
+  echo "  status: Display processing status."
   echo HFG = HF1-HF2-... where HFi is any of
   echo "  exec:XX where XX = wq, tp or wqMM"
   echo "  cvmfs: Code taken from cvmfs"
