@@ -47,7 +47,7 @@ The howfig fields are
 | cvmfs | Use the cvmfs installation of the LSST software. | cvmfs |
 | shifter | use the shifter installation of the software. | shifter |
 | tp:NN | Parsl ThreadPool executor with NN concurrent processes. | tp:100 |
-| wq:MM | Parsl WorQueue executor with totl memory MM GB. | wq:128 |
+| wq:MM | Parsl WorkQueue executor with totl memory MM GB. | wq:128 |
 | tmax:TTT | Set job timeout of TTT seconds. | tmax:3600 |
 | tmax:TTTU | Set timeout of TTT seconds, minutes, hours or days for U = {s, m, h, d} | tmax:1.5h |
 
