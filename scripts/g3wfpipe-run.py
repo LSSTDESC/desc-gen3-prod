@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 
+# Start the clock for timing out.
+import time
+time0 = time.time()
+
 import os
 import sys
-import time
 import dg3prod
 
 statfilename = 'current-status.txt'
@@ -15,6 +18,7 @@ showStatus = False
 showParslTables = False
 doWorkflow = True
 doTest = False
+tmax = 1000
 
 thisdir = os.getcwd()
 haveQG = False
@@ -71,12 +75,12 @@ for opt in sys.argv[1:]:
         print('Usage:', sys.argv[0], '[OPTS]')
         print('  Supported valuse for OPTS:')
         print('    init - Create QG (QuandunGraph).')
-        print('    job:JJJ - Set up to continue processing for job JJJ.')
         print('    proc - Process tasks in the existing QG.')
         print('    status - Report on the status of processing for the existing QG.')
         print('    qgre - Prepare report describing the existing QG.')
         print('    tables - Prepare report describing the parsl tables.')
         print('    finalize - Register output datasets for existing QG.')
+        print('    tmax - Timeout [sec].')
         sys.exit()
     elif opt == 'init':
         doInit = True
@@ -90,6 +94,8 @@ for opt in sys.argv[1:]:
         showStatus = True
     elif opt == 'tables':
         showParslTables = True
+    elif opt == 'test':
+        tmax = int(opt[5:])
     elif opt == 'test': doTest = True
     elif opt == 'path':
         for dir in os.getenv('PYTHONPATH').split(':'): print(dir)
@@ -183,8 +189,6 @@ if doProc:
     ntsk = len(futures)
     statlogmsg(f"Workflow task count: {ntsk}")
     ndone = 0
-    time0 = time.time()
-    tmax = 1000
     while ndone < ntsk:
         ndone = 0
         for fut in futures:
@@ -193,7 +197,8 @@ if doProc:
         time.sleep(10)
         dtim = time.time() - time0
         if dtim > tmax:
-            statlogmsg(f"Timing out after {dtim:.1f} seconds with {ndone}/{ntsk} tasks completed.")
+            statlogmsg(f"Timing out after {dtim:.1f} sec. {ndone}/{ntsk} tasks completed.")
+            pg.shutdown()
             sys.exit(1)
     statlogmsg(f"Workflow complete: {ndone}/{ntsk} tasks.")
 

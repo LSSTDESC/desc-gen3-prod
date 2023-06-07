@@ -32,6 +32,7 @@ if [ $# -ne 2 ]; then
   echo "  exec:XX where XX = wq, tp or wqMM"
   echo "  cvmfs: Code taken from cvmfs"
   echo "  shifter: Code taken from shifter"
+  echo "  tmax: Timeout in sec"
   exit 1
 fi
 
@@ -225,6 +226,8 @@ for OPT in ${HOPTS[@]}; do
     EXEC=$OPT
   elif [ ${OPT:0:3} = tp: ]; then
     EXEC=$OPT
+  elif [ ${OPT:0:5} = tmax: ]; then
+    WFARGS+=($OPT)
   else
     err_echo Invalid howfig field: $OPT
     exit 13
