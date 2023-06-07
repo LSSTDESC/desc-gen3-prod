@@ -135,7 +135,6 @@ for OPT in ${COPTS[@]}; do
     fi
   fi
 done
-WFARGS="${WFARGS[*]}"
 
 if [[ $DOINIT = false && -z $CJOB ]]; then
   err_echo "Configuration must include initialization or continuation."
@@ -233,6 +232,8 @@ for OPT in ${HOPTS[@]}; do
     exit 13
   fi
 done
+
+WFARGS="${WFARGS[*]}"
 
 if [ -z "$CSRC" ]; then
   err_echo "Code source must be provided."
