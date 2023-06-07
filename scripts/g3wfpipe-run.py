@@ -183,13 +183,13 @@ if doProc:
 
 if doFina:
     statlogmsg()
-    logmsg('Finalizing job...')
+    statlogmsg('Finalizing job...')
     pg.finalize()
     statlogmsg('Finalizing done')
 
 if showStatus:
     logmsg()
-    logmsg("Fetching status")
+    statlogmsg("Fetching status")
     pgro = ParslGraph.restore(pg_pickle_path, use_dfk =False)
     pgro.status()
 
