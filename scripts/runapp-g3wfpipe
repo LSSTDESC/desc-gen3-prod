@@ -227,7 +227,7 @@ done
 WFARGS="${WFARGS_ARR[*]}"
 
 # Record the setup for continuation jobs.
-log_info Creating consetup.sh
+info_echo Creating consetup.sh
 echo "CON_CSRC=$CSRC" >consetup.sh
 echo "CON_LVER=$LVER" >>consetup.sh
 echo "CON_QUERY=$QUERY" >>consetup.sh
