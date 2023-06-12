@@ -169,7 +169,7 @@ if [[ -n $CJOB ]]; then
   for FIL in consetup.sh submit runinfo; do
     SRCFIL=$PDIR/$FIL
     if [ ! -r $SRCFIL ]; then
-      echo "ERROR: Unable to find continuation source $DIR"
+      echo "ERROR: Unable to find continuation source $SRCFIL"
       exit 1
     fi
     if ! ln -s $SRCFIL .; then
