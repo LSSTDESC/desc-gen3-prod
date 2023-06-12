@@ -188,7 +188,12 @@ if [[ -n $CJOB ]]; then
   done
   # Read the old configuration.
   # This should define CON_LVER, CON_PIPEVAL, CON_QUERY, CON_CSRC
-  source consetup.sh
+  SUPFIL=$PDIR/consetup.sh
+  if [ ! -r $SUPFIL ]; then
+    echo "ERROR: Unable to find continuation source setup $SUPFIL"
+    exit 1
+  fi
+  source $SUPFIL
   PIPE=$CON_PIPE
   QUERY=$CON_QUERY
   LVER=$CON_LVER
