@@ -236,15 +236,15 @@ echo "CON_PIPE=$PIPE" >>consetup.sh
 if [ $DOINIT = true ]; then
 PIPEVAL=
   if [ -z "$PIPE" ]; then
-    echo "ERROR: Pipeline (pipeXXX) must be specified if initialization is run."
+    err_echo "Pipeline must be specified for initialization."
     exit 1
   fi
   if [[ -z $QUERY ]]; then
-    echo "ERROR: Query must be provided if initialization is run."
+    err_echo "Query must be provided for initialization."
     exit 1
   fi
   if [ -z "$LVER" ]; then
-    echo "ERROR: LSST release mt be supplied."
+    err_echo "LSST release mt be proivided for initialization."
     exit 1
   fi
   if [ $PIPE = drp ]; then
