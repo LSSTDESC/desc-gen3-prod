@@ -166,7 +166,7 @@ if [[ -n $CJOB ]]; then
     echo "ERROR: For job $CJOB, unable to find continuation run directory $PDIR"
     exit 1
   fi
-  for FIL in consetup.sh submit runinfo; do
+  for FIL in consetup.sh; do
     SRCFIL=$PDIR/$FIL
     if [ ! -r $SRCFIL ]; then
       echo "ERROR: Unable to find continuation source $SRCFIL"
@@ -177,7 +177,7 @@ if [[ -n $CJOB ]]; then
       exit 1
     fi
   done
-  for FIL in config.yaml; do
+  for FIL in config.yaml submit runinfo; do
     SRCFIL=$PDIR/$FIL
     if [ -r $SRCFIL ]; then
       if ! ln -s $SRCFIL .; then
