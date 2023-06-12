@@ -169,19 +169,6 @@ if [[ -n $CJOB ]]; then
     err_echo "For job $CJOB, unable to find continuation run directory $PDIR"
     exit 1
   fi
-  # Required sources.
-  for FIL in consetup.sh; do
-    SRCFIL=$PDIR/$FIL
-    if [ ! -r $SRCFIL ]; then
-      err_echo "Unable to find continuation source $SRCFIL"
-      exit 1
-    fi
-    echo "Linking source $SRCFIL"
-    if ! ln -s $SRCFIL .; then
-      err_echo "Unable to link $SRCFIL to $(pwd)"
-      exit 1
-    fi
-  done
   # Optional sources.
   for FIL in config.yaml submit runinfo; do
     SRCFIL=$PDIR/$FIL
