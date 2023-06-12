@@ -221,6 +221,12 @@ done
 
 WFARGS="${WFARGS_ARR[*]}"
 
+# Record the setup for continuation jobs.
+log_info Creating consetup.sh
+echo "CON_CSRC=$CSRC" >consetup.sh
+echo "CON_LVER=$LVER" >>consetup.sh
+echo "CON_QUERY=$QUERY" >>consetup.sh
+echo "CON_PIPE=$PIPE" >>consetup.sh
 
 if [ $DOINIT = true ]; then
 PIPEVAL=
@@ -304,11 +310,6 @@ PIPEVAL=
     exit 1
   fi
   echo Executor: $EXEC
-  # Setup for continuation jobs.
-  echo "CON_CSRC=$CSRC" >consetup.sh
-  echo "CON_LVER=$LVER" >>consetup.sh
-  echo "CON_QUERY=$QUERY" >>consetup.sh
-  echo "CON_PIPE=$PIPE" >>consetup.sh
 fi
 
 if [[ -n $WFARGS ]]; then
