@@ -52,7 +52,7 @@ err_echo() {
 info_echo() {
   MSG="$*"
   echo "$MSG" >$SFIL
-  echo "ERROR: $MSG" >&2
+  echo "INFO: $MSG" >&2
 }
 
 dbg_echo() {
@@ -156,37 +156,43 @@ if [[ -n $CJOB ]]; then
     echo "ERROR: The LSST release may not be specified for a continuation job."
     exit 1
   fi
-  echo "Connecting to job $CJOB."
+  info_echo "Connecting to job $CJOB."
   if ! PDIR=$(descprod-get-job $CJOB | grep rundir: | sed 's/ *rundir: //g'); then
-    echo "ERROR: Unable to find continuation job $CJOB"
+    err_echo "Unable to find continuation job $CJOB"
     exit 1
   fi
   if [ -z "$PDIR" ]; then
-    echo "ERROR: Unable to find name of run directory for continuation job $CJOB"
+    err_echo "Unable to find name of run directory for continuation job $CJOB"
     exit 1
   fi
   if [ ! -r "$PDIR" ]; then
-    echo "ERROR: For job $CJOB, unable to find continuation run directory $PDIR"
+    err_echo "For job $CJOB, unable to find continuation run directory $PDIR"
     exit 1
   fi
+  # Required sources.
   for FIL in consetup.sh; do
     SRCFIL=$PDIR/$FIL
     if [ ! -r $SRCFIL ]; then
-      echo "ERROR: Unable to find continuation source $SRCFIL"
+      err_echo "Unable to find continuation source $SRCFIL"
       exit 1
     fi
+    echo "Linking source $SRCFIL"
     if ! ln -s $SRCFIL .; then
-      echo "ERROR: Unable to link $SRCFIL to $(pwd)"
+      err_echo "Unable to link $SRCFIL to $(pwd)"
       exit 1
     fi
   done
+  # Optional sources.
   for FIL in config.yaml submit runinfo; do
     SRCFIL=$PDIR/$FIL
     if [ -r $SRCFIL ]; then
+      echo "Linking source $SRCFIL"
       if ! ln -s $SRCFIL .; then
-        echo "ERROR: Unable to link $SRCFIL to $(pwd)"
+        err_echo "Unable to link $SRCFIL to $(pwd)"
         exit 1
       fi
+    else
+      echo "Source not found: $SRCFIL"
     fi
   done
   # Read the old configuration.
