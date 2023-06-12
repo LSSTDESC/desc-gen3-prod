@@ -92,26 +92,26 @@ QUERY=
 LVER=
 CJOB=
 DOINIT=false
-WFARGS=()
+WFARGS_ARR=()
 USER=$(whoami)
 DRP_INGDIR=pipelines/_ingredients  # w2321 and later
 for OPT in ${COPTS[@]}; do
   dbg_echo Parsing option $OPT
   if [ $OPT == init ]; then
     DOINIT=true
-    WFARGS+=($OPT)
+    WFARGS_ARR+=($OPT)
   elif [[ $OPT =~ job:[0-9]+$ ]]; then
     CJOB=${OPT:4}
   elif [[ $OPT =~ proc:?* ]]; then
-    WFARGS+=($OPT)
+    WFARGS_ARR+=($OPT)
   elif [ $OPT == finalize ]; then
-    WFARGS+=($OPT)
+    WFARGS_ARR+=($OPT)
   elif [ $OPT == qgre ]; then
-    WFARGS+=($OPT)
+    WFARGS_ARR+=($OPT)
   elif [ $OPT == status ]; then
-    WFARGS+=($OPT)
+    WFARGS_ARR+=($OPT)
   elif [ $OPT == tables ]; then
-    WFARGS+=($OPT)
+    WFARGS_ARR+=($OPT)
   elif [[ $OPT == pipe:?* ]]; then
     if [ -n "$PIPE" ]; then
       err_echo ERROR: Duplicate pipeline specification: $PIPE $OPT
@@ -150,9 +150,10 @@ if [[ $DOINIT = true && -n $CJOB ]]; then
   exit 1
 fi
 
+DOCREATE=false
 if [ -n "$CJOB" ]; then
   if [[ -n $QUERYE ]]; then
-    echo "ERROR: Pipeline may not be specified for a continuation job."
+    echo "ERROR: Query may not be specified for a continuation job."
     exit 1
   fi
   if [[ -n $PIPE ]]; then
@@ -196,48 +197,9 @@ if [ -n "$CJOB" ]; then
   if [[ -z $CSRC ]]; then
     CSRC=$CON_CSRC
   fi
+  DOCREATE=true
 fi
 
-PIPEVAL=
-if [ -n "$PIPE" ]; then
-  if [ $DOINIT = false ]; then
-    echo "ERROR: Pipeline (pipeXXX) may only be specified when intialization is run."
-    exit 1
-  fi
-  if [ $PIPE = drp ]; then
-    PIPEVAL=
-  elif [ $PIPE = sf ]; then
-    PIPEVAL="detection,mergeDetections,deblend,measure,mergeMeasurements,forcedPhotCoadd,writeObjectTable,transformObjectTable,consolidateObjectTable"
-  elif [ $PIPE = ccd ]; then
-    PIPEVAL="isr,characterizeImage,calibrate"
-  else
-    PIPEVAL=$PIPE
-  fi
-  echo Pipeline: $PIPEVAL
-  PIPEVALSPEC=
-  if [ -n "$PIPEVAL" ]; then PIPEVALSPEC="#$PIPEVAL"; fi
-elif [ $DOINIT = true ]; then
-  echo "ERROR: Pipeline (pipeXXX) must be specified if initialization is run."
-  exit 1
-fi
-
-if [ -n "$QUERY" ]; then
-  if [ $DOINIT = false ]; then
-    echo "ERROR: Query may only be specified when initialization is run."
-    exit 1
-  fi
-  echo "    Query: $QUERY"
-elif [ $DOINIT = true ]; then
-  echo "ERROR: Query must be provided if initialization is run."
-  exit 1
-fi
-
-if [ -n "$LVER" ]; then
-  echo " LSST release: $LVER"
-else
-  echo "ERROR: LSST release mt be supplied."
-  exit 1
-fi
 
 # Parse the howfig.
 CSRC=
@@ -253,14 +215,14 @@ for OPT in ${HOPTS[@]}; do
   elif [ ${OPT:0:3} = tp: ]; then
     EXEC=$OPT
   elif [ ${OPT:0:5} = tmax: ]; then
-    WFARGS+=($OPT)
+    WFARGS_ARR+=($OPT)
   else
     err_echo Invalid howfig field: $OPT
     exit 13
   fi
 done
 
-WFARGS="${WFARGS[*]}"
+WFARGS="${WFARGS_ARR[*]}"
 
 if [ -z "$CSRC" ]; then
   err_echo "Code source must be provided."
@@ -279,6 +241,35 @@ echo Code source: $CSRC
 echo Executor: $CSRC
 
 if [ $DOINIT = true ]; then
+
+
+PIPEVAL=
+  if [ -z "$PIPE" ]; then
+    echo "ERROR: Pipeline (pipeXXX) must be specified if initialization is run."
+    exit 1
+  fi
+  if [[ -z $QUERY ]]; then
+    echo "ERROR: Query must be provided if initialization is run."
+    exit 1
+  fi
+  if [ -z "$LVER" ]; then
+    echo "ERROR: LSST release mt be supplied."
+    exit 1
+  fi
+  if [ $PIPE = drp ]; then
+    PIPEVAL=
+  elif [ $PIPE = sf ]; then
+    PIPEVAL="detection,mergeDetections,deblend,measure,mergeMeasurements,forcedPhotCoadd,writeObjectTable,transformObjectTable,consolidateObjectTable"
+  elif [ $PIPE = ccd ]; then
+    PIPEVAL="isr,characterizeImage,calibrate"
+  else
+    PIPEVAL=$PIPE
+  fi
+  PIPEVALSPEC=
+  if [ -n "$PIPEVAL" ]; then PIPEVALSPEC="#$PIPEVAL"; fi
+  echo Pipeline: $PIPEVAL
+  echo "    Query: $QUERY"
+  echo " LSST release: $LVER"
   echo Creating config.yaml.
   g3wfpipe-template \
     | sed s/%PAYLOAD%/$PIPE/g \
@@ -332,27 +323,32 @@ if [ $DOINIT = true ]; then
     err_echo Unknown executor: $EXEC
     exit 1
   fi
-  # Setup for contnuation jobs.
+  # Setup for continuation jobs.
   echo "CON_CSRC=$CSRC" >consetup.sh
   echo "CON_LVER=$LVER" >>consetup.sh
   echo "CON_QUERY=$QUERY" >>consetup.sh
   echo "CON_PIPE=$PIPE" >>consetup.sh
 fi
-  
-# Create the run script.
-# It installs desc-gen3-prod and then runs the query.
-RFIL=./run
-echo "#!/bin/bash" > $RFIL
-echo "pip install -t local git+https://github.com/LSSTDESC/desc-gen3-prod" >>$RFIL
-echo 'PATH=./local/bin:$PATH' >>$RFIL
-echo 'export PYTHONPATH=./local:$PYTHONPATH' >>$RFIL
-echo 'echo Running with desc-gen3-prod version $(desc-gen3-prod-version)' >>$RFIL
-echo 'git clone https://github.com/LSSTDESC/gen3_workflow.git' >>$RFIL
-echo 'setup -r gen3_workflow -j' >>$RFIL
-echo "g3wfpipe-run $WFARGS" >>$RFIL
-chmod +x ./run
 
-info_echo Executing $COM
-$COM
+if [[ -n $WFARGS ]]; then
+  # Create the run script.
+  # It installs desc-gen3-prod and then runs the query.
+  RFIL=./run
+  echo "#!/bin/bash" > $RFIL
+  echo "pip install -t local git+https://github.com/LSSTDESC/desc-gen3-prod" >>$RFIL
+  echo 'PATH=./local/bin:$PATH' >>$RFIL
+  echo 'export PYTHONPATH=./local:$PYTHONPATH' >>$RFIL
+  echo 'echo Running with desc-gen3-prod version $(desc-gen3-prod-version)' >>$RFIL
+  echo 'git clone https://github.com/LSSTDESC/gen3_workflow.git' >>$RFIL
+  echo 'setup -r gen3_workflow -j' >>$RFIL
+  echo "g3wfpipe-run $WFARGS" >>$RFIL
+  chmod +x ./run
+  info_echo Running the following steps: $WFARGS
+  $COM
+  RSTAT=$?
+else
+  info_echo No actions specified.
+  RSTAT=0
+fi
 
-exit $?
+exit $RSTAT
