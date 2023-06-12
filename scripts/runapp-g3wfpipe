@@ -140,18 +140,7 @@ for OPT in ${COPTS[@]}; do
   fi
 done
 
-if [[ $DOINIT = false && -z $CJOB ]]; then
-  err_echo "Configuration must include initialization or continuation."
-  exit 1
-fi
-
-if [[ $DOINIT = true && -n $CJOB ]]; then
-  err_echo "Configuration may not include both initialization and continuation."
-  exit 1
-fi
-
-DOCREATE=false
-if [ -n "$CJOB" ]; then
+if [[ -n $CJOB ]]; then
   if [[ -n $QUERYE ]]; then
     echo "ERROR: Query may not be specified for a continuation job."
     exit 1
@@ -183,9 +172,18 @@ if [ -n "$CJOB" ]; then
       echo "ERROR: Unable to find continuation source $DIR"
       exit 1
     fi
-    if ! ln -s $SRCFIL; then
+    if ! ln -s $SRCFIL .; then
       echo "ERROR: Unable to link $SRCFIL to $(pwd)"
       exit 1
+    fi
+  done
+  for FIL in config.yaml; do
+    SRCFIL=$PDIR/$FIL
+    if [ -r $SRCFIL ]; then
+      if ! ln -s $SRCFIL .; then
+        echo "ERROR: Unable to link $SRCFIL to $(pwd)"
+        exit 1
+      fi
     fi
   done
   # Read the old configuration.
@@ -197,7 +195,6 @@ if [ -n "$CJOB" ]; then
   if [[ -z $CSRC ]]; then
     CSRC=$CON_CSRC
   fi
-  DOCREATE=true
 fi
 
 
@@ -224,25 +221,8 @@ done
 
 WFARGS="${WFARGS_ARR[*]}"
 
-if [ -z "$CSRC" ]; then
-  err_echo "Code source must be provided."
-  exit 14
-elif [ $CSRC = shifter ]; then
-  COM=g3wf-run-shifter
-elif [ $CSRC = cvmfs ]; then
-  COM=g3wf-run-cvmfs
-else
-  err_echo Invalid source: $CSRC.
-  exit 15
-fi
-COM="$COM $LVER ./run"
-
-echo Code source: $CSRC
-echo Executor: $CSRC
 
 if [ $DOINIT = true ]; then
-
-
 PIPEVAL=
   if [ -z "$PIPE" ]; then
     echo "ERROR: Pipeline (pipeXXX) must be specified if initialization is run."
@@ -323,6 +303,7 @@ PIPEVAL=
     err_echo Unknown executor: $EXEC
     exit 1
   fi
+  echo Executor: $EXEC
   # Setup for continuation jobs.
   echo "CON_CSRC=$CSRC" >consetup.sh
   echo "CON_LVER=$LVER" >>consetup.sh
@@ -331,6 +312,19 @@ PIPEVAL=
 fi
 
 if [[ -n $WFARGS ]]; then
+  if [ -z "$CSRC" ]; then
+    err_echo "Code source must be provided."
+    exit 14
+  elif [ $CSRC = shifter ]; then
+    COM=g3wf-run-shifter
+  elif [ $CSRC = cvmfs ]; then
+    COM=g3wf-run-cvmfs
+  else
+    err_echo Invalid source: $CSRC.
+    exit 15
+  fi
+  echo Code source: $CSRC
+  COM="$COM $LVER ./run"
   # Create the run script.
   # It installs desc-gen3-prod and then runs the query.
   RFIL=./run
