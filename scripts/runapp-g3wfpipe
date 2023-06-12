@@ -140,6 +140,9 @@ for OPT in ${COPTS[@]}; do
   fi
 done
 
+CSRC=
+NNOD=1
+EXEC=none
 if [[ -n $CJOB ]]; then
   if [[ -n $QUERYE ]]; then
     echo "ERROR: Query may not be specified for a continuation job."
@@ -204,9 +207,6 @@ fi
 
 
 # Parse the howfig.
-CSRC=
-NNOD=1
-EXEC=none
 for OPT in ${HOPTS[@]}; do
   if [ $OPT = shifter ]; then
     CSRC=shifter
