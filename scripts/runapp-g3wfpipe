@@ -328,7 +328,7 @@ if [[ -n $WFARGS ]]; then
   # It installs desc-gen3-prod and then runs the query.
   RFIL=./run
   echo "#!/bin/bash" > $RFIL
-  echo 'export PYTHONPATH=./local:$PYTHONPATH' >>$RFIL
+  echo 'export PYTHONPATH' >>$RFIL
   if [ $CSRC = shifter ]; then
     echo "source /opt/lsst/software/stack/setup.sh" >>$RFIL
     echo "pip install -t local/desc-wfmon git+https://github.com/LSSTDESC/desc-wfmon" >>$RFIL
