@@ -332,9 +332,9 @@ if [[ -n $WFARGS ]]; then
   echo 'export PYTHONPATH=./local:$PYTHONPATH' >>$RFIL
   if [ $CSRC = shifter ]; then
     echo "source /opt/lsst/software/stack/setup.sh" >>$RFIL
-    echo "pip install -t -U local git+https://github.com/LSSTDESC/desc-wfmon" >>$RFIL
+    echo "pip install -tU local git+https://github.com/LSSTDESC/desc-wfmon" >>$RFIL
   fi
-  echo "pip install -t -U local git+https://github.com/LSSTDESC/desc-gen3-prod" >>$RFIL
+  echo "pip install -tU local git+https://github.com/LSSTDESC/desc-gen3-prod" >>$RFIL
   echo 'echo Running with desc-gen3-prod version $(desc-gen3-prod-version)' >>$RFIL
   echo 'echo Running with desc-wfmon version $(desc-wfmon-parsltest -v)' >>$RFIL
   echo 'git clone https://github.com/LSSTDESC/gen3_workflow.git' >>$RFIL
