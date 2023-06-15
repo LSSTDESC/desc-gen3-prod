@@ -1,5 +1,5 @@
 LVER=$1
-VERS=$2
+VERS=${2:-05}
 if [ -z "$VERS" ]; then
   echo Usage: $0 VERSION
   exit 0
