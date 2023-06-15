@@ -67,8 +67,8 @@ def logmsg(*msgs, update_status=False):
 def statlogmsg(*msgs):
     logmsglist(list(msgs), update_status=True)
 
-statlogmsg(f"Executing {__file__}")
-logmsg(f"g3wfpipe version: {dg3prod.version()}")
+logmsg(f"Executing {__file__}")
+statlogmsg(f"Running g3wfpipe version: {dg3prod.version()}")
 for opt in sys.argv[1:]:
     logmsg("Processing argument", opt)
     if opt in ["-h", "help"]:
