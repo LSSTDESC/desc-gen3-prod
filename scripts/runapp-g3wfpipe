@@ -331,6 +331,7 @@ if [[ -n $WFARGS ]]; then
   echo 'export PYTHONPATH' >>$RFIL
   if [ $CSRC = shifter ]; then
     echo "source /opt/lsst/software/stack/setup.sh" >>$RFIL
+    echo "setup lsst_distrib" >>$RFIL
     echo "pip install -t local/desc-wfmon git+https://github.com/LSSTDESC/desc-wfmon" >>$RFIL
     echo 'PATH=./local/desc-wfmon/bin:$PATH' >>$RFIL
     echo 'PYTHONPATH=./local/desc-wfmon:$PYTHONPATH' >>$RFIL
