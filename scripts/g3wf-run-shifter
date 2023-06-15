@@ -5,7 +5,7 @@ shift
 COM="$*"
 MYNAME=$(basename ${BASH_SOURCE[0]})
 export PS1="Failed $MYNAME> "
-IVER=04
+IVER=06
 
 if [ -z "$LVER" ]; then
   echo Usage: source $MYNAME LSST_VERSION
