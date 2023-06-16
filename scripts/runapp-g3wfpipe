@@ -200,6 +200,7 @@ fi
 
 
 # Parse the howfig.
+TMAX=
 for OPT in ${HOPTS[@]}; do
   if [ $OPT = shifter ]; then
     CSRC=shifter
@@ -210,7 +211,8 @@ for OPT in ${HOPTS[@]}; do
   elif [ ${OPT:0:3} = tp: ]; then
     EXEC=$OPT
   elif [ ${OPT:0:5} = tmax: ]; then
-    WFARGS_ARR+=($OPT)
+    TMAX=$OPT
+    #WFARGS_ARR+=($OPT)
   else
     err_echo Invalid howfig field: $OPT
     exit 13
@@ -323,7 +325,7 @@ if [[ -n $WFARGS ]]; then
     exit 15
   fi
   echo Code source: $CSRC
-  COM="$COM $LVER ./run"
+  COM="${TMAX:+timeout $TMAX }$COM $LVER ./run"
   # Create the run script.
   # It installs desc-gen3-prod and then runs the query.
   RFIL=./run
