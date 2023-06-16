@@ -7,7 +7,7 @@
 
 # Cleanup routine for the signal handlers to call.
 # Mimic bash and return 128 + interrupt signal
-shut-down() {
+cleanup() {
   ISIG=$(kill -l $1)
   if [ -r sysmon.pid ]; then
     echo Killing system monitor.
