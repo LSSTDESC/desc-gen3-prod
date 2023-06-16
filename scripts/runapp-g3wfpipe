@@ -211,7 +211,7 @@ for OPT in ${HOPTS[@]}; do
   elif [ ${OPT:0:3} = tp: ]; then
     EXEC=$OPT
   elif [ ${OPT:0:5} = tmax: ]; then
-    TMAX=$OPT
+    TMAX=${OPT:5}
     #WFARGS_ARR+=($OPT)
   else
     err_echo Invalid howfig field: $OPT
