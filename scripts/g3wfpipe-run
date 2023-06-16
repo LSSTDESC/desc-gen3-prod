@@ -5,6 +5,29 @@
 # David Adams
 # May 2023
 
+# Cleanup routine for the signal handlers to call.
+# Mimic bash and return 128 + interrupt signal
+shut-down {
+  ISIG=$(kill -l $1)
+  if [ -r sysmon.pid ]; then
+    echo Killing system monitor.
+    kill -$ISIG $(cat sysmon.pid)
+  fi
+  exit $((128+$ISIG))
+}
+
+handle-sigterm() {
+  echo "Handling SIGTERM (e.g. from timeout)"
+  cleanup TERM
+}
+trap handl-sigterm SIGTERM
+
+handle-sigint() {
+  echo "Handling SIGINT (e.g. from user kill)"
+  cleanup INT
+}
+trap handl-sigterm SIGTERM
+
 THISBAS=$(basename $0)
 THISPTH=$0
 ARGS="$*"
