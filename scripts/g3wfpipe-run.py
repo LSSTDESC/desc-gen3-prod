@@ -73,7 +73,8 @@ def statlogmsg(*msgs):
 sigstop = 0
 def setstop(signum, frame):
     statlogmsg(f"Received interrupt signal {sigstop}.")
-    global sigstop = signum
+    global sigstop
+    sigstop = signum
 
 #################################################################################
 
