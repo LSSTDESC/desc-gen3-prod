@@ -224,7 +224,7 @@ if showStatus:
     pgro.status()
     statlogmsg("Evaluating status summary.")
     
-    df = pgro.df[pgro.df['task_type'].is_in(pgro._task_list)]
+    df = pgro.df[pgro.df['task_type'].isin(pgro._task_list)]
     pandas.set_option('display.max_rows', 500)
     pandas.set_option('display.max_columns', 50)
     pandas.set_option('display.width', 1000)
