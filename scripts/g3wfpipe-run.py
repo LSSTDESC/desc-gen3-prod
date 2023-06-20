@@ -192,16 +192,12 @@ if doProc:
     ntsk = len(futures)
     statlogmsg(f"Workflow task count: {ntsk}")
     ndone = 0
-    sigint_save = signal.signal(signal.SIGINT, setstop)
-    sigterm_save = signal.signal(signal.SIGTERM, setstop)
     while ndone < ntsk:
         ndone = 0
         for fut in futures:
             if fut.done(): ndone += 1
         statlogmsg(f"Finished {ndone} of {ntsk} tasks.")
         time.sleep(10)
-    signal.signal(signal.SIGINT, sigint_save)
-    signal.signal(signal.SIGTERM, sigterm_save)
     statlogmsg(f"Workflow complete: {ndone}/{ntsk} tasks.")
 
 if doFina:
