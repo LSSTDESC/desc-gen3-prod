@@ -226,7 +226,9 @@ if doProc:
     if sigstop:
         logmsg("Shutting down for interrupt.")
         pg.shutdown()
-        sys.exit(128+sigstop)
+        doFina = False
+        showStatus = True
+        #sys.exit(128+sigstop)
     statlogmsg(f"Workflow complete: {ndone}/{ntsk} tasks.")
 
 if doFina:
@@ -267,3 +269,4 @@ if showStatus:
     statlogmsg(msg)
 
 logmsg("All steps completed.")
+if sigstop: sys.exit(128+sigstop)
