@@ -221,5 +221,16 @@ if showStatus:
     statlogmsg("Fetching status")
     get_pgro()
     pgro.status()
+    statlogmsg("Evaluating status summary.")
+    get_pg()
+    futures = [job.get_future() for job in pg.values() if not job.dependencies]
+    ntsk = len(futures)
+    statlogmsg(f"Workflow task count: {ntsk}")
+    ndone = 0
+    while ndone < ntsk:
+        ndone = 0
+        for fut in futures:
+            if fut.done(): ndone += 1
+        statlogmsg(f"Finished {ndone} of {ntsk} tasks.")
 
 logmsg("All steps completed.")
