@@ -20,7 +20,6 @@ showStatus = False
 showParslTables = False
 doWorkflow = True
 doTest = False
-tmax = 1000
 
 thisdir = os.getcwd()
 haveQG = False
@@ -87,13 +86,6 @@ def get_pg_pickle_path():
             logmsg(f"    {path}")
         sys.exit(1)
 
-# Interrupt signal handler.
-def setstop(signum, frame):
-    logmsg(f"Handling interrupt signal {signum}.")
-    global sigstop
-    sigstop = signum
-sigstop = 0
-
 #################################################################################
 
 logmsg(f"Executing {__file__}")
@@ -109,7 +101,6 @@ for opt in sys.argv[1:]:
         print('    qgre - Prepare report describing the existing QG.')
         print('    tables - Prepare report describing the parsl tables.')
         print('    finalize - Register output datasets for existing QG.')
-        print('    tmax - Timeout in sec or tttU with U in {s, m, h, d}.')
         sys.exit()
     elif opt == 'init':
         doInit = True
@@ -123,15 +114,6 @@ for opt in sys.argv[1:]:
         showStatus = True
     elif opt == 'tables':
         showParslTables = True
-    elif opt[0:5] == 'tmax:':
-        stmax = opt[5:]
-        unit = stmax[-1]
-        utims = {'s':1, 'm':60, 'h':3600, 'd':86400}
-        if unit in utims:
-            tmax = utims[unit]*float(stmax[0:-1])
-        else:
-            tmax = float(stmax)
-        logmsg(f"Timeout set to {tmax:.1f} seconds.")
     elif opt == 'test': doTest = True
     elif opt == 'path':
         for dir in os.getenv('PYTHONPATH').split(':'): print(dir)
@@ -218,21 +200,8 @@ if doProc:
             if fut.done(): ndone += 1
         statlogmsg(f"Finished {ndone} of {ntsk} tasks.")
         time.sleep(10)
-        dtim = time.time() - time0
-        if sigstop: break
-        if dtim > tmax:
-            statlogmsg(f"Timing out after {dtim:.1f} sec. {ndone}/{ntsk} tasks completed.")
-            pg.shutdown()
-            sys.exit(1)
     signal.signal(signal.SIGINT, sigint_save)
     signal.signal(signal.SIGTERM, sigterm_save)
-    if sigstop:
-        logmsg("Shutting down for interrupt.")
-        pg.shutdown()
-        doFina = False
-        showStatus = True
-        get_pg_pickle_path()
-        #sys.exit(128+sigstop)
     statlogmsg(f"Workflow complete: {ndone}/{ntsk} tasks.")
 
 if doFina:
@@ -273,6 +242,3 @@ if showStatus:
     statlogmsg(msg)
 
 logmsg("All steps completed.")
-if sigstop:
-    logmsg("Forwarding signal {sigstop}.")
-    os.kill(os.getpid(), sigstop)
