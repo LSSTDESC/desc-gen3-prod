@@ -347,7 +347,7 @@ if [[ -n $WFARGS ]]; then
   echo 'setup -r gen3_workflow -j' >>$RFIL
   echo "g3wfpipe-run $WFARGS" >>$RFIL
   chmod +x ./run
-  info_echo Running steps: $WFARGS
+  info_echo Steps: $WFARGS
   $COM
   RSTAT=$?
 else
