@@ -71,7 +71,7 @@ def statlogmsg(*msgs):
 
 # Interrupt signal handler.
 def setstop(signum, frame):
-    statlogmsg(f"Received interrupt signal {signum}.")
+    logmsg(f"Handling interrupt signal {signum}.")
     global sigstop
     sigstop = signum
 sigstop = 0
@@ -224,6 +224,7 @@ if doProc:
     signal.signal(signal.SIGINT, sigint_save)
     signal.signal(signal.SIGTERM, sigterm_save)
     if sigstop:
+        logmsg("Shutting down for interrupt.")
         pg.shutdown()
         sys.exit(128+sigstop)
     statlogmsg(f"Workflow complete: {ndone}/{ntsk} tasks.")
