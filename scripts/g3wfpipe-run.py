@@ -243,7 +243,7 @@ if showStatus:
     logmsg(f"  Success: {nsuc:10}")
     logmsg(f"   Failed: {nfai:10}")
     logmsg(f"   Remain: {nrem:10}")
-    msg(f"Finished {nxdn} of {ntot} tasks.")
+    msg = f"Finished {nxdn} of {ntot} tasks.")
     if ( nfai ) msg += f" ({nfai} failed.)"
     statlogmsg(msg)
 
