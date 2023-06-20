@@ -222,8 +222,7 @@ if showStatus:
     get_pgro()
     pgro.status()
     statlogmsg("Evaluating status summary.")
-    get_pg()
-    futures = [job.get_future() for job in pg.values() if not job.dependencies]
+    futures = [job.get_future() for job in pgro.values() if not job.dependencies]
     ntsk = len(futures)
     ndone = 0
     for fut in futures:
