@@ -228,7 +228,7 @@ if showStatus:
     pandas.set_option('display.max_columns', 50)
     pandas.set_option('display.width', 1000)
     print(df)
-    print(df[200])
+    print(df.iloc[[200]])
     ntot = len(df)
     npen = len(df.query('status == "pending"'))
     nsch = len(df.query('status == "scheduled"'))
