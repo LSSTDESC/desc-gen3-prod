@@ -269,4 +269,6 @@ if showStatus:
     statlogmsg(msg)
 
 logmsg("All steps completed.")
-if sigstop: sys.exit(128+sigstop)
+if sigstop:
+    logmsg("Forwarding signal {sigstop}.")
+    os.kill(os.getpid(), sigstop)
