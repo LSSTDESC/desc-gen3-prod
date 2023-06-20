@@ -223,7 +223,7 @@ if showStatus:
     get_pgro()
     pgro.status()
     statlogmsg("Evaluating status summary.")
-    df = pgro.df.query("task_type.notnull()")
+    df = pgro.df.query("isinstance(task_type, str)")
     pandas.set_option('display.max_rows', 500)
     pandas.set_option('display.max_columns', 50)
     pandas.set_option('display.width', 1000)
