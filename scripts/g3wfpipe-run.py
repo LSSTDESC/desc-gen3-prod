@@ -29,11 +29,6 @@ pg_pickle_path = None     # Full path to the pg pickle file
 pg = None                 # ParlslGraph used for processing
 pgro = None               # ParslGraph for checking status
 
-# Interrupt signal handler.
-sigstop = 0
-def setstop(signum, frame):
-    sigstop = signum
-
 def get_pg():
     global pg
     if pg is None:
@@ -73,6 +68,14 @@ def logmsg(*msgs, update_status=False):
 
 def statlogmsg(*msgs):
     logmsglist(list(msgs), update_status=True)
+
+# Interrupt signal handler.
+sigstop = 0
+def setstop(signum, frame):
+    statlogmsg(f"Received interrupt signal {sigstop}.")
+    global sigstop = signum
+
+#################################################################################
 
 logmsg(f"Executing {__file__}")
 statlogmsg(f"Running g3wfpipe version: {dg3prod.version()}")
@@ -220,7 +223,6 @@ if doProc:
     signal.signal(signal.SIGINT, sigint_save)
     signal.signal(signal.SIGTERM, sigterm_save)
     if sigstop:
-        statlogmsg(f"Received interrupt signal {sigstop}.")
         pg.shutdown()
         sys.exit(128+sigstop)
     statlogmsg(f"Workflow complete: {ndone}/{ntsk} tasks.")
