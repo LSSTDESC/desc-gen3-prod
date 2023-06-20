@@ -222,11 +222,20 @@ if showStatus:
     get_pgro()
     pgro.status()
     statlogmsg("Evaluating status summary.")
-    futures = [job.get_future() for job in pgro.values() if not job.dependencies]
-    ntsk = len(futures)
-    ndone = 0
-    for fut in futures:
-        if fut.done(): ndone += 1
-    statlogmsg(f"Finished {ndone} of {ntsk} tasks.")
+    df = pgro.df
+    ntot = len(df)
+    npen = len(df.query('status == "pending"'))
+    nsch = len(df.query('status == "scheduled"'))
+    nrun = len(df.query('status == "running"'))
+    nsuc = len(df.query('status == "succeeded"'))
+    nfai = len(df.query('status == "failed"'))
+    nxdn = len(df.query('status == "exec_done"'))
+    nrem = npen + nsch
+    logmsg(f"    Total: {ntot:10}")
+    logmsg(f"Exec_done: {nxdn:10}")
+    logmsg(f"  Success: {nsuc:10}")
+    logmsg(f"   Failed: {nfai:10}")
+    logmsg(f"   Remain: {nrem:10}")
+    statlogmsg(f"Finished {nxdn} of {ntot} tasks.")
 
 logmsg("All steps completed.")
