@@ -223,13 +223,13 @@ if showStatus:
     get_pgro()
     pgro.status()
     statlogmsg("Evaluating status summary.")
-    
     df = pgro.df[pgro.df['task_type'].isin(pgro._task_list)]
-    pandas.set_option('display.max_rows', 500)
-    pandas.set_option('display.max_columns', 50)
-    pandas.set_option('display.width', 1000)
-    pandas.set_option('display.max_colwidth', 500)
-    print(df)
+    if False:
+        pandas.set_option('display.max_rows', 500)
+        pandas.set_option('display.max_columns', 50)
+        pandas.set_option('display.width', 1000)
+        pandas.set_option('display.max_colwidth', 500)
+        print(df)
     ntot = len(df)
     npen = len(df.query('status == "pending"'))
     nsch = len(df.query('status == "scheduled"'))
@@ -243,6 +243,8 @@ if showStatus:
     logmsg(f"  Success: {nsuc:10}")
     logmsg(f"   Failed: {nfai:10}")
     logmsg(f"   Remain: {nrem:10}")
-    statlogmsg(f"Finished {nxdn} of {ntot} tasks.")
+    msg(f"Finished {nxdn} of {ntot} tasks.")
+    if ( nfai ) msg += f" ({nfai} failed.)"
+    statlogmsg(msg)
 
 logmsg("All steps completed.")
