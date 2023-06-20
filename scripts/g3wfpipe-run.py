@@ -28,6 +28,11 @@ pg_pickle_path = None     # Full path to the pg pickle file
 pg = None                 # ParlslGraph used for processing
 pgro = None               # ParslGraph for checking status
 
+# Interrupt signal handler.
+sigstop = 0
+def setstop(signum, frame):
+    sigstop = signum
+
 def get_pg():
     global pg
     if pg is None:
@@ -197,6 +202,8 @@ if doProc:
     ntsk = len(futures)
     statlogmsg(f"Workflow task count: {ntsk}")
     ndone = 0
+    sigint_save = signal.signal(signal.SIGINT, setstop)
+    sigterm_save signal.signal(signal.SIGTERM, setstop)
     while ndone < ntsk:
         ndone = 0
         for fut in futures:
@@ -204,10 +211,17 @@ if doProc:
         statlogmsg(f"Finished {ndone} of {ntsk} tasks.")
         time.sleep(10)
         dtim = time.time() - time0
+        if sigstop: break
         if dtim > tmax:
             statlogmsg(f"Timing out after {dtim:.1f} sec. {ndone}/{ntsk} tasks completed.")
             pg.shutdown()
             sys.exit(1)
+    signal.signal(signal.SIGINT, sigint_save)
+    signal.signal(signal.SIGTERM, sigterm_save)
+    if sigstop:
+        statlogmsg(f"Received interrupt signal {sigstop}.")
+        pg.shutdown()
+        sys.exit(128+sigstop)
     statlogmsg(f"Workflow complete: {ndone}/{ntsk} tasks.")
 
 if doFina:
