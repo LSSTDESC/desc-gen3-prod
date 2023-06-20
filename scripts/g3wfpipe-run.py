@@ -70,11 +70,11 @@ def statlogmsg(*msgs):
     logmsglist(list(msgs), update_status=True)
 
 # Interrupt signal handler.
-sigstop = 0
 def setstop(signum, frame):
     statlogmsg(f"Received interrupt signal {sigstop}.")
     global sigstop
     sigstop = signum
+sigstop = 0
 
 #################################################################################
 
