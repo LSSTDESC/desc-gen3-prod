@@ -222,4 +222,4 @@ if showStatus:
     get_pgro()
     pgro.status()
 
-statlogmsg("All steps completed.")
+logmsg("All steps completed.")
