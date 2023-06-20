@@ -69,6 +69,24 @@ def logmsg(*msgs, update_status=False):
 def statlogmsg(*msgs):
     logmsglist(list(msgs), update_status=True)
 
+# Look for parsl graph pickle files.
+def get_pg_pickle_path():
+    global pg_pickle_path
+    pickname = 'parsl_graph_config.pickle'
+    pg_pickle_paths = []
+    pg_pickle_path = ''
+    for path, dirs, files in os.walk(thisdir, followlinks=True):
+        if pickname in files:
+            pg_pickle_paths += [f"{path}/{pickname}"]
+    if len(pg_pickle_paths) == 1:
+        pg_pickle_path = pg_pickle_paths[0]
+        statlogmsg(f"Found parsl pickle file: {pg_pickle_path}")
+    elif len(pg_pickle_paths):
+        statlogmsg(f"Found {len(pg_pickle_paths)} parsl pickle files")
+        for path in pg_pickle_paths:
+            logmsg(f"    {path}")
+        sys.exit(1)
+
 # Interrupt signal handler.
 def setstop(signum, frame):
     logmsg(f"Handling interrupt signal {signum}.")
@@ -138,32 +156,17 @@ from desc.gen3_workflow import start_pipeline
 from desc.gen3_workflow import ParslGraph
 
 bpsfile = 'config.yaml'
-pickname = 'parsl_graph_config.pickle'
-pickpath = ''
 
-# Look for parsl graph pickle files.
-pg_pickle_paths = []
-pg_pickle_path = ''
-for path, dirs, files in os.walk(thisdir, followlinks=True):
-    if pickname in files:
-        pg_pickle_paths += [f"{path}/{pickname}"]
-if len(pg_pickle_paths) == 1:
-    pg_pickle_path = pg_pickle_paths[0]
-    statlogmsg(f"Found parsl pickle file: {pg_pickle_path}")
-elif len(pg_pickle_paths):
-    statlogmsg(f"Found {len(pg_pickle_paths)} parsl pickle files")
-    for path in pg_pickle_paths:
-        logmsg(f"    {path}")
-    sys.exit(1)
-elif not doInit:
-    statlogmsg(f"Parsl pickle file not found: {pickname}")
-    sys.exit(1)
+get_pg_pickle_path()
+if len(pg_pickle_path) == 0 and not doInit:
+        statlogmsg(f"Parsl pickle file not found: {pickname}")
+        sys.exit(1)
 
 if doTest:
     logmsg('test')
 
 if doInit:
-    if len(pickpath):
+    if len(pg_pickle_path):
         statlogmsg("Remove existing job before starting a new one.")
         sys.exit(1)
     else:
@@ -228,6 +231,7 @@ if doProc:
         pg.shutdown()
         doFina = False
         showStatus = True
+        get_pg_pickle_path()
         #sys.exit(128+sigstop)
     statlogmsg(f"Workflow complete: {ndone}/{ntsk} tasks.")
 
