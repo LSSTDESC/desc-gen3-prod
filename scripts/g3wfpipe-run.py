@@ -223,6 +223,7 @@ if showStatus:
     pgro.status()
     statlogmsg("Evaluating status summary.")
     df = pgro.df
+    print(df)
     ntot = len(df)
     npen = len(df.query('status == "pending"'))
     nsch = len(df.query('status == "scheduled"'))
