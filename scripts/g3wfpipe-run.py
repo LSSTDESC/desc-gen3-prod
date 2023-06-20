@@ -7,6 +7,7 @@ time0 = time.time()
 import os
 import sys
 import dg3prod
+import pandas
 
 statfilename = 'current-status.txt'
 doInit = False
@@ -223,6 +224,9 @@ if showStatus:
     pgro.status()
     statlogmsg("Evaluating status summary.")
     df = pgro.df
+    pandas.set_option('display.max_rows', 500)
+    pandas.set_option('display.max_columns', 50)
+    pandas.set_option('display.width', 1000)
     print(df)
     ntot = len(df)
     npen = len(df.query('status == "pending"'))
