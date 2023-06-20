@@ -8,6 +8,7 @@ import os
 import sys
 import dg3prod
 import pandas
+import signal
 
 statfilename = 'current-status.txt'
 doInit = False
@@ -203,7 +204,7 @@ if doProc:
     statlogmsg(f"Workflow task count: {ntsk}")
     ndone = 0
     sigint_save = signal.signal(signal.SIGINT, setstop)
-    sigterm_save signal.signal(signal.SIGTERM, setstop)
+    sigterm_save = signal.signal(signal.SIGTERM, setstop)
     while ndone < ntsk:
         ndone = 0
         for fut in futures:
