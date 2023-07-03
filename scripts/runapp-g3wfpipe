@@ -345,7 +345,7 @@ if [[ -n $WFARGS ]]; then
   echo 'echo Running with desc-wfmon version $(desc-wfmon-parsltest -v)' >>$RFIL
   echo 'git clone https://github.com/LSSTDESC/gen3_workflow.git' >>$RFIL
   echo 'setup -r gen3_workflow -j' >>$RFIL
-  echo 'pip freeze' >>$RFIL
+  echo 'pip freeze >versions.log' >>$RFIL
   echo "g3wfpipe-run $WFARGS" >>$RFIL
   chmod +x ./run
   info_echo Steps: $WFARGS
