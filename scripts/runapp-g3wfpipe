@@ -298,6 +298,7 @@ PIPEVAL=
     fi
     echo "  executor: WorkQueue" >>config.yaml
     echo "  provider: Local" >>config.yaml
+    echo "  port: 0" >>config.yaml
     echo "  nodes_per_block: 1" >>config.yaml
     echo "  worker_options: \"--memory=${MEGB}000\"" >>config.yaml
   elif [ ${EXEC:0:3} = tp: ]; then
