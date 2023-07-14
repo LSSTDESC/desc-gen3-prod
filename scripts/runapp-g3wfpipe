@@ -89,7 +89,7 @@ shopt -s extglob
 # Parse the config.
 PIPE=
 QUERY=
-LVER=
+LVEROPTS=
 CJOB=
 DOINIT=false
 WFARGS_ARR=()
@@ -97,28 +97,30 @@ USER=$(whoami)
 DRP_INGDIR=pipelines/_ingredients  # w2321 and later
 for OPT in ${COPTS[@]}; do
   dbg_echo Parsing option $OPT
-  if [ $OPT == init ]; then
+  OPTNAME=$(echo $OPT | cut -d':' -f1)
+  OPTARGS=$(echo $OPT | cut -d':' -f2-)
+  if [ $OPTNAME == init ]; then
     DOINIT=true
-    WFARGS_ARR+=($OPT)
-  elif [[ $OPT =~ job:[0-9]+$ ]]; then
-    CJOB=${OPT:4}
-  elif [[ $OPT =~ proc:?* ]]; then
-    WFARGS_ARR+=($OPT)
-  elif [ $OPT == finalize ]; then
-    WFARGS_ARR+=($OPT)
-  elif [ $OPT == qgre ]; then
-    WFARGS_ARR+=($OPT)
-  elif [ $OPT == status ]; then
-    WFARGS_ARR+=($OPT)
+    WFARGS_ARR+=($OPTNAME)
+  elif [ $OPTNAME = job ]; then
+    CJOB=$OPTARGS
+  elif [[ $OPTNAME = proc ]]; then
+    WFARGS_ARR+=($OPTNAME)
+  elif [ $OPTNAME == finalize ]; then
+    WFARGS_ARR+=($OPTNAME)
+  elif [ $OPTNAME == qgre ]; then
+    WFARGS_ARR+=($OPTNAME)
+  elif [ $OPTNAME == status ]; then
+    WFARGS_ARR+=($OPTNAME)
   elif [ $OPT == tables ]; then
-    WFARGS_ARR+=($OPT)
-  elif [[ $OPT == pipe:?* ]]; then
+    WFARGS_ARR+=($OPTNAME)
+  elif [ $OPTNAME = pipe ]; then
     if [ -n "$PIPE" ]; then
       err_echo ERROR: Duplicate pipeline specification: $PIPE $OPT
       exit 1
     fi
-    PIPE=${OPT:5}
-  elif [[ $OPT == +(visit|tract|patch):?* ]]; then
+    PIPE=$OPTARGS
+  elif [ $OPTNAME = visit -o $OPTNAME = tract -o $OPTNAME = patch ]; then
     NEWQUERY=$(decode_query $OPT)
     if [ -n "$QUERY" ]; then
       QUERY="$QUERY and $NEWQUERY"
@@ -126,17 +128,16 @@ for OPT in ${COPTS[@]}; do
       QUERY="$NEWQUERY"
     fi
   else
-    NEWVER=$(g3wf-convert-lsst-version $OPT)
-    if [ -n "$NEWVER" ]; then
-      LVER=$NEWVER
-    else
+    LVER=$(g3wf-convert-lsst-version $OPTNAME)
+    if [ -z "$LVER" ]; then
       err_echo ERROR: Invalid config field: $OPT
       exit 3
     fi
-    IVER=${OPT:1}
+    IVER=${OPTNAME:1}
     if [ $IVER -le 2319 ]; then
       DRP_INGDIR=ingredients
     fi
+    LVEROPTS=$OPT
   fi
 done
 
@@ -152,7 +153,7 @@ if [[ -n $CJOB ]]; then
     echo "ERROR: Pipeline may not be specified for a continuation job."
     exit 1
   fi
-  if [[ -n $LVER ]]; then
+  if [[ -n $LVEROPTS ]]; then
     echo "ERROR: The LSST release may not be specified for a continuation job."
     exit 1
   fi
@@ -192,7 +193,7 @@ if [[ -n $CJOB ]]; then
   source $SUPFIL
   PIPE=$CON_PIPE
   QUERY=$CON_QUERY
-  LVER=$CON_LVER
+  LVEROPTS=$CON_LVEROPTS
   if [[ -z $CSRC ]]; then
     CSRC=$CON_CSRC
   fi
@@ -224,7 +225,7 @@ WFARGS="${WFARGS_ARR[*]}"
 # Record the setup for continuation jobs.
 info_echo Creating consetup.sh
 echo "CON_CSRC=$CSRC" >consetup.sh
-echo "CON_LVER=$LVER" >>consetup.sh
+echo "CON_LVEROPTS=$LVEROPTS" >>consetup.sh
 echo "CON_QUERY=$QUERY" >>consetup.sh
 echo "CON_PIPE=$PIPE" >>consetup.sh
 
@@ -238,7 +239,7 @@ PIPEVAL=
     err_echo "Query must be provided for initialization."
     exit 1
   fi
-  if [ -z "$LVER" ]; then
+  if [ -z "$LVEROPTS" ]; then
     err_echo "LSST release mt be proivided for initialization."
     exit 1
   fi
@@ -255,7 +256,7 @@ PIPEVAL=
   if [ -n "$PIPEVAL" ]; then PIPEVALSPEC="#$PIPEVAL"; fi
   echo Pipeline: $PIPEVAL
   echo "    Query: $QUERY"
-  echo " LSST release: $LVER"
+  echo " LSST release opts: $LVEROPTS"
   echo Creating config.yaml.
   g3wfpipe-template \
     | sed s/%PAYLOAD%/$PIPE/g \
@@ -326,7 +327,7 @@ if [[ -n $WFARGS ]]; then
     exit 15
   fi
   echo Code source: $CSRC
-  COM="${TMAX:+timeout $TMAX }$COM $LVER ./run"
+  COM="${TMAX:+timeout $TMAX }$COM $LVEROPTS ./run"
   # Create the run script.
   # It installs desc-gen3-prod and then runs the query.
   RFIL=./run
