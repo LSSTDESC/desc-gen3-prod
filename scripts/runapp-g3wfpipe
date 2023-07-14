@@ -329,25 +329,28 @@ if [[ -n $WFARGS ]]; then
   echo Code source: $CSRC
   COM="${TMAX:+timeout $TMAX }$COM $LVEROPTS ./run"
   # Create the run script.
-  # It installs desc-gen3-prod and then runs the query.
+  # It installs desc-gen3-prod and then runs the pipeline.
   RFIL=./run
   echo "#!/bin/bash" > $RFIL
   echo 'export PYTHONPATH' >>$RFIL
   if [ $CSRC = shifter ]; then
     echo "source /opt/lsst/software/stack/setup.sh" >>$RFIL
     echo "setup lsst_distrib" >>$RFIL
-    echo "pip install -t local/desc-wfmon git+https://github.com/LSSTDESC/desc-wfmon" >>$RFIL
-    echo 'PATH=./local/desc-wfmon/bin:$PATH' >>$RFIL
-    echo 'PYTHONPATH=./local/desc-wfmon:$PYTHONPATH' >>$RFIL
   fi
+  echo "echo run: Installing desc-wfmon." >>$RFIL
+  echo "pip install -t local/desc-wfmon git+https://github.com/LSSTDESC/desc-wfmon" >>$RFIL
+  echo 'PATH=./local/desc-wfmon/bin:$PATH' >>$RFIL
+  echo 'PYTHONPATH=./local/desc-wfmon:$PYTHONPATH' >>$RFIL
+  echo "echo run: Installing desc-gen3-prod." >>$RFIL
   echo "pip install -t local/desc-gen3-prod git+https://github.com/LSSTDESC/desc-gen3-prod" >>$RFIL
   echo 'PATH=./local/desc-gen3-prod/bin:$PATH' >>$RFIL
   echo 'PYTHONPATH=./local/desc-gen3-prod:$PYTHONPATH' >>$RFIL
-  echo 'echo Running with desc-gen3-prod version $(desc-gen3-prod-version)' >>$RFIL
-  echo 'echo Running with desc-wfmon version $(desc-wfmon-parsltest -v)' >>$RFIL
+  echo 'echo run: Running with desc-gen3-prod version $(desc-gen3-prod-version)' >>$RFIL
+  echo 'echo run: Running with desc-wfmon version $(desc-wfmon-parsltest -v)' >>$RFIL
   echo 'git clone https://github.com/LSSTDESC/gen3_workflow.git' >>$RFIL
   echo 'setup -r gen3_workflow -j' >>$RFIL
   echo 'pip freeze >versions.log' >>$RFIL
+  echo 'echo run: Running pipeline.' >>$RFIL
   echo "g3wfpipe-run $WFARGS" >>$RFIL
   chmod +x ./run
   info_echo Steps: $WFARGS
