@@ -188,9 +188,11 @@ if doProc:
         statlogmsg("ERROR: Quantum graph not found.")
         sys.exit(1)
     pg.run()
+    ntskall = len(pg.values())
+    statlogmsg(f"Total task count: {ntskall}")
     futures = [job.get_future() for job in pg.values() if not job.dependencies]
     ntsk = len(futures)
-    statlogmsg(f"Workflow task count: {ntsk}")
+    statlogmsg(f"Ready/total task count: {ntsk}/{ntskall}")
     ndone = 0
     while ndone < ntsk:
         ndone = 0
