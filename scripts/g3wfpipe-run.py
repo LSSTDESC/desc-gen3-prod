@@ -20,6 +20,7 @@ showStatus = False
 showParslTables = False
 doWorkflow = True
 doTest = False
+doButlerTest = False
 
 thisdir = os.getcwd()
 haveQG = False
@@ -118,6 +119,8 @@ for opt in sys.argv[1:]:
     elif opt == 'path':
         for dir in os.getenv('PYTHONPATH').split(':'): print(dir)
         exit(0)
+    elif opt == 'butler':
+        doButlerTest = True
     else:
         statlogmsg(f"Invalid option: '{opt}'")
         sys.exit(1)
@@ -147,6 +150,15 @@ if len(pg_pickle_path) == 0 and not doInit:
 if doTest:
     logmsg('test')
 
+if doButlerTest:
+    statlogmsg("Setting up to test the butler.")
+    import lsst.daf.butler as daf_butler
+    repo = '/global/cfs/cdirs/lsst/production/gen3/DC2/Run2.2i/repo'
+    butler = daf_butler.Butler(repo)
+    statlogmsg("Fetching butler collections.")
+    collections = butler.registry.queryCollections()
+    statlogmsg("Butler has {len(collections)} collections.")
+
 if doInit:
     if len(pg_pickle_path):
         statlogmsg("Remove existing job before starting a new one.")
@@ -154,6 +166,9 @@ if doInit:
     else:
         logmsg()
         statlogmsg("Creating quantum graph.")
+        # The log for the QG generati is at submit/u/<user>/<name>/<timestamp>/quantumGraphGeneration.out
+        # Also see execution_butler_creation.out in that same dir.
+        # There should messages reporting daset transfers after the quanta are reported.
         pg = start_pipeline(bpsfile)
         #qgid = pg.qgraph.graphID
         #statlogmsg(f"Created QG. ID is {qgid}")
