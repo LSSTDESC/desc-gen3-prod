@@ -157,6 +157,7 @@ if doInit:
         pg = start_pipeline(bpsfile)
         #qgid = pg.qgraph.graphID
         #statlogmsg(f"Created QG. ID is {qgid}")
+        statlogmsg("Checking quantum graph.")
         haveQG = get_haveQG(pg)
         if haveQG:
             statlogmsg("Quantum graph was created.")
