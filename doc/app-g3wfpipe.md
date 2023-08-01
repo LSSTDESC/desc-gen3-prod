@@ -59,4 +59,4 @@ For cvmfs, gen3-workflow and its required extra products are automatically insta
 This can lead to some delay the first time a release is used and there will likely be problems if another jobs is started during installation.
 
 For shifter, a docker image must be created in advance and installed in the user's shifter image area.
-Instructions and code for this may be found at [xx](../docker).
+Instructions and code for this may be found at [docker/gen3workflow](../docker/gen3workflow).
