@@ -200,10 +200,21 @@ if doProc:
         sys.exit(1)
     statlogmsg('Starting workflow')
     pg.run()
-    statlogmsg('Running workflow')
-    ntskall = len(pg.values())
-    statlogmsg(f"Total task count: {ntskall}")
-    futures = [job.get_future() for job in pg.values() if not job.dependencies]
+    count = 0
+    futures = None
+    statlogmsg('Retrieving futures.')
+    while futures is None:
+        count += 1
+        try:
+            ntskall = len(pg.values())
+            statlogmsg(f"Try {count} task count: {ntskall}")
+            futures = [job.get_future() for job in pg.values() if not job.dependencies]
+        except Exception as e:
+            logmsg(f"Try {count} raised exception: {e}")
+            if count > 10:
+                statlogmsg("Unable to retrieve futures.")
+                sys.exit(1)
+            futures = None
     ntsk = len(futures)
     statlogmsg(f"Ready/total task count: {ntsk}/{ntskall}")
     ndone = 0
