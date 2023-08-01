@@ -34,6 +34,7 @@ The config fields are
 | finalize | Register output data. | finalize |
 | qgre | Check the QG and display its properties. | qgre |
 | status | Report the status of processing, e.g. what fraction is complete. | status |
+| butler | Run a Butler test that lists the collections. | butler |
 
 If there are mutliple queries, they are ANDed together.
 The LSST release, query and pipeline may not be specified in continuation jobs.
