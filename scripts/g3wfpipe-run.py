@@ -237,30 +237,33 @@ if showStatus:
     logmsg()
     statlogmsg("Fetching status")
     get_pg(readonly=True)
-    pgro.status()
-    statlogmsg("Evaluating status summary.")
-    df = pgro.df[pgro.df['task_type'].isin(pgro._task_list)]
-    if False:
-        pandas.set_option('display.max_rows', 500)
-        pandas.set_option('display.max_columns', 50)
-        pandas.set_option('display.width', 1000)
-        pandas.set_option('display.max_colwidth', 500)
-        print(df)
-    ntot = len(df)
-    npen = len(df.query('status == "pending"'))
-    nsch = len(df.query('status == "scheduled"'))
-    nrun = len(df.query('status == "running"'))
-    nsuc = len(df.query('status == "succeeded"'))
-    nfai = len(df.query('status == "failed"'))
-    nxdn = len(df.query('status == "exec_done"'))
-    nrem = npen + nsch
-    logmsg(f"    Total: {ntot:10}")
-    logmsg(f"Exec_done: {nxdn:10}")
-    logmsg(f"  Success: {nsuc:10}")
-    logmsg(f"   Failed: {nfai:10}")
-    logmsg(f"   Remain: {nrem:10}")
-    msg = f"Finished {nxdn} of {ntot} tasks."
-    if nfai: msg += f" ({nfai} failed.)"
-    statlogmsg(msg)
+    if pgro is None:
+        statlogmsg('Workflow has not started.')
+    else:
+        pgro.status()
+        statlogmsg("Evaluating status summary.")
+        df = pgro.df[pgro.df['task_type'].isin(pgro._task_list)]
+        if False:
+            pandas.set_option('display.max_rows', 500)
+            pandas.set_option('display.max_columns', 50)
+            pandas.set_option('display.width', 1000)
+            pandas.set_option('display.max_colwidth', 500)
+            print(df)
+        ntot = len(df)
+        npen = len(df.query('status == "pending"'))
+        nsch = len(df.query('status == "scheduled"'))
+        nrun = len(df.query('status == "running"'))
+        nsuc = len(df.query('status == "succeeded"'))
+        nfai = len(df.query('status == "failed"'))
+        nxdn = len(df.query('status == "exec_done"'))
+        nrem = npen + nsch
+        logmsg(f"    Total: {ntot:10}")
+        logmsg(f"Exec_done: {nxdn:10}")
+        logmsg(f"  Success: {nsuc:10}")
+        logmsg(f"   Failed: {nfai:10}")
+        logmsg(f"   Remain: {nrem:10}")
+        msg = f"Finished {nxdn} of {ntot} tasks."
+        if nfai: msg += f" ({nfai} failed.)"
+        statlogmsg(msg)
 
 logmsg("All steps completed.")
