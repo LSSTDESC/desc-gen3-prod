@@ -67,12 +67,12 @@ def get_pg_pickle_path():
             logmsg(f"    {path}")
         sys.exit(1)
 
-def get_haveQG(pg):
+def get_haveQG(pg, noisy=False):
     try:
         if pg.qgraph is None:
             return False
     except:
-        statlogmsg("Check of quantum graph raised an exception.")
+        if noisy: statlogmsg("Check of quantum graph raised an exception.")
     return True
 
 def get_pg(readonly=False, require=True):
