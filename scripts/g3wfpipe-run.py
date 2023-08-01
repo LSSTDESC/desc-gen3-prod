@@ -193,11 +193,12 @@ if doQgReport:
 
 if doProc:
     logmsg()
-    statlogmsg('Starting workflow')
+    statlogmsg('Fetching workflow QG.')
     get_pg()
     if not haveQG:
         statlogmsg("ERROR: Quantum graph not found.")
         sys.exit(1)
+    statlogmsg('Starting workflow')
     pg.run()
     statlogmsg('Running workflow')
     ntskall = len(pg.values())
