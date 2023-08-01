@@ -30,26 +30,6 @@ pg_pickle_path = None     # Full path to the pg pickle file
 pg = None                 # ParlslGraph used for processing
 pgro = None               # ParslGraph for checking status
 
-def get_pg():
-    global pg
-    if pg is None:
-        pg = ParslGraph.restore(pg_pickle_path)
-    return pg
-
-def get_pgro():
-    global pgro
-    if pgro is None:
-        pgro = ParslGraph.restore(pg_pickle_path, use_dfk=False)
-    return pgro
-
-def get_haveQG(pg):
-    try:
-        if pg.qgraph is None:
-            return False
-    except:
-        statlogmsg("Check of quantum graph raised an exception.")
-    return True
-
 def logmsglist(msgs, update_status=False):
     out = open('runapp-g3wfpipe.log', 'a')
     dmsg = time.strftime('%Y-%m-%d %H:%M:%S:')
@@ -86,6 +66,29 @@ def get_pg_pickle_path():
         for path in pg_pickle_paths:
             logmsg(f"    {path}")
         sys.exit(1)
+
+def get_pg(readonly=False):
+    global pg
+    global pgro
+    if pg is None:
+        get_pg_pickle_path()
+        if len(pg_pickle_path) == 0:
+            statlogmsg(f"Parsl pickle file not found: {pickname}")
+            sys.exit(1)
+        if readonly:
+            pgro = ParslGraph.restore(pg_pickle_path, use_dfk=False)
+            return pgro
+        else:
+            pg = ParslGraph.restore(pg_pickle_path)
+    return pg
+
+def get_haveQG(pg):
+    try:
+        if pg.qgraph is None:
+            return False
+    except:
+        statlogmsg("Check of quantum graph raised an exception.")
+    return True
 
 #################################################################################
 
@@ -142,11 +145,6 @@ from desc.gen3_workflow import ParslGraph
 
 bpsfile = 'config.yaml'
 
-get_pg_pickle_path()
-if len(pg_pickle_path) == 0 and not doInit and not doButlerTest:
-        statlogmsg(f"Parsl pickle file not found: {pickname}")
-        sys.exit(1)
-
 if doTest:
     logmsg('test')
 
@@ -157,7 +155,7 @@ if doButlerTest:
     butler = daf_butler.Butler(repo)
     statlogmsg("Fetching butler collections.")
     collections = butler.registry.queryCollections()
-    statlogmsg("Butler has {len(collections)} collections.")
+    statlogmsg(f"Butler has {len(collections)} collections.")
 
 if doInit:
     if len(pg_pickle_path):
@@ -229,7 +227,7 @@ if doFina:
 if showStatus:
     logmsg()
     statlogmsg("Fetching status")
-    get_pgro()
+    get_pg(readonly=True)
     pgro.status()
     statlogmsg("Evaluating status summary.")
     df = pgro.df[pgro.df['task_type'].isin(pgro._task_list)]
