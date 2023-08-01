@@ -178,12 +178,6 @@ if doInit:
             statlogmsg("Quantum graph was created.")
         else:
             statlogmsg("Quantum graph was not created.")
-else:
-    if pg_pickle_path == '':
-        statlogmsg("Parsl pickle file not found.")
-        sys.exit(1)
-    logmsg(time.ctime(), "Using existing pipeline:", pg_pickle_path)
-    haveQG = get_haveQG(pg)
 
 if doQgReport:
     if not haveQG:
