@@ -34,6 +34,7 @@ The config fields are
 | finalize | Register output data. | finalize |
 | qgre | Check the QG and display its properties. | qgre |
 | status | Report the status of processing, e.g. what fraction is complete. | status |
+| butler | Run a Butler test that lists the collections. | butler |
 
 If there are mutliple queries, they are ANDed together.
 The LSST release, query and pipeline may not be specified in continuation jobs.
@@ -58,4 +59,4 @@ For cvmfs, gen3-workflow and its required extra products are automatically insta
 This can lead to some delay the first time a release is used and there will likely be problems if another jobs is started during installation.
 
 For shifter, a docker image must be created in advance and installed in the user's shifter image area.
-Instructions and code for this may be found at [xx](../docker).
+Instructions and code for this may be found at [docker/gen3workflow](../docker/gen3workflow).
