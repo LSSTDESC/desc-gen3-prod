@@ -75,21 +75,22 @@ def get_haveQG(pg):
         statlogmsg("Check of quantum graph raised an exception.")
     return True
 
-def get_pg(readonly=False):
+def get_pg(readonly=False, require=True):
     global pg
     global pgro
     global haveQG
     if pg is None:
         get_pg_pickle_path()
-        if len(pg_pickle_path) == 0:
             statlogmsg(f"Parsl pickle file not found: {pickname}")
+        if require and len(pg_pickle_path) == 0:
             sys.exit(1)
-        if readonly:
-            pgro = ParslGraph.restore(pg_pickle_path, use_dfk=False)
-            haveQG = get_haveQG(pgro)
-            return pgro
-        else:
-            pg = ParslGraph.restore(pg_pickle_path)
+        if len(pg_pickle_path) > 0:
+            if readonly:
+                pgro = ParslGraph.restore(pg_pickle_path, use_dfk=False)
+                haveQG = get_haveQG(pgro)
+                return pgro
+            else:
+                pg = ParslGraph.restore(pg_pickle_path)
     haveQG = get_haveQG(pg)
     return pg
 
@@ -161,6 +162,7 @@ if doButlerTest:
     statlogmsg(f"Butler has {len(collections)} collections.")
 
 if doInit:
+    get_pg()
     if len(pg_pickle_path):
         statlogmsg("Remove existing job before starting a new one.")
         sys.exit(1)
