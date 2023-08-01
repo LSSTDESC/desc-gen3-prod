@@ -45,8 +45,8 @@ On perlmutter or cori, install with shifter:
 </pre>
 
 ## Version history 
-00 - LSST installation on Centos 7 plus vim.
-01 - Preceding plus the gen3 pip installs for LSST.
-02 - Preceding plus conda install of ndcctools 7.3.5
-03 - Same as preceding with mamba conda solver
-04 - Same as 02 except thread protections are added to startup.
+00 - LSST installation on Centos 7 plus vim.  
+01 - Preceding plus the gen3 pip installs for LSST.  
+02 - Preceding plus conda install of ndcctools 7.3.5  
+03 - Same as preceding with mamba conda solver  
+04 - Same as 02 except thread protections are added to startup.  
