@@ -67,21 +67,6 @@ def get_pg_pickle_path():
             logmsg(f"    {path}")
         sys.exit(1)
 
-def get_pg(readonly=False):
-    global pg
-    global pgro
-    if pg is None:
-        get_pg_pickle_path()
-        if len(pg_pickle_path) == 0:
-            statlogmsg(f"Parsl pickle file not found: {pickname}")
-            sys.exit(1)
-        if readonly:
-            pgro = ParslGraph.restore(pg_pickle_path, use_dfk=False)
-            return pgro
-        else:
-            pg = ParslGraph.restore(pg_pickle_path)
-    return pg
-
 def get_haveQG(pg):
     try:
         if pg.qgraph is None:
@@ -89,6 +74,24 @@ def get_haveQG(pg):
     except:
         statlogmsg("Check of quantum graph raised an exception.")
     return True
+
+def get_pg(readonly=False):
+    global pg
+    global pgro
+    global haveQG
+    if pg is None:
+        get_pg_pickle_path()
+        if len(pg_pickle_path) == 0:
+            statlogmsg(f"Parsl pickle file not found: {pickname}")
+            sys.exit(1)
+        if readonly:
+            pgro = ParslGraph.restore(pg_pickle_path, use_dfk=False)
+            haveQG = get_haveQG(pgro)
+            return pgro
+        else:
+            pg = ParslGraph.restore(pg_pickle_path)
+    haveQG = get_haveQG(pg)
+    return pg
 
 #################################################################################
 
@@ -162,7 +165,6 @@ if doInit:
         statlogmsg("Remove existing job before starting a new one.")
         sys.exit(1)
     else:
-        logmsg()
         statlogmsg("Creating quantum graph.")
         # The log for the QG generati is at submit/u/<user>/<name>/<timestamp>/quantumGraphGeneration.out
         # Also see execution_butler_creation.out in that same dir.
@@ -180,7 +182,6 @@ else:
     if pg_pickle_path == '':
         statlogmsg("Parsl pickle file not found.")
         sys.exit(1)
-    logmsg()
     logmsg(time.ctime(), "Using existing pipeline:", pg_pickle_path)
     haveQG = get_haveQG(pg)
 
