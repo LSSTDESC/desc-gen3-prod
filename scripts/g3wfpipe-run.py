@@ -25,6 +25,7 @@ doButlerTest = False
 thisdir = os.getcwd()
 haveQG = False
 
+pickname = 'parsl_graph_config.pickle'
 pg_pickle_path = None     # Full path to the pg pickle file
 pg = None                 # ParlslGraph used for processing
 pgro = None               # ParslGraph for checking status
@@ -72,7 +73,6 @@ def statlogmsg(*msgs):
 # Look for parsl graph pickle files.
 def get_pg_pickle_path():
     global pg_pickle_path
-    pickname = 'parsl_graph_config.pickle'
     pg_pickle_paths = []
     pg_pickle_path = ''
     for path, dirs, files in os.walk(thisdir, followlinks=True):
@@ -143,7 +143,7 @@ from desc.gen3_workflow import ParslGraph
 bpsfile = 'config.yaml'
 
 get_pg_pickle_path()
-if len(pg_pickle_path) == 0 and not doInit:
+if len(pg_pickle_path) == 0 and not doInit and not doButlerTest:
         statlogmsg(f"Parsl pickle file not found: {pickname}")
         sys.exit(1)
 

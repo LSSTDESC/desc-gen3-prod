@@ -32,6 +32,7 @@ if [[ -z $1 || $1 = -h ]]; then
   echo "  proc: Process data."
   echo "  finalize: Finalize (register output data products)."
   echo "  status: Display processing status."
+  echo "  butler: Run test of the Butler."
   echo HFG = HF1-HF2-... where HFi is any of
   echo "  exec:XX where XX = wq, tp or wqMM"
   echo "  cvmfs: Code taken from cvmfs"
@@ -109,6 +110,8 @@ for OPT in ${COPTS[@]}; do
   elif [ $OPTNAME == finalize ]; then
     WFARGS_ARR+=($OPTNAME)
   elif [ $OPTNAME == qgre ]; then
+    WFARGS_ARR+=($OPTNAME)
+  elif [ $OPTNAME == butler ]; then
     WFARGS_ARR+=($OPTNAME)
   elif [ $OPTNAME == status ]; then
     WFARGS_ARR+=($OPTNAME)
