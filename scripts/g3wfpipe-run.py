@@ -81,8 +81,8 @@ def get_pg(readonly=False, require=True):
     global haveQG
     if pg is None:
         get_pg_pickle_path()
-            statlogmsg(f"Parsl pickle file not found: {pickname}")
         if require and len(pg_pickle_path) == 0:
+            statlogmsg(f"Parsl pickle file not found: {pickname}")
             sys.exit(1)
         if len(pg_pickle_path) > 0:
             if readonly:
@@ -162,7 +162,7 @@ if doButlerTest:
     statlogmsg(f"Butler has {len(collections)} collections.")
 
 if doInit:
-    get_pg()
+    get_pg(require=False)
     if len(pg_pickle_path):
         statlogmsg("Remove existing job before starting a new one.")
         sys.exit(1)
