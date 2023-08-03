@@ -33,7 +33,7 @@ export PS1="Failed $MYNAME> "
 if [ -z "$LVER" -o "$LVER" = "-h" -o -z "$OPT" ]; then
   echo Usage: source $MYNAME LSST_TAG:OPT
 elif [ -z "$LVER" ]; then
-  echo $MYNAME: ERROR: Unable to intepret LSST tag $LVERTAG
+  echo $MYNAME: ERROR: Unable to interpret LSST tag $LVERTAG
 elif ! outbase=$(descprod-output-dir create installs); then
   echo $MYNAME: ERROR: Unable to find decprod output dir.
 else

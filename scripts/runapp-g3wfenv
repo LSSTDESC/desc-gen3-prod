@@ -25,6 +25,7 @@ if [[ -z $1 || $1 = -h ]]; then
   echo "    cvmfs: Code taken from cvmfs"
   echo "  shifter: Code taken from shifter"
   echo "    wYYWW: Use LSSST release w_20YY_WW"
+  echo "   remove: Remove the env if it exists"
   echo "  rebuild: Rebuild the env if it already exists"
   echo HFG = HF1-HF2-... where HFi is any of
   echo "  tmax: Timeout in sec"
@@ -62,13 +63,10 @@ shopt -s extglob
 
 # Parse the config.
 CSRC=cvmfs
-QUERY=
 LVEROPTS=
-CJOB=
-DOINIT=false
-WFARGS_ARR=()
 USER=$(whoami)
-DRP_INGDIR=pipelines/_ingredients  # w2321 and later
+REMOVE=
+REBUILD=
 for OPT in ${COPTS[@]}; do
   dbg_echo Parsing option $OPT
   OPTNAME=$(echo $OPT | cut -d':' -f1)
@@ -77,6 +75,10 @@ for OPT in ${COPTS[@]}; do
     CSRC=shifter
   elif [ $OPT = cvmfs ]; then
     CSRC=cvmfs
+  elif [ $OPT = remove ]; then
+    REMOVE=true
+  elif [ $OPT = rebuild ]; then
+    REBUILD=true
   else
     LVER=$(g3wf-convert-lsst-version $OPTNAME)
     if [ -z "$LVER" ]; then
@@ -112,12 +114,26 @@ else
 fi
 echo Code source: $CSRC
 
+if [ -n "$REMOVE" -o -n "$REBUILD" ]; then
+  if [ $CSRC = cvmfs ]; then
+    info_echo Removing old installation.
+    if ! g3wf-remove-cvmfs $LVEROPTS; then
+      info_echo Unable to remove cvmfs $LVEROPTS
+      exit 1
+    fi
+    if [ -z "$REBUILD" ]; then exit 0; fi
+  fi
+fi
+  
+info_echo Fetching parsl version for $CSRC $LVEROPTS.
 ECOM=$(which g3wf-parsl-version)
 VFIL='parsl-version.dat'
 echo "not found" >$VFIL
-$COM $LVEROPTS $ECOM
+if ! $COM $LVEROPTS $ECOM; then
+  info_echo Unable to run in env $CSRC $LVEROPTS
+  exit 1
+fi
 info_echo Parsl version is $(cat $VFIL)
-RSTAT=$?
 
 echo "Done."
 exit $RSTAT
