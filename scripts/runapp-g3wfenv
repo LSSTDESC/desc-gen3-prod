@@ -1,0 +1,123 @@
+#!/bin/bash
+
+# runapp-g3wfenv
+#
+# David Adams
+# August 2023
+#
+# Run a job to build or check an env suitable for running DESC gen3 jobs.
+# The env includes an LSST release and the latest DESC parsl mand its
+# dependencies.
+#
+# This script is called without two arguments config and howfig, each of which is split
+# '-' as a separator to obtain the configuration fields NAM:VAL or NAM:VAL1:VAL2
+#
+# Config fields:
+#   cvmfs - Take LSST release from cvmfs.
+#   shifter - Use a shifter image.
+#   wYYWW: Use LSST release w_20YY_WW
+# Howfig fields:
+#   tmax - Timeout in sec or with suffix m, h
+
+if [[ -z $1 || $1 = -h ]]; then
+  echo Usage: $0 CFG [HFG]
+  echo CFG = CF1-CF2-... where CFi is any of
+  echo "    cvmfs: Code taken from cvmfs"
+  echo "  shifter: Code taken from shifter"
+  echo "    wYYWW: Use LSSST release w_20YY_WW"
+  echo "  rebuild: Rebuild the env if it already exists"
+  echo HFG = HF1-HF2-... where HFi is any of
+  echo "  tmax: Timeout in sec"
+  exit 1
+fi
+
+DBG=0
+SFIL=current-status.txt
+
+err_echo() {
+  MSG="$*"
+  echo "$MSG" >$SFIL
+  echo "ERROR: $MSG" >&2
+}
+
+info_echo() {
+  MSG="$*"
+  echo "$MSG" >$SFIL
+  echo "INFO: $MSG" >&2
+}
+
+dbg_echo() {
+  if [ $DBG -gt 0 ]; then
+    echo $*
+  fi
+}
+
+CFG=$1
+HFG=$2
+COPTS=(${CFG//-/ })
+HOPTS=(${HFG//-/ })
+
+# We use extended globbing below.
+shopt -s extglob
+
+# Parse the config.
+CSRC=cvmfs
+QUERY=
+LVEROPTS=
+CJOB=
+DOINIT=false
+WFARGS_ARR=()
+USER=$(whoami)
+DRP_INGDIR=pipelines/_ingredients  # w2321 and later
+for OPT in ${COPTS[@]}; do
+  dbg_echo Parsing option $OPT
+  OPTNAME=$(echo $OPT | cut -d':' -f1)
+  OPTARGS=$(echo $OPT | cut -d':' -f2-)
+  if [ $OPT = shifter ]; then
+    CSRC=shifter
+  elif [ $OPT = cvmfs ]; then
+    CSRC=cvmfs
+  else
+    LVER=$(g3wf-convert-lsst-version $OPTNAME)
+    if [ -z "$LVER" ]; then
+      err_echo ERROR: Invalid config field: $OPT
+      exit 3
+    fi
+    IVER=${OPTNAME:1}
+    LVEROPTS=$OPT
+  fi
+done
+
+# Parse the howfig.
+TMAX=
+for OPT in ${HOPTS[@]}; do
+  if [ ${OPT:0:5} = tmax: ]; then
+    TMAX=${OPT:5}
+  else
+    err_echo Invalid howfig field: $OPT
+    exit 13
+  fi
+done
+
+if [ -z "$CSRC" ]; then
+  err_echo "Code source must be provided."
+  exit 14
+elif [ $CSRC = shifter ]; then
+  COM=g3wf-run-shifter
+elif [ $CSRC = cvmfs ]; then
+  COM=g3wf-run-cvmfs
+else
+  err_echo Invalid source: $CSRC.
+  exit 15
+fi
+echo Code source: $CSRC
+
+ECOM=$(which g3wf-parsl-version)
+VFIL='parsl-version.dat'
+echo "not found" >$VFIL
+$COM $LVEROPTS $ECOM
+info_echo Parsl version is $(cat $VFIL)
+RSTAT=$?
+
+echo "Done."
+exit $RSTAT

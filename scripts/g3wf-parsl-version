@@ -1,0 +1,7 @@
+#!/usr/bin/env python3
+
+import parsl
+print(f"Parsl version is {parsl.VERSION}")
+ofil = open('parsl-version.dat', 'w')
+ofil.write(f"{parsl.VERSION}\n")
+ofil.close()

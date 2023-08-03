@@ -4,7 +4,7 @@
 #
 # David Adams
 # May 2023
-# Run a DESC gen3 pipline processing job.
+# Run a DESC gen3 pipeline processing job.
 # This script is called without two arguments config and howfig, each of which is split
 # '-' as a separator to obtain the configuration fields NAM:VAL or NAM:VAL1:VAL2
 # Config fields:
