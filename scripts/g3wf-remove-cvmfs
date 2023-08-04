@@ -1,0 +1,27 @@
+#!/bin/bash
+
+# g3wf-remove-cvmfs
+#
+# David Adams
+# August 2023
+#
+# Remoove a cvmfs g3wf installation.
+
+LVEROPT=$1
+LVERTAG=$(echo $LVEROPT | cut -d':' -f1)
+OPT=$(echo $LVEROPT | grep : | cut -d':' -f2-)
+if [[ -z $OPT ]]; then OPT=parsl; fi
+outbase=$(descprod-output-dir get installs)
+cnam=g3wf-$LVERTAG-$OPT
+wq_env=$outbase/$cnam
+
+if [ -r $wq_env ]; then
+  echo Removing $wq_env
+  rm -rf $wq_env
+  RSTAT=$?
+else
+  echo Env not found: $wq_env
+  RSTAT=0
+fi
+
+exit $RSTAT
