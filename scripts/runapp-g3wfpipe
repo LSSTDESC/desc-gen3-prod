@@ -13,11 +13,11 @@
 #   The query for which data to process is and of one or more of the following:
 #     visit: Which visits to process. Either VAL or [VAL1,VAL2]
 #     tract: Which tracts to process. Either VAL or [VAL1,VAL2]
-#     patch: Which patchess to process. Either VAL or [VAL1,VAL2]
+#     patch: Which patches to process. Either VAL or [VAL1,VAL2]
 # Howfig fields:
 #   exec: Parsl executor wq, ht or tp. Also wqMM to run WorkQueue with MM GB memor=y limit.
-#   code source: cvmfs of shifter
-#   batch time limit: btTT where TT is time limit in minutes
+#   code source: cvmfs or shifter
+#   time limit: tmax:TT where TT is time limit in sec or
 #   memory limit [GB]: memMMM
 
 if [[ -z $1 || $1 = -h ]]; then
@@ -37,7 +37,7 @@ if [[ -z $1 || $1 = -h ]]; then
   echo "  exec:XX where XX = wq, tp or wqMM"
   echo "  cvmfs: Code taken from cvmfs"
   echo "  shifter: Code taken from shifter"
-  echo "  tmax: Timeout in sec"
+  echo "  tmax: Timeout in with unit {s, m, h}"
   exit 1
 fi
 
@@ -350,7 +350,15 @@ if [[ -n $WFARGS ]]; then
   echo 'PYTHONPATH=./local/desc-gen3-prod:$PYTHONPATH' >>$RFIL
   echo 'echo run: Running with desc-gen3-prod version $(desc-gen3-prod-version)' >>$RFIL
   echo 'echo run: Running with desc-wfmon version $(desc-wfmon-parsltest -v)' >>$RFIL
-  echo 'git clone https://github.com/LSSTDESC/gen3_workflow.git' >>$RFIL
+  echo 'SRC=$HOME/descprod/repos/gen3_workflow' >>$RFIL
+  echo 'if [ -r $SRC ]; then' >>$RFIL
+  echo '  echo run: Using local copy of gen3_workflow: $SRC' >>$RFIL
+  echo '  cp -r $SRC .' >>$RFIL
+  echo 'else' >>$RFIL
+  echo '  SRC=https://github.com/LSSTDESC/gen3_workflow.git' >>$RFIL
+  echo '  echo run: Using github gen3_workflow: $SRC' >>$RFIL
+  echo '  git clone $SRC' >>$RFIL
+  echo 'fi' >>$RFIL
   echo 'setup -r gen3_workflow -j' >>$RFIL
   echo 'pip freeze >versions.log' >>$RFIL
   echo 'echo run: Running pipeline.' >>$RFIL
