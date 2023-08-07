@@ -341,9 +341,14 @@ if [[ -n $WFARGS ]]; then
     echo "setup lsst_distrib" >>$RFIL
   fi
   echo "echo run: Installing desc-wfmon." >>$RFIL
-  echo "pip install -t local/desc-wfmon git+https://github.com/LSSTDESC/desc-wfmon" >>$RFIL
+  echo 'mkdir repos && cd repos && git clone https://github.com/LSSTDESC/desc-wfmon && cd ..' >>$RFIL
+  echo "pip install -t local/desc-wfmon repos/desc-wfmon" >>$RFIL
   echo 'PATH=./local/desc-wfmon/bin:$PATH' >>$RFIL
   echo 'PYTHONPATH=./local/desc-wfmon:$PYTHONPATH' >>$RFIL
+  echo 'IPYDIR=./repos/desc-wfmon/ipynb' >>$RFIL
+  echo 'cp $IPYDIR/monexp.ipynb .' >>$RFIL
+  echo 'touch monexp.py' >>$RFIL
+  echo 'basename $(pwd) | sed "s/job0*/Job /g" > README.txt' >>$RFIL
   echo "echo run: Installing desc-gen3-prod." >>$RFIL
   echo "pip install -t local/desc-gen3-prod git+https://github.com/LSSTDESC/desc-gen3-prod" >>$RFIL
   echo 'PATH=./local/desc-gen3-prod/bin:$PATH' >>$RFIL
