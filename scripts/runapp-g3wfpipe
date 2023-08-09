@@ -37,7 +37,10 @@ if [[ -z $1 || $1 = -h ]]; then
   echo "  exec:XX where XX = wq, tp or wqMM"
   echo "  cvmfs: Code taken from cvmfs"
   echo "  shifter: Code taken from shifter"
-  echo "  tmax: Timeout in with unit {s, m, h}"
+  echo "  tmax:TMAX Timeout TMAX in with unit {s, m, h}"
+  echo "  tmax:TMAX1:TMAX2:...: Stage timeouts for multistage jobs"
+  echo "  bproc:BPO: Run pre,proc,post multistage with proc in pmbs-BPO"
+  echo "    Options BPO are those for pmbs here colon separated."
   exit 1
 fi
 
@@ -79,6 +82,7 @@ decode_query() {
   fi
 }
 
+info_echo Running app g3wfpipe
 CFG=$1
 HFG=$2
 COPTS=(${CFG//-/ })
@@ -160,7 +164,7 @@ if [[ -n $CJOB ]]; then
     echo "ERROR: The LSST release may not be specified for a continuation job."
     exit 1
   fi
-  info_echo "Connecting to job $CJOB."
+  echo "Connecting to job $CJOB."
   if ! PDIR=$(descprod-get-job $CJOB | grep rundir: | sed 's/ *rundir: //g'); then
     err_echo "Unable to find continuation job $CJOB"
     exit 1
@@ -202,9 +206,16 @@ if [[ -n $CJOB ]]; then
   fi
 fi
 
+# Extract the list of processing steps.
+WFARGS="${WFARGS_ARR[*]}"
+
 
 # Parse the howfig.
+TMAXS=()
+NTMAX=0
 TMAX=
+TMAX2=
+TMAX3=
 for OPT in ${HOPTS[@]}; do
   if [ $OPT = shifter ]; then
     CSRC=shifter
@@ -215,18 +226,49 @@ for OPT in ${HOPTS[@]}; do
   elif [ ${OPT:0:3} = tp: ]; then
     EXEC=$OPT
   elif [ ${OPT:0:5} = tmax: ]; then
-    TMAX=${OPT:5}
-    #WFARGS_ARR+=($OPT)
+    IFS=':' read -ra TMAXS <<< "${OPT:5}"
+    NTMAX=${#TMAXS}
+    if [ $NTMAX = 0 ]; then
+      err_echo Howfig field missing value: $OPT
+      exit 12
+    fi
+    TMAX=${TMAXS[0]}
+    if [ $NTMAX -ge 2 ]; then TMAX2=${TMAXS[1]}; fi
+    if [ $NTMAX -ge 3 ]; then TMAX3=${TMAXS[2]}; fi
+  elif [ ${OPT:0:6} = bproc: ]; then
+    if ! echo $WFARGS | grep proc 1>/dev/null; then
+      err_echo WFARGS: $WFARGS
+      err_echo howfig bproc requires proc in config.
+      exit 14
+    fi
+    BPROC=true
+    # pmbs expects '-' (not ':') as separator.
+    IFS=':' read -ra BPOPTARR <<<"${OPT:6}"
+    BPJOB=        # If true, create a DESCprod job to submit
+    BPOPTS=       # Arguments passed to pmbs
+    for OPT in ${BPOPTARR[@]}; do
+      if [ $OPT = job ; then
+        BPJOB=true
+      elif [ -z "$BPOPTS" ]; then
+        BPOPTS=$OPT
+      else
+        BPOPTS=$BPOPTS-$OPT
+      fi
+    done
+    if [ -z "$BPOPTS" ]; then
+      err_echo Batch options must be specified with bproc.
+      exit 19
+    fi
+    WFARGS2=$(echo $WFARGS | sed 's/.*proc//g' | sed 's/^-//g')
+    WFARGS=$(echo $WFARGS | sed 's/proc.*//g' | sed 's/-$//g')
   else
     err_echo Invalid howfig field: $OPT
     exit 13
   fi
 done
 
-WFARGS="${WFARGS_ARR[*]}"
-
 # Record the setup for continuation jobs.
-info_echo Creating consetup.sh
+echo Creating consetup.sh
 echo "CON_CSRC=$CSRC" >consetup.sh
 echo "CON_LVEROPTS=$LVEROPTS" >>consetup.sh
 echo "CON_QUERY=$QUERY" >>consetup.sh
@@ -318,6 +360,7 @@ PIPEVAL=
 fi
 
 if [[ -n $WFARGS ]]; then
+  log_echo Creating run script.
   if [ -z "$CSRC" ]; then
     err_echo "Code source must be provided."
     exit 14
@@ -369,7 +412,7 @@ if [[ -n $WFARGS ]]; then
   echo 'echo run: Running pipeline.' >>$RFIL
   echo "g3wfpipe-run $WFARGS" >>$RFIL
   chmod +x ./run
-  info_echo Steps: $WFARGS
+  info_echo Starting run script with steps $WFARGS.
   $COM
   RSTAT=$?
 else
@@ -377,4 +420,50 @@ else
   RSTAT=0
 fi
 
-exit $RSTAT
+if [ $RSTAT != 0 ]; then exit $RSTAT; fi
+
+if [ -n "$BPROC" ]; then
+  echo Creating batch job for stage 2.
+  JOBID=$(grep '"id"' config.json | sed 's/.*: //' | sed 's/,.*//')
+  if [ -z "$JOBID" ]; then
+    err_echo Unable to extract job ID.
+    exit 17
+  fi
+  CFG2=job:$JOBID-proc
+  HFG2=pmbs-$BPOPTS
+  if [ -n "$TMAX2" ]; then
+    HFG2=$HFG2,tmax:$TMAX2
+  fi
+  if [ -n "$BPJOB" ]; then
+    LOG=stage2.log
+    if ! descprod-add-job -p $JOBID g3wfpipe $CFG2 $HFG2 >$LOG; then
+      err_echo "Unable to create job for stage 2."
+      exit 18
+    fi
+    cat $LOG
+    JOBID2=$(grep " id:" $LOG | sed 's/.*id: //')
+    echo Starting job $JOBID2 for stage 2.
+    descprod-start-job $JOBID2
+  else
+    mkdir stage2
+    cd stage2
+    echo '{' >config.json
+    echo '  "id": '$JOBID, >>config.json
+    echo '  "jobtype": "g3wfpipe",' >>config.json
+    echo '  "config": "'$CFG2'",' >>config.json
+    echo '  "howfig": "'$HFG2'"' >>config.json
+    echo '}' >>config.json
+    if ! runapp-pmbs; then
+      err_echo "Unable to submit batch job for stage 2."
+      exit 21
+    fi
+    cd ..
+  fi
+fi
+
+if [ -n "$WFARGS2" ]; then
+  err_echo Create finalization job is not yet implemented.
+  exit 77
+fi
+
+exit 0

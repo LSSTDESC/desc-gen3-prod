@@ -60,7 +60,8 @@ def get_pg_pickle_path():
             pg_pickle_paths += [f"{path}/{pickname}"]
     if len(pg_pickle_paths) == 1:
         pg_pickle_path = pg_pickle_paths[0]
-        statlogmsg(f"Found parsl pickle file: {pg_pickle_path}")
+        statlogmsg(f"Found parsl pickle file.")
+        logmsg(f"Parsl pickle file: {pg_pickle_path}")
     elif len(pg_pickle_paths):
         statlogmsg(f"Found {len(pg_pickle_paths)} parsl pickle files")
         for path in pg_pickle_paths:
