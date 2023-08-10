@@ -10,6 +10,7 @@ import dg3prod
 import pandas
 import signal
 from desc.wfmon import MonDbReader
+import traceback
 
 statfilename = 'current-status.txt'
 doInit = False
@@ -240,7 +241,7 @@ if doProc:
         ofil = open('monexp.py', 'a')
         ofil.write(f"{line}\n")
         ofil.close()
-    catch Exception as e:
+    except Exception as e:
         print(e)
         traceback.print_tb(e.__traceback__)
 
