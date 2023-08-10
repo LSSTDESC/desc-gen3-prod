@@ -178,7 +178,7 @@ if [[ -n $CJOB ]]; then
     exit 1
   fi
   # Optional sources.
-  for FIL in config.yaml submit runinfo; do
+  for FIL in config.yaml submit runinfo repos local; do
     SRCFIL=$PDIR/$FIL
     if [ -r $SRCFIL ]; then
       echo "Linking source $SRCFIL"
@@ -376,31 +376,36 @@ if [[ -n $WFARGS ]]; then
   COM="${TMAX:+timeout $TMAX }$COM $LVEROPTS ./run"
   # Create the run script.
   # It installs desc-gen3-prod and then runs the pipeline.
-  RFIL=./run
-  echo "#!/bin/bash" > $RFIL
+  RFIL=./setup.sh
+  rm -f $RFIL
+  echo "# This script was generated $(date) on $(hostname)" >>$RFIL
   echo 'export PYTHONPATH' >>$RFIL
   if [ $CSRC = shifter ]; then
     echo "source /opt/lsst/software/stack/setup.sh" >>$RFIL
     echo "setup lsst_distrib" >>$RFIL
   fi
-  echo "echo run: Installing desc-wfmon." >>$RFIL
-  echo 'mkdir repos && cd repos && git clone https://github.com/LSSTDESC/desc-wfmon && cd ..' >>$RFIL
-  echo "pip install -t local/desc-wfmon repos/desc-wfmon" >>$RFIL
-  echo 'PATH=./local/desc-wfmon/bin:$PATH' >>$RFIL
+  echo "if [ ! -r ./local/desc-wfmon ]; then" >>$RFIL
+  echo "  echo run: Installing desc-wfmon." >>$RFIL
+  echo '  mkdir repos && cd repos && git clone https://github.com/LSSTDESC/desc-wfmon && cd ..' >>$RFIL
+  echo "  pip install -t local/desc-wfmon repos/desc-wfmon" >>$RFIL
+  echo '  PATH=./local/desc-wfmon/bin:$PATH' >>$RFIL
+  echo "fi" >>$RFIL
   echo 'PYTHONPATH=./local/desc-wfmon:$PYTHONPATH' >>$RFIL
   echo 'IPYDIR=./repos/desc-wfmon/ipynb' >>$RFIL
   echo 'cp $IPYDIR/monexp.ipynb .' >>$RFIL
   echo 'touch monexp.py' >>$RFIL
   echo 'basename $(pwd) | sed "s/job0*/Job /g" > README.txt' >>$RFIL
-  echo "echo run: Installing desc-gen3-prod." >>$RFIL
-  echo "pip install -t local/desc-gen3-prod git+https://github.com/LSSTDESC/desc-gen3-prod" >>$RFIL
+  echo "if [ ! -r ./local/desc-gen3-prod ]; then" >>$RFIL
+  echo "  echo run: Installing desc-gen3-prod." >>$RFIL
+  echo "  pip install -t local/desc-gen3-prod git+https://github.com/LSSTDESC/desc-gen3-prod" >>$RFIL
+  echo "fi" >>$RFIL
   echo 'PATH=./local/desc-gen3-prod/bin:$PATH' >>$RFIL
   echo 'PYTHONPATH=./local/desc-gen3-prod:$PYTHONPATH' >>$RFIL
   echo 'echo run: Running with desc-gen3-prod version $(desc-gen3-prod-version)' >>$RFIL
   echo 'echo run: Running with desc-wfmon version $(desc-wfmon-parsltest -v)' >>$RFIL
   echo 'SRC=$HOME/descprod/repos/gen3_workflow' >>$RFIL
   echo 'if [ -r $SRC ]; then' >>$RFIL
-  echo '  echo run: Using local copy of gen3_workflow: $SRC' >>$RFIL
+  echo '  echo run: WARNING: Using local copy of gen3_workflow: $SRC' >>$RFIL
   echo '  cp -r $SRC .' >>$RFIL
   echo 'else' >>$RFIL
   echo '  SRC=https://github.com/LSSTDESC/gen3_workflow.git' >>$RFIL
@@ -409,6 +414,12 @@ if [[ -n $WFARGS ]]; then
   echo 'fi' >>$RFIL
   echo 'setup -r gen3_workflow -j' >>$RFIL
   echo 'pip freeze >versions.log' >>$RFIL
+  RFIL=./run
+  rm -f $RFIL
+  echo "#!/bin/bash" >> $RFIL
+  echo "# This script was generated $(date) on $(hostname)" >>$RFIL
+  echo "# and was run with the command $COM" >>$RFIL
+  echo 'source ./setup.sh' >>$RFIL
   echo 'echo run: Running pipeline.' >>$RFIL
   echo "g3wfpipe-run $WFARGS" >>$RFIL
   chmod +x ./run

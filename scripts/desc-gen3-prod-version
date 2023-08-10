@@ -2,4 +2,4 @@
 
 import dg3prod
 
-print(dg3prod.__version__)
+print(dg3prod.version())
