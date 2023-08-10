@@ -385,7 +385,7 @@ if [[ -n $WFARGS ]]; then
     echo "setup lsst_distrib" >>$RFIL
   fi
   echo "if [ ! -r ./local/desc-wfmon ]; then" >>$RFIL
-  echo "  echo run: Installing desc-wfmon." >>$RFIL
+  echo "  echo setup: Installing desc-wfmon." >>$RFIL
   echo '  mkdir repos && cd repos && git clone https://github.com/LSSTDESC/desc-wfmon && cd ..' >>$RFIL
   echo "  pip install -t local/desc-wfmon repos/desc-wfmon" >>$RFIL
   echo "fi" >>$RFIL
@@ -396,24 +396,25 @@ if [[ -n $WFARGS ]]; then
   echo 'touch monexp.py' >>$RFIL
   echo 'basename $(pwd) | sed "s/job0*/Job /g" > README.txt' >>$RFIL
   echo "if [ ! -r ./local/desc-gen3-prod ]; then" >>$RFIL
-  echo "  echo run: Installing desc-gen3-prod." >>$RFIL
+  echo "  echo setup: Installing desc-gen3-prod." >>$RFIL
   echo "  pip install -t local/desc-gen3-prod git+https://github.com/LSSTDESC/desc-gen3-prod" >>$RFIL
   echo "fi" >>$RFIL
   echo 'PATH=./local/desc-gen3-prod/bin:$PATH' >>$RFIL
   echo 'PYTHONPATH=./local/desc-gen3-prod:$PYTHONPATH' >>$RFIL
-  echo 'echo run: Running with desc-gen3-prod version $(desc-gen3-prod-version)' >>$RFIL
-  echo 'echo run: Running with desc-wfmon version $(desc-wfmon-parsltest -v)' >>$RFIL
+  echo 'echo setup: Running with desc-gen3-prod version $(desc-gen3-prod-version)' >>$RFIL
+  echo 'echo setup: Running with desc-wfmon version $(desc-wfmon-parsltest -v)' >>$RFIL
   echo 'SRC=$HOME/descprod/repos/gen3_workflow' >>$RFIL
   echo 'if [ -r $SRC ]; then' >>$RFIL
-  echo '  echo run: WARNING: Using local copy of gen3_workflow: $SRC' >>$RFIL
+  echo '  echo setup: WARNING: Using local copy of gen3_workflow: $SRC' >>$RFIL
   echo '  cp -r $SRC .' >>$RFIL
   echo 'else' >>$RFIL
   echo '  SRC=https://github.com/LSSTDESC/gen3_workflow.git' >>$RFIL
-  echo '  echo run: Using github gen3_workflow: $SRC' >>$RFIL
+  echo '  echo setup: Using github gen3_workflow: $SRC' >>$RFIL
   echo '  git clone $SRC' >>$RFIL
   echo 'fi' >>$RFIL
   echo 'setup -r gen3_workflow -j' >>$RFIL
   echo 'pip freeze >versions.log' >>$RFIL
+  echo 'export PS1="g3wfpipe> "' >>$RFIL
   RFIL=./run
   rm -f $RFIL
   echo "#!/bin/bash" >> $RFIL

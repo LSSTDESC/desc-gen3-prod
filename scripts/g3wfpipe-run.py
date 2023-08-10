@@ -9,6 +9,7 @@ import sys
 import dg3prod
 import pandas
 import signal
+from desc.wfmon import MonDbReader
 
 statfilename = 'current-status.txt'
 doInit = False
@@ -226,6 +227,22 @@ if doProc:
         statlogmsg(f"Finished {ndone} of {ntsk} tasks.")
         time.sleep(10)
     statlogmsg(f"Workflow complete: {ndone}/{ntsk} tasks.")
+    try:
+        logmsg(f"Fetching the parsl run ID.")
+        dbr = MonDbReader('runinfo/monitoring.db', fix=False, dodelta=False)
+        run_id = dbr.latest_run_id()
+        if run_id is None:
+            logmsg('Run ID not found.')
+            line = f"monexp.run_id = None"
+        else:
+            logmsg(f"Run ID: {run_id}")
+            line = f"monexp.run_id = '{run_id}'"
+        ofil = open('monexp.py', 'a')
+        ofil.write(f"{line}\n")
+        ofil.close()
+    catch Exception as e:
+        print(e)
+        traceback.print_tb(e.__traceback__)
 
 if doFina:
     statlogmsg()
