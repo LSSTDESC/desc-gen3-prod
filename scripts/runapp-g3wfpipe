@@ -316,15 +316,16 @@ PIPEVAL=
     | sed s/%USER%/$USER/g \
     >config.yaml
   
-  echo "" >>config.yaml
-  echo "monitoring: MonitoringHub(hub_address=address_by_hostname()," >>config.yaml
-  echo "                   hub_port=None," >>config.yaml
-  echo "                   monitoring_debug=False," >>config.yaml
-  echo "                   monitoring_interval=5)" >>config.yaml
+  #echo "" >>config.yaml
+  #echo "monitoring: MonitoringHub(hub_address=address_by_hostname()," >>config.yaml
+  #echo "                   hub_port=None," >>config.yaml
+  #echo "                   monitoring_debug=False," >>config.yaml
+  #echo "                   monitoring_interval=5)" >>config.yaml
 
   echo "" >>config.yaml
   echo "parsl_config:" >>config.yaml
   echo "  retries: 1" >>config.yaml
+  echo "  monitoring_interval: 5" >>config.yaml
 
   #  monitoring: parsl.monitoring.monitoring.MonitoringHub(
   #           hub_address=parsl.addresses.address_by_hostname(),
