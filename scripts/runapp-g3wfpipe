@@ -39,6 +39,8 @@ if [[ -z $1 || $1 = -h ]]; then
   echo "  shifter: Code taken from shifter"
   echo "  tmax:TMAX Timeout TMAX in with unit {s, m, h}"
   echo "  tmax:TMAX1:TMAX2:...: Stage timeouts for multistage jobs"
+  echo "  pmon:DT Sampling time for the parsl process monitor is DT sec."
+  echo "          DT = false or 0 disables monitoring. Default is 3."
   echo "  bproc:BPO: Run pre,proc,post multistage with proc in pmbs-BPO"
   echo "    Options BPO are those for pmbs here colon separated."
   exit 1
@@ -216,6 +218,7 @@ NTMAX=0
 TMAX=
 TMAX2=
 TMAX3=
+PMONDT=${CON_PMONDT:-3}
 for OPT in ${HOPTS[@]}; do
   if [ $OPT = shifter ]; then
     CSRC=shifter
@@ -225,6 +228,8 @@ for OPT in ${HOPTS[@]}; do
     EXEC=$OPT
   elif [ ${OPT:0:3} = tp: ]; then
     EXEC=$OPT
+  elif [ ${OPT:0:3} = pmon: ]; then
+    PMONDT=${OPT:5}
   elif [ ${OPT:0:5} = tmax: ]; then
     IFS=':' read -ra TMAXS <<< "${OPT:5}"
     NTMAX=${#TMAXS}
@@ -267,12 +272,18 @@ for OPT in ${HOPTS[@]}; do
   fi
 done
 
+if [ $PMONDT != false ] && [ $PMONDT != $PMONDT ]; then
+  err_echo Invalid parsl monitoring interval: $PMONDT
+  exit 20
+fi
+
 # Record the setup for continuation jobs.
 echo Creating consetup.sh
 echo "CON_CSRC=$CSRC" >consetup.sh
 echo "CON_LVEROPTS=$LVEROPTS" >>consetup.sh
 echo "CON_QUERY=$QUERY" >>consetup.sh
 echo "CON_PIPE=$PIPE" >>consetup.sh
+echo "CON_PMONDT=$PMONDT" >>consetup.sh
 
 if [ $DOINIT = true ]; then
 PIPEVAL=
@@ -316,16 +327,14 @@ PIPEVAL=
     | sed s/%USER%/$USER/g \
     >config.yaml
   
-  #echo "" >>config.yaml
-  #echo "monitoring: MonitoringHub(hub_address=address_by_hostname()," >>config.yaml
-  #echo "                   hub_port=None," >>config.yaml
-  #echo "                   monitoring_debug=False," >>config.yaml
-  #echo "                   monitoring_interval=5)" >>config.yaml
-
   echo "" >>config.yaml
   echo "parsl_config:" >>config.yaml
   echo "  retries: 1" >>config.yaml
-  echo "  monitoring_interval: 5" >>config.yaml
+  if [ $PMONDT = false -o $PMONDT -le 0 ]; then
+    echo "  monitoring: false" >>config.yaml
+  else
+    echo "  monitoring_interval: $PMONDT" >>config.yaml
+  fi
 
   #  monitoring: parsl.monitoring.monitoring.MonitoringHub(
   #           hub_address=parsl.addresses.address_by_hostname(),
