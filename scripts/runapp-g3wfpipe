@@ -228,7 +228,7 @@ for OPT in ${HOPTS[@]}; do
     EXEC=$OPT
   elif [ ${OPT:0:3} = tp: ]; then
     EXEC=$OPT
-  elif [ ${OPT:0:3} = pmon: ]; then
+  elif [ ${OPT:0:5} = pmon: ]; then
     PMONDT=${OPT:5}
   elif [ ${OPT:0:5} = tmax: ]; then
     IFS=':' read -ra TMAXS <<< "${OPT:5}"
