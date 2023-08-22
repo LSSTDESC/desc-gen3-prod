@@ -150,6 +150,11 @@ for OPT in ${COPTS[@]}; do
   fi
 done
 
+if [ $IVER -ge 2330 ]; then
+  err_echo "ERROR: DESC parsl cannot (yet) be installed for w_2023_30 and latger."
+  exit 22
+fi
+
 CSRC=
 NNOD=1
 EXEC=none
