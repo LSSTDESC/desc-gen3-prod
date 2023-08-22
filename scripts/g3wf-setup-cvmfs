@@ -76,7 +76,9 @@ else
         pip install --prefix ${wq_env} git+https://github.com/LSSTDESC/desc-wfmon
       elif [ $OPT = parsl ]; then
         echo $MYNAME: Installing parsl with dependencies
-        pip install -I --prefix ${wq_env} 'parsl[monitoring,workqueue] @ git+https://github.com/parsl/parsl@desc'
+        if ! pip install -I --prefix ${wq_env} 'parsl[monitoring,workqueue] @ git+https://github.com/parsl/parsl@desc'; then
+          echo $MYNAME: ERROR: Install of parsl failed! Env is at $wq_env
+        fi
       else
         echo $MYNAME: Invalid install option: $OPT
         rm -rf $wq_env

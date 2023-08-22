@@ -281,7 +281,7 @@ fi
 echo Creating consetup.sh
 echo "CON_CSRC=$CSRC" >consetup.sh
 echo "CON_LVEROPTS=$LVEROPTS" >>consetup.sh
-echo "CON_QUERY=$QUERY" >>consetup.sh
+echo "CON_QUERY=\"$QUERY\"" >>consetup.sh
 echo "CON_PIPE=$PIPE" >>consetup.sh
 echo "CON_PMONDT=$PMONDT" >>consetup.sh
 
@@ -369,6 +369,11 @@ PIPEVAL=
   echo Executor: $EXEC
 fi
 
+G3WF_BRANCH=
+if [ $IVER -ge 2331 ]; then
+  G3WF_BRANCH=u/jchiang/w_2023_32_qbb_changes
+fi
+
 if [[ -n $WFARGS ]]; then
   log_echo Creating run script.
   if [ -z "$CSRC" ]; then
@@ -422,6 +427,10 @@ if [[ -n $WFARGS ]]; then
   echo '  echo setup: Using github gen3_workflow: $SRC' >>$RFIL
   echo '  git clone $SRC' >>$RFIL
   echo 'fi' >>$RFIL
+  if [ -n "$G3WF_BRANCH" ] then
+    echo 'setup: Using gen3_workflow branch '$G3WF_BRANCH >>$RFIL
+    echo '(cd gen3_workflow; git checkout '$G3WF_BRANCH')' >>$RFIL
+  fi
   echo 'setup -r gen3_workflow -j' >>$RFIL
   echo 'pip freeze >versions.log' >>$RFIL
   echo 'export PS1="g3wfpipe> "' >>$RFIL
