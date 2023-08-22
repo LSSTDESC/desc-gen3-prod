@@ -1,0 +1,111 @@
+#!/bin/bash
+
+# g3wf-install-cvmfs
+#
+# David Adams
+# August 2023
+#
+# Source script to install a cvmfs env for desc-gen3-prod.
+#
+# Called with argument LVERTAG:OPT
+# where LVERTAG is an LSST release tag nickname (see
+# g3wf-convert-lsst-version) and OPT indicates which package to
+# install on top of that release.
+# Supported values for OPT:
+#    g3wf - Default prescription for gen3_workflow
+#     tyx - Same plus typing_extensions
+#   parsl - Prescription from Ben: Install parsl with dependencies
+#           and no external packages.
+# At present (14-jul-2023) only the last yields an env suitable
+# for running g3wfpipe jobs.
+# If the argument is LVERTAG (or LVERTAG:), then OPT is set to parsl.
+# Installation base directory is found with the command
+#   g3wf-output-dir
+
+LVEROPT=$1
+LVERTAG=$(echo $LVEROPT | cut -d':' -f1)
+LVER=$(g3wf-convert-lsst-version $LVERTAG)
+OPT=$(echo $LVEROPT | grep : | cut -d':' -f2-)
+if [[ -z $OPT ]]; then OPT=parsl; fi
+MYNAME=$(basename ${BASH_SOURCE[0]})
+export PS1="Failed $MYNAME> "
+
+if [ -z "$LVER" -o "$LVER" = "-h" -o -z "$OPT" ]; then
+  echo Usage: $MYNAME LSST_TAG:OPT
+  exit 1
+fi
+
+if [ -z "$LVER" ]; then
+  echo $MYNAME: ERROR: Unable to interpret LSST tag $LVERTAG
+  exit 2
+fi
+
+cnam=g3wf-$LVERTAG-$OPT
+wq_env=$outbase/$cnam
+
+if [ -r $wq_env ]; then
+  echo $MYNAME: ERROR: Env already exists: $wq_env
+  exit 1
+fi
+
+if ! outbase=$(descprod-output-dir create installs); then
+  echo $MYNAME: ERROR: Unable to find or create descprod output dir.
+fi
+
+SUPFIL=/cvmfs/sw.lsst.eu/linux-x86_64/lsst_distrib/$LVER/loadLSST-ext.bash
+if [ ! -r $SUPFIL ]; then
+  echo $MYNAME: ERROR: LSST setup not found: $SUPFIL
+  exit 3
+fi
+
+echo $MYNAME: Setting up LSST cvmfs distrib $LVER
+source /cvmfs/sw.lsst.eu/linux-x86_64/lsst_distrib/$LVER/loadLSST-ext.bash
+setup lsst_distrib
+export OMP_NUM_THREADS=1
+export NUMEXPR_MAX_THREADS=1
+
+echo $MYNAME: Creating conda env $wq_env
+conda create -y --prefix ${wq_env}
+echo $MYNAME: Activating conda env $wq_env
+conda activate --stack ${wq_env}
+#echo $MYNAME: Updating conda
+#conda update -n base -c conda-forge -y conda
+echo $MYNAME: Applying option $OPT
+
+SUCCESS=
+if [ $OPT = g3wf -o $OPT = tyx ]; then
+  if [ $OPT = tyx ]; then
+    PRODS="tblib paramiko dill globus-sdk sqlalchemy_utils zmq"
+    if [ $OPT = tyx ]; then
+      PRODS="$PRODS typing_extensions==4.6.3"
+    fi
+    PRODS="$PRODS typeguard<3"
+    echo $MYNAME: Installing ndcctools && \
+    conda install -y -c conda-forge ndcctools=7.3.0=py38h4630a5e_0 --no-deps && \
+    echo $MYNAME: Installing parsl without dependencies && \
+    pip install -I --prefix ${wq_env} --no-deps 'parsl[monitoring,workqueue] @ git+https://github.com/parsl/parsl@desc' && \
+    echo $MYNAME: Installing $PRODS && \
+    pip install --prefix ${wq_env} $PRODS && \
+    echo $MYNAME: Installing desc-wfmon && \
+    pip install --prefix ${wq_env} git+https://github.com/LSSTDESC/desc-wfmon && \
+    SUCCESS=true
+  fi
+
+elif [ $OPT = parsl ]; then
+  echo $MYNAME: Installing parsl with dependencies && \
+  pip install -I --prefix ${wq_env} 'parsl[monitoring,workqueue] @ git+https://github.com/parsl/parsl@desc' && \
+  SUCCESS=true
+
+else
+  echo $MYNAME: Invalid install option: $OPT
+  rm -rf $wq_env
+  exit 2
+fi
+
+if [ -z "$SUCCESS" ]; then
+  echo $MYNAME: Install failed for env $cnam
+  rm -rf $wq_env
+fi
+
+g3wf-check-env $LVEROPT
+exit $?
