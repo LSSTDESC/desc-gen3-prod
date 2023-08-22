@@ -151,7 +151,7 @@ for OPT in ${COPTS[@]}; do
 done
 
 if [ $IVER -ge 2330 ]; then
-  err_echo "ERROR: DESC parsl cannot (yet) be installed for w_2023_30 and latger."
+  err_echo "ERROR: DESC parsl cannot (yet) be installed for $LVER."
   exit 22
 fi
 
