@@ -381,7 +381,7 @@ if [ $IVER -ge 2331 ]; then
 fi
 
 if [[ -n $WFARGS ]]; then
-  log_echo Creating run script.
+  info_echo Creating run script.
   if [ -z "$CSRC" ]; then
     err_echo "Code source must be provided."
     exit 14
@@ -434,7 +434,7 @@ if [[ -n $WFARGS ]]; then
   echo '  git clone $SRC' >>$RFIL
   echo 'fi' >>$RFIL
   if [ -n "$G3WF_BRANCH" ]; then
-    echo 'setup: Using gen3_workflow branch '$G3WF_BRANCH >>$RFIL
+    echo 'echo setup: Using gen3_workflow branch '$G3WF_BRANCH >>$RFIL
     echo '(cd gen3_workflow; git checkout '$G3WF_BRANCH')' >>$RFIL
   fi
   echo 'setup -r gen3_workflow -j' >>$RFIL
