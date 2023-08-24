@@ -150,7 +150,8 @@ for OPT in ${COPTS[@]}; do
   fi
 done
 
-if [ $IVER -ge 2330 ]; then
+BADRELS="2330 2331"
+if echo " "$BADRELS " | grep " $IVER "; then
   err_echo "ERROR: DESC parsl cannot (yet) be installed for $LVER."
   exit 22
 fi
