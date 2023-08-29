@@ -26,6 +26,7 @@ doButlerTest = False
 
 thisdir = os.getcwd()
 haveQG = False
+monexp_udated = False
 
 pickname = 'parsl_graph_config.pickle'
 pg_pickle_path = None     # Full path to the pg pickle file
@@ -246,14 +247,14 @@ if doProc:
     statlogmsg(f"Ready/total task count: {ntsk}/{ntskall}")
     ndone = 0
     while ndone < ntsk:
-        if not monexp_updated: monexp_updated = update_monexp()
+        if not monexpUpdated: monexpUpdated = update_monexp()
         ndone = 0
         for fut in futures:
             if fut.done(): ndone += 1
         statlogmsg(f"Finished {ndone} of {ntsk} tasks.")
         time.sleep(10)
     statlogmsg(f"Workflow complete: {ndone}/{ntsk} tasks.")
-    if not monexp_updated: monexp_updated = update_monexp()
+    if not monexpUpdated: monexpUpdated = update_monexp()
 
 if doFina:
     statlogmsg()
