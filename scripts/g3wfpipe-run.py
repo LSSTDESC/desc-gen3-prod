@@ -97,6 +97,30 @@ def get_pg(readonly=False, require=True):
     haveQG = get_haveQG(pg)
     return pg
 
+def update_monexp():
+    myname = "update_monexp"
+    try:
+        logmsg(f"Fetching the parsl run ID.")
+        dbr = MonDbReader('runinfo/monitoring.db', fix=False, dodelta=False)
+        if dbr is None:
+            print(f"{myname}: Unable to open monitoring DB.")
+            return False
+        run_id = dbr.latest_run_id()
+        if run_id is None:
+            logmsg(f"{myname}: Run ID not found.")
+            return False
+        else:
+            logmsg(f"Run ID: {run_id}")
+            line = f"monexp.run_id = '{run_id}'"
+        ofil = open('monexp.py', 'a')
+        ofil.write(f"{line}\n")
+        ofil.close()
+    except Exception as e:
+        print(e)
+        traceback.print_tb(e.__traceback__)
+        return False
+    return True
+
 #################################################################################
 
 logmsg(f"Executing {__file__}")
@@ -222,28 +246,14 @@ if doProc:
     statlogmsg(f"Ready/total task count: {ntsk}/{ntskall}")
     ndone = 0
     while ndone < ntsk:
+        if not monexp_updated: monexp_updated = update_monexp()
         ndone = 0
         for fut in futures:
             if fut.done(): ndone += 1
         statlogmsg(f"Finished {ndone} of {ntsk} tasks.")
         time.sleep(10)
     statlogmsg(f"Workflow complete: {ndone}/{ntsk} tasks.")
-    try:
-        logmsg(f"Fetching the parsl run ID.")
-        dbr = MonDbReader('runinfo/monitoring.db', fix=False, dodelta=False)
-        run_id = dbr.latest_run_id()
-        if run_id is None:
-            logmsg('Run ID not found.')
-            line = f"monexp.run_id = None"
-        else:
-            logmsg(f"Run ID: {run_id}")
-            line = f"monexp.run_id = '{run_id}'"
-        ofil = open('monexp.py', 'a')
-        ofil.write(f"{line}\n")
-        ofil.close()
-    except Exception as e:
-        print(e)
-        traceback.print_tb(e.__traceback__)
+    if not monexp_updated: monexp_updated = update_monexp()
 
 if doFina:
     statlogmsg()
