@@ -26,7 +26,7 @@ doButlerTest = False
 
 thisdir = os.getcwd()
 haveQG = False
-monexpUdated = False
+monexpUpdated = False
 
 pickname = 'parsl_graph_config.pickle'
 pg_pickle_path = None     # Full path to the pg pickle file
@@ -100,6 +100,7 @@ def get_pg(readonly=False, require=True):
 
 def update_monexp():
     myname = "update_monexp"
+    if monexpUpdated: return True
     try:
         logmsg(f"Fetching the parsl run ID.")
         dbr = MonDbReader('runinfo/monitoring.db', fix=False, dodelta=False)
@@ -116,6 +117,7 @@ def update_monexp():
         ofil = open('monexp.py', 'a')
         ofil.write(f"{line}\n")
         ofil.close()
+        monexpUpdated = True
     except Exception as e:
         print(e)
         traceback.print_tb(e.__traceback__)
@@ -221,6 +223,7 @@ if doQgReport:
 
 if doProc:
     logmsg()
+    monexpUpdate = False
     statlogmsg('Fetching workflow QG.')
     get_pg()
     if not haveQG:
@@ -247,14 +250,14 @@ if doProc:
     statlogmsg(f"Ready/total task count: {ntsk}/{ntskall}")
     ndone = 0
     while ndone < ntsk:
-        if not monexpUpdated: monexpUpdated = update_monexp()
+        update_monexp()
         ndone = 0
         for fut in futures:
             if fut.done(): ndone += 1
         statlogmsg(f"Finished {ndone} of {ntsk} tasks.")
         time.sleep(10)
     statlogmsg(f"Workflow complete: {ndone}/{ntsk} tasks.")
-    if not monexpUpdated: monexpUpdated = update_monexp()
+    update_monexp()
 
 if doFina:
     statlogmsg()
