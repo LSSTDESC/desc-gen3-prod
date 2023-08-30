@@ -26,7 +26,7 @@ doButlerTest = False
 
 thisdir = os.getcwd()
 haveQG = False
-monexp_udated = False
+monexpUdated = False
 
 pickname = 'parsl_graph_config.pickle'
 pg_pickle_path = None     # Full path to the pg pickle file
