@@ -100,6 +100,7 @@ def get_pg(readonly=False, require=True):
 
 def update_monexp():
     myname = "update_monexp"
+    global monexpUpdated
     if monexpUpdated: return True
     try:
         logmsg(f"Fetching the parsl run ID.")
