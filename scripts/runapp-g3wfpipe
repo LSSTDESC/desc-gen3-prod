@@ -414,7 +414,7 @@ if [[ -n $WFARGS ]]; then
   echo 'PYTHONPATH=./local/desc-wfmon:$PYTHONPATH' >>$RFIL
   echo 'IPYDIR=./repos/desc-wfmon/ipynb' >>$RFIL
   echo 'cp $IPYDIR/monexp.ipynb .' >>$RFIL
-  echo 'cp $IPYDIR/perfmon.ipynb .' >>$RFIL
+  echo 'cp $IPYDIR/perfstat.ipynb .' >>$RFIL
   echo 'cp $IPYDIR/monexp.py .' >>$RFIL
   echo 'basename $(pwd) | sed "s/job0*/Job /g" > README.txt' >>$RFIL
   echo "if [ ! -r ./local/desc-gen3-prod ]; then" >>$RFIL

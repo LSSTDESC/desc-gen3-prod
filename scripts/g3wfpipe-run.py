@@ -211,6 +211,7 @@ if doInit:
             statlogmsg("Quantum graph was created.")
         else:
             statlogmsg("Quantum graph was not created.")
+        update_monexp()
 
 if doQgReport:
     if not haveQG:
