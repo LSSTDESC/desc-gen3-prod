@@ -98,6 +98,9 @@ PIPE=
 QUERY=
 #PREPEND="iotrace -cmd time perf stat -d"
 PREPEND="time perf stat -d"
+if [ $(whoami) = dladams ]; then
+  PREPEND="myiotrace $PREPEND"
+fi
 LVEROPTS=
 CJOB=
 DOINIT=false
