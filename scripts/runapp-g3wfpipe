@@ -96,7 +96,7 @@ shopt -s extglob
 # Parse the config.
 PIPE=
 QUERY=
-PREPEND="iostat time perf stat -d"
+PREPEND="iotrace time perf stat -d"
 LVEROPTS=
 CJOB=
 DOINIT=false
