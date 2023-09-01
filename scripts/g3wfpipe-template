@@ -10,7 +10,7 @@ payload:
   butlerConfig: /global/cfs/cdirs/lsst/production/gen3/DC2/Run2.2i/repo
   dataQuery: \"visit>0 and skymap='DC2' and %QUERY%\"
 
-commandPrepend: "%PREPEND%"
+commandPrepend: \"%PREPEND%\"
 
 # Default task properties.
 requestCpus: 1
