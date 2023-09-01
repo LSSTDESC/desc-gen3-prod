@@ -96,6 +96,7 @@ shopt -s extglob
 # Parse the config.
 PIPE=
 QUERY=
+PREPEND="iostat time perf stat -d"
 LVEROPTS=
 CJOB=
 DOINIT=false
@@ -160,7 +161,7 @@ CSRC=
 NNOD=1
 EXEC=none
 if [[ -n $CJOB ]]; then
-  if [[ -n $QUERYE ]]; then
+  if [[ -n $QUERY ]]; then
     echo "ERROR: Query may not be specified for a continuation job."
     exit 1
   fi
@@ -199,7 +200,7 @@ if [[ -n $CJOB ]]; then
     fi
   done
   # Read the old configuration.
-  # This should define CON_LVER, CON_PIPEVAL, CON_QUERY, CON_CSRC
+  # This should define CON_LVER, CON_PIPEVAL, CON_QUERY, CON_CSRC, CON_PREPEND
   SUPFIL=$PDIR/consetup.sh
   if [ ! -r $SUPFIL ]; then
     echo "ERROR: Unable to find continuation source setup $SUPFIL"
@@ -208,6 +209,7 @@ if [[ -n $CJOB ]]; then
   source $SUPFIL
   PIPE=$CON_PIPE
   QUERY=$CON_QUERY
+  PREPEND=$CON_PREPEND
   LVEROPTS=$CON_LVEROPTS
   if [[ -z $CSRC ]]; then
     CSRC=$CON_CSRC
@@ -288,6 +290,7 @@ echo Creating consetup.sh
 echo "CON_CSRC=$CSRC" >consetup.sh
 echo "CON_LVEROPTS=$LVEROPTS" >>consetup.sh
 echo "CON_QUERY=\"$QUERY\"" >>consetup.sh
+echo "CON_PREPEND=\"$PREPEND\"" >>consetup.sh
 echo "CON_PIPE=$PIPE" >>consetup.sh
 echo "CON_PMONDT=$PMONDT" >>consetup.sh
 
@@ -331,6 +334,7 @@ PIPEVAL=
     | sed s/%RMIENABLE%/$RMIE/g \
     | sed s/%RMIINTERVAL%/$RMII/g \
     | sed s/%USER%/$USER/g \
+    | sed s/%PREPEND%/"$PREPEND"/g \
     >config.yaml
   
   echo "" >>config.yaml
