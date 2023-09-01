@@ -99,7 +99,8 @@ QUERY=
 #PREPEND="iotrace -cmd time perf stat -d"
 PREPEND="time perf stat -d"
 if [ $(whoami) = dladams ]; then
-  PREPEND="myiotrace $PREPEND"
+  #PREPEND="myiotrace $PREPEND"  # job000831
+  PREPEND="strace -o strace.log -e read,write,open,openat,close $PREPEND"
 fi
 LVEROPTS=
 CJOB=
