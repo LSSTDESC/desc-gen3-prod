@@ -102,7 +102,7 @@ if [ $(whoami) = dladams ]; then
   #PREPEND="myiotrace $PREPEND"  # job000831
   #PREPEND="strace -o strace.log -e read,write,open,openat,close $PREPEND" # 832
   #PREPEND="strace -f -o strace.log -e read,write,open,openat,close $PREPEND"
-  PREPEND="g3wf-strace -f -e read,write,open,openat,close $PREPEND"
+  PREPEND="g3wf-strace -f -e read,write,open,openat,close,rename $PREPEND"
 fi
 LVEROPTS=
 CJOB=
