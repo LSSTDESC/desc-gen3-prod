@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# g3wf-strace
+#
+# David Adams
+# September 2023
+#
+# Run strace without output file that replaces stderr
+# XXX.sterr --> XXX.strace
+SLOG=$(descprod-get-stderr | sed 's/.stderr/.strace/g')
+strace -o $SLOG $*
+

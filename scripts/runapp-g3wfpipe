@@ -216,7 +216,7 @@ if [[ -n $CJOB ]]; then
   source $SUPFIL
   PIPE=$CON_PIPE
   QUERY=$CON_QUERY
-  PREPEND=$CON_PREPEND
+  PREPEND="$CON_PREPEND"
   LVEROPTS=$CON_LVEROPTS
   if [[ -z $CSRC ]]; then
     CSRC=$CON_CSRC
