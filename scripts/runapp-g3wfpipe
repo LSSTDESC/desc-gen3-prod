@@ -102,6 +102,7 @@ if [ $(whoami) = dladams ]; then
   #PREPEND="myiotrace $PREPEND"  # job000831
   #PREPEND="strace -o strace.log -e read,write,open,openat,close $PREPEND" # 832
   PREPEND="strace -f -o strace.log -e read,write,open,openat,close $PREPEND"
+  PREPEND="strace -f -o $(echo $(./descprod-get-stderr) | sed 's/.stderr/.strace/g') -e read,write,open,openat,close $PREPEND"
 fi
 LVEROPTS=
 CJOB=
