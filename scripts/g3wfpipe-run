@@ -43,7 +43,7 @@ if echo $ARGS | grep proc >/dev/null; then
     exit 0
   else
     echo $THISBAS: Starting sysmon
-    desc-sysmon-reporter "fnam='$SYMFIL';log='sysmon.log';dt=5;frqfnam='$FRQFIL'" &
+    desc-sysmon-reporter "fnam='$SYMFIL';log='sysmon.log';dt=5;frqfnam='$FRQFIL'" >sysmon.log &
     PID=$!
     echo $PID>sysmon.pid
   fi
