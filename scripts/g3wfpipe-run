@@ -50,3 +50,5 @@ if echo $ARGS | grep proc >/dev/null; then
 fi
 echo $THISBAS: Starting workflow script with args $ARGS
 $THISPTH.py $ARGS
+echo $THISBAS: Terminating sysmon.
+kill $(cat sysmon.pid)
