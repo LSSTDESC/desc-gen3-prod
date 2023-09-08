@@ -318,7 +318,8 @@ if [ -n "$STRACE" ]; then
   fi
   if [ -n "$STIME" ]; then
     info_echo "Tasks will be run with an strace time summary"
-    PREPEND="g3wf-strace -f -c $PREPEND"
+    #PREPEND="g3wf-strace -f -c $PREPEND"
+    PREPEND="$PREPEND g3wf-strace -D -c"
   else
     info_echo "Tasks will run strace with expression $STOPT"
     PREPEND="g3wf-strace -f -e $STOPT $PREPEND"
