@@ -46,6 +46,7 @@ if [[ -z $1 || $1 = -h ]]; then
   echo "  strace: Run strace with trace=file for each task."
   echo "  strace:fileI: Run strace with selected file calls. I in {1,2,3}"
   echo "  strace:V1:V2:...: Run strace with trace=V1,V2,... for each task."
+  echo "  stime: Create an strace system time summary."
   exit 1
 fi
 
@@ -281,6 +282,8 @@ for OPT in ${HOPTS[@]}; do
     STRACE=$(echo ${OPT:7} | sed 's/:/,/g')
   elif [ $OPT = strace ]; then
     STRACE=file2
+  elif [ $OPT = stime ]; then
+    STRACE=timesum
   else
     err_echo Invalid howfig field: $OPT
     exit 13
@@ -300,17 +303,26 @@ if [ -n "$STRACE" ]; then
   #PREPEND="strace -o strace.log -e read,write,open,openat,close $PREPEND" # 832
   #PREPEND="strace -f -o strace.log -e read,write,open,openat,close $PREPEND"
   #PREPEND="g3wf-strace -f -e read,write,open,openat,close,rename,renameat,renameat2,link,linkat,unlink,unlinkat $PREPEND"
+  STOPT=
+  STIME=
   if [ $STRACE = file1 ]; then
     STOPT="open,openat"
   elif [ $STRACE = file2 ]; then
     STOPT="open,openat,close,rename,renameat,renameat2,link,linkat,unlink,unlinkat"
   elif [ $STRACE = file3 ]; then
     STOPT="read,write,open,openat,close,rename,renameat,renameat2,link,linkat,unlink,unlinkat"
+  elif [ $STRACE = timesum ]; then
+    STIME=true
   else
     STOPT="trace=$STRACE"
   fi
-  info_echo "Takss will run strace with $STOPT"
-  PREPEND="g3wf-strace -f -e $STOPT $PREPEND"
+  if [ -n "$STIME" ]; then
+    info_echo "Tasks will be run with an strace time summary"
+    PREPEND="g3wf-strace -f -c $PREPEND"
+  else
+    info_echo "Tasks will run strace with expression $STOPT"
+    PREPEND="g3wf-strace -f -e $STOPT $PREPEND"
+  fi
 fi
 
 # Record the setup for continuation jobs.

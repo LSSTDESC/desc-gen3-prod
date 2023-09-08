@@ -7,9 +7,6 @@
 #
 # Run strace without output file that replaces stderr
 # XXX.sterr --> XXX.strace
-#
-# An strace time report is also written to XXX.stime
 SLOG=$(descprod-get-stderr | sed 's/.stderr/.strace/g')
-STLOG=$(descprod-get-stderr | sed 's/.stderr/.stime/g')
-strace -c -o $STLOG strace -o $SLOG $*
+strace -o $SLOG $*
 
