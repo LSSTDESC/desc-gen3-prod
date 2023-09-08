@@ -44,7 +44,7 @@ if [[ -z $1 || $1 = -h ]]; then
   echo "  bproc:BPO: Run pre,proc,post multistage with proc in pmbs-BPO"
   echo "    Options BPO are those for pmbs here colon separated."
   echo "  strace: Run strace with trace=file for each task."
-  echo "  strace:fileI: Run strace with selected file calls. I in {1,2,3}
+  echo "  strace:fileI: Run strace with selected file calls. I in {1,2,3}"
   echo "  strace:V1:V2:...: Run strace with trace=V1,V2,... for each task."
   exit 1
 fi
