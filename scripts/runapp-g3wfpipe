@@ -279,8 +279,8 @@ for OPT in ${HOPTS[@]}; do
     WFARGS=$(echo $WFARGS | sed 's/proc.*//g' | sed 's/-$//g')
   elif [ ${OPT:0:7} = "strace:" -a ${#OPT} -gt 7 ]; then
     STRACE=$(echo ${OPT:7} | sed 's/:/,/g')
-  elif [ ${OPT:0:6} = strace ]; then
-    STRACE=file1
+  elif [ $OPT = strace ]; then
+    STRACE=file2
   else
     err_echo Invalid howfig field: $OPT
     exit 13
