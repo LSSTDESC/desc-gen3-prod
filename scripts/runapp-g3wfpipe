@@ -44,6 +44,7 @@ if [[ -z $1 || $1 = -h ]]; then
   echo "  bproc:BPO: Run pre,proc,post multistage with proc in pmbs-BPO"
   echo "    Options BPO are those for pmbs here colon separated."
   echo "  strace: Run strace with trace=file for each task."
+  echo "  strace:fileI: Run strace with selected file calls. I in {1,2,3}
   echo "  strace:V1:V2:...: Run strace with trace=V1,V2,... for each task."
   exit 1
 fi
@@ -279,7 +280,7 @@ for OPT in ${HOPTS[@]}; do
   elif [ ${OPT:0:7} = "strace:" -a ${#OPT} -gt 7 ]; then
     STRACE=$(echo ${OPT:7} | sed 's/:/,/g')
   elif [ ${OPT:0:6} = strace ]; then
-    STRACE=file
+    STRACE=file1
   else
     err_echo Invalid howfig field: $OPT
     exit 13
@@ -299,7 +300,17 @@ if [ -n "$STRACE" ]; then
   #PREPEND="strace -o strace.log -e read,write,open,openat,close $PREPEND" # 832
   #PREPEND="strace -f -o strace.log -e read,write,open,openat,close $PREPEND"
   #PREPEND="g3wf-strace -f -e read,write,open,openat,close,rename,renameat,renameat2,link,linkat,unlink,unlinkat $PREPEND"
-  PREPEND="g3wf-strace -f -e trace=$STRACE $PREPEND"
+  if [ STRACE = file1 ]; then
+    STOPT="open,openat"
+  elif [ STRACE = file2 ]; then
+    STOPT="open,openat,close,rename,renameat,renameat2,link,linkat,unlink,unlinkat"
+  elif [ STRACE = file3 ]; then
+    STOPT="read,write,open,openat,close,rename,renameat,renameat2,link,linkat,unlink,unlinkat"
+  else
+    STOPT="trace=$STRACE"
+  fi
+  info_echo "Takss will run strace with $STOPT"
+  PREPEND="g3wf-strace -f -e $STOPT $PREPEND"
 fi
 
 # Record the setup for continuation jobs.
