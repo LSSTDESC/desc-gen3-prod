@@ -300,11 +300,11 @@ if [ -n "$STRACE" ]; then
   #PREPEND="strace -o strace.log -e read,write,open,openat,close $PREPEND" # 832
   #PREPEND="strace -f -o strace.log -e read,write,open,openat,close $PREPEND"
   #PREPEND="g3wf-strace -f -e read,write,open,openat,close,rename,renameat,renameat2,link,linkat,unlink,unlinkat $PREPEND"
-  if [ STRACE = file1 ]; then
+  if [ $STRACE = file1 ]; then
     STOPT="open,openat"
-  elif [ STRACE = file2 ]; then
+  elif [ $STRACE = file2 ]; then
     STOPT="open,openat,close,rename,renameat,renameat2,link,linkat,unlink,unlinkat"
-  elif [ STRACE = file3 ]; then
+  elif [ $STRACE = file3 ]; then
     STOPT="read,write,open,openat,close,rename,renameat,renameat2,link,linkat,unlink,unlinkat"
   else
     STOPT="trace=$STRACE"
