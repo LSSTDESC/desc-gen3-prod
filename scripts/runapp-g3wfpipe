@@ -98,15 +98,6 @@ shopt -s extglob
 # Parse the config.
 PIPE=
 QUERY=
-#PREPEND="iotrace -cmd time perf stat -d"
-PREPEND="time perf stat -d"
-if [ -n "$STRACE" ]; then
-  #PREPEND="myiotrace $PREPEND"  # job000831
-  #PREPEND="strace -o strace.log -e read,write,open,openat,close $PREPEND" # 832
-  #PREPEND="strace -f -o strace.log -e read,write,open,openat,close $PREPEND"
-  PREPEND="g3wf-strace -f -e read,write,open,openat,close,rename,renameat,renameat2,link,linkat,unlink,unlinkat $PREPEND"
-  PREPEND="g3wf-strace -f -e trace=$STRACE $PREPEND"
-fi
 LVEROPTS=
 CJOB=
 DOINIT=false
@@ -298,6 +289,17 @@ done
 if [ $PMONDT != false ] && [ $PMONDT != $PMONDT ]; then
   err_echo Invalid parsl monitoring interval: $PMONDT
   exit 20
+fi
+
+# Define the task command prepend.
+#PREPEND="iotrace -cmd time perf stat -d"
+PREPEND="time perf stat -d"
+if [ -n "$STRACE" ]; then
+  #PREPEND="myiotrace $PREPEND"  # job000831
+  #PREPEND="strace -o strace.log -e read,write,open,openat,close $PREPEND" # 832
+  #PREPEND="strace -f -o strace.log -e read,write,open,openat,close $PREPEND"
+  PREPEND="g3wf-strace -f -e read,write,open,openat,close,rename,renameat,renameat2,link,linkat,unlink,unlinkat $PREPEND"
+  PREPEND="g3wf-strace -f -e trace=$STRACE $PREPEND"
 fi
 
 # Record the setup for continuation jobs.
