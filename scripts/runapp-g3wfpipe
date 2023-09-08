@@ -43,6 +43,8 @@ if [[ -z $1 || $1 = -h ]]; then
   echo "          DT = false or 0 disables monitoring. Default is 3."
   echo "  bproc:BPO: Run pre,proc,post multistage with proc in pmbs-BPO"
   echo "    Options BPO are those for pmbs here colon separated."
+  echo "  strace: Run strace with trace=file for each task."
+  echo "  strace:V1:V2:...: Run strace with trace=V1,V2,... for each task."
   exit 1
 fi
 
@@ -98,11 +100,12 @@ PIPE=
 QUERY=
 #PREPEND="iotrace -cmd time perf stat -d"
 PREPEND="time perf stat -d"
-if [ $(whoami) = dladams ]; then
+if [ -n "$STRACE" ]; then
   #PREPEND="myiotrace $PREPEND"  # job000831
   #PREPEND="strace -o strace.log -e read,write,open,openat,close $PREPEND" # 832
   #PREPEND="strace -f -o strace.log -e read,write,open,openat,close $PREPEND"
-  PREPEND="g3wf-strace -f -e read,write,open,openat,close,rename $PREPEND"
+  PREPEND="g3wf-strace -f -e read,write,open,openat,close,rename,renameat,renameat2,link,linkat,unlink,unlinkat $PREPEND"
+  PREPEND="g3wf-strace -f -e trace=$STRACE $PREPEND"
 fi
 LVEROPTS=
 CJOB=
@@ -234,6 +237,7 @@ TMAX=
 TMAX2=
 TMAX3=
 PMONDT=${CON_PMONDT:-3}
+strace=false
 for OPT in ${HOPTS[@]}; do
   if [ $OPT = shifter ]; then
     CSRC=shifter
@@ -267,7 +271,7 @@ for OPT in ${HOPTS[@]}; do
     BPJOB=        # If true, create a DESCprod job to submit
     BPOPTS=       # Arguments passed to pmbs
     for OPT in ${BPOPTARR[@]}; do
-      if [ $OPT = job ; then
+      if [ $OPT = job ]; then
         BPJOB=true
       elif [ -z "$BPOPTS" ]; then
         BPOPTS=$OPT
@@ -281,6 +285,10 @@ for OPT in ${HOPTS[@]}; do
     fi
     WFARGS2=$(echo $WFARGS | sed 's/.*proc//g' | sed 's/^-//g')
     WFARGS=$(echo $WFARGS | sed 's/proc.*//g' | sed 's/-$//g')
+  elif [ ${OPT:0:7} = "strace:" -a ${#OPT} -gt 7 ]; then
+    STRACE=$(echo ${OPT:7} | sed 's/:/,/g')
+  elif [ ${OPT:0:6} = strace ]; then
+    STRACE=file
   else
     err_echo Invalid howfig field: $OPT
     exit 13
