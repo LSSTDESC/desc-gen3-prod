@@ -1,6 +1,11 @@
 #!/bin/bash
 
-LVER=$1
+LNAM=$1
+LVER=$(g3wf-convert-lsst-version $LNAM)
+if [ -z "$LVER" ]; then
+  err_echo ERROR: Invalid config field: $OPT
+  exit 3
+fi
 shift
 COM="$*"
 MYNAME=$(basename ${BASH_SOURCE[0]})
