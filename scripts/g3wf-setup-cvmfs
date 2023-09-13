@@ -53,7 +53,6 @@ else
       conda activate --stack ${wq_env}
     else
       echo $MYNAME: Creating conda env $wq_env
-      echo $MYNAME: Creating conda env $wq_env
       conda create -y --prefix ${wq_env}
       echo $MYNAME: Activating conda env $wq_env
       conda activate --stack ${wq_env}
