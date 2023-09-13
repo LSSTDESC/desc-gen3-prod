@@ -1,16 +1,16 @@
 #!/bin/bash
 
+MYNAME=$(basename ${BASH_SOURCE[0]})
 LNAM=$1
 LVER=$(g3wf-convert-lsst-version $LNAM)
 if [ -z "$LVER" ]; then
-  err_echo ERROR: Invalid config field: $OPT
+  echo ERROR: $MYNAME: Invalid version nickname: $LNAM
   exit 3
 fi
 shift
 COM="$*"
-MYNAME=$(basename ${BASH_SOURCE[0]})
 export PS1="Failed $MYNAME> "
-IVER=07
+IVER=08
 
 if [ -z "$LVER" ]; then
   echo Usage: source $MYNAME LSST_VERSION
