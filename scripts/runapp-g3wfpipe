@@ -234,7 +234,7 @@ TMAX3=
 PMONDT=${CON_PMONDT:-3}
 strace=false
 for OPT in ${HOPTS[@]}; do
-  if [ $OPT = shifter ]; then
+  if [ ${OPT:0:7} = shifter ]; then
     CSRC=shifter
   elif [ $OPT = cvmfs ]; then
     CSRC=cvmfs
@@ -347,7 +347,7 @@ PIPEVAL=
     exit 1
   fi
   if [ -z "$LVEROPTS" ]; then
-    err_echo "LSST release mt be proivided for initialization."
+    err_echo "LSST release must be provided for initialization."
     exit 1
   fi
   if [ $PIPE = drp ]; then
@@ -429,10 +429,12 @@ fi
 if [[ -n $WFARGS ]]; then
   info_echo Creating run script.
   if [ -z "$CSRC" ]; then
+  CSRCARG=
     err_echo "Code source must be provided."
     exit 14
-  elif [ $CSRC = shifter ]; then
+  elif [ ${CSRC:0:7} = shifter ]; then
     COM=g3wf-run-shifter
+    CSRCARG="-v ${CSRC:8}"
   elif [ $CSRC = cvmfs ]; then
     COM=g3wf-run-cvmfs
   else
@@ -440,7 +442,7 @@ if [[ -n $WFARGS ]]; then
     exit 15
   fi
   echo Code source: $CSRC
-  COM="${TMAX:+timeout $TMAX }$COM $LVEROPTS ./run"
+  COM="${TMAX:+timeout $TMAX }$COM $CSRCARG $LVEROPTS ./run"
   # Create the run script.
   # It installs desc-gen3-prod and then runs the pipeline.
   RFIL=./setup.sh

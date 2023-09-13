@@ -2,6 +2,14 @@
 
 MYNAME=$(basename ${BASH_SOURCE[0]})
 LNAM=$1
+if [ "$LNAM" = "-v" ]; then
+  shift
+  IVER=$1
+  shift
+  LVER=$1
+else
+  IVER=11
+fi
 LVER=$(g3wf-convert-lsst-version $LNAM)
 if [ -z "$LVER" ]; then
   echo ERROR: $MYNAME: Invalid version nickname: $LNAM
@@ -10,7 +18,6 @@ fi
 shift
 COM="$*"
 export PS1="Failed $MYNAME> "
-IVER=11
 
 if [ -z "$LVER" ]; then
   echo Usage: source $MYNAME LSST_VERSION
