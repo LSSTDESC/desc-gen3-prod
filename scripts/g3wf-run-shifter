@@ -10,7 +10,7 @@ fi
 shift
 COM="$*"
 export PS1="Failed $MYNAME> "
-IVER=10
+IVER=11
 
 if [ -z "$LVER" ]; then
   echo Usage: source $MYNAME LSST_VERSION
