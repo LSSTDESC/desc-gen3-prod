@@ -6,7 +6,7 @@ if [ "$LNAM" = "-v" ]; then
   shift
   IVER=$1
   shift
-  LVER=$1
+  LNAM=$1
 else
   IVER=11
 fi
