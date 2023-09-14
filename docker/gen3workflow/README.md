@@ -50,3 +50,9 @@ On perlmutter or cori, install with shifter:
 02 - Preceding plus conda install of ndcctools 7.3.5  
 03 - Same as preceding with mamba conda solver  
 04 - Same as 02 except thread protections are added to startup.  
+06 - Working?
+07 - Working?
+09 - Failed attempt to add parsl build with dependencies.
+00 - Another failed attempt.
+09 - Another failed attempt.
+11 - Another failed attempt.

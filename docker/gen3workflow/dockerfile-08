@@ -1,0 +1,15 @@
+from lsstsqre/centos:7-stack-lsst_distrib-%LSSTVERSION%
+
+USER root
+RUN  yum --assumeyes --quiet install vim
+USER lsst
+
+RUN echo source /opt/lsst/software/stack/loadLSST.bash >setup.sh
+RUN echo setup lsst_distrib >>setup.sh
+RUN echo "export PS1='lsst:%LSSTVERSION%> '" >> setup.sh
+RUN echo "export LSSTVERSION='%LSSTVERSION%'" >> setup.sh
+RUN echo "export OMP_NUM_THREADS=1" >> setup.sh
+RUN echo "export NUMEXPR_MAX_THREADS=1" >> setup.sh
+
+RUN source setup.sh &&\
+    pip install 'parsl[monitoring,workqueue] @ git+https://github.com/parsl/parsl@desc'
