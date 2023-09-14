@@ -434,7 +434,10 @@ if [[ -n $WFARGS ]]; then
     exit 14
   elif [ ${CSRC:0:7} = shifter ]; then
     COM=g3wf-run-shifter
-    CSRCARG="-v ${CSRC:8}"
+    CSRCOPT=${CSRC:8}
+    if [ -n "$CSRCOPT" ]; then
+      CSRCARG="-v $CSRCOPT"
+    fi
   elif [ $CSRC = cvmfs ]; then
     COM=g3wf-run-cvmfs
   else
