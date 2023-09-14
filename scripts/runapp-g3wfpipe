@@ -37,6 +37,7 @@ if [[ -z $1 || $1 = -h ]]; then
   echo "  exec:XX where XX = wq, tp or wqMM"
   echo "  cvmfs: Code taken from cvmfs"
   echo "  shifter: Code taken from shifter"
+  echo "  shifter:VV: Code taken from shifter env version VV"
   echo "  tmax:TMAX Timeout TMAX in with unit {s, m, h}"
   echo "  tmax:TMAX1:TMAX2:...: Stage timeouts for multistage jobs"
   echo "  pmon:DT Sampling time for the parsl process monitor is DT sec."
