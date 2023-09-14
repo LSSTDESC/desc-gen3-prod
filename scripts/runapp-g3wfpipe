@@ -235,7 +235,7 @@ PMONDT=${CON_PMONDT:-3}
 strace=false
 for OPT in ${HOPTS[@]}; do
   if [ ${OPT:0:7} = shifter ]; then
-    CSRC=shifter
+    CSRC=$OPT
   elif [ $OPT = cvmfs ]; then
     CSRC=cvmfs
   elif [ ${OPT:0:3} = wq: ]; then
