@@ -85,6 +85,7 @@ else
       else
         echo $MYNAME: Invalid install option: $OPT
         rm -rf $wq_env
+        exit 0
       fi
     fi
     if [ -r $wq_env ]; then
