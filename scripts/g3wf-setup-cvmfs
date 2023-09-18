@@ -81,7 +81,7 @@ else
           echo $MYNAME: ERROR: Install of parsl failed! Env is at $wq_env
         fi
       elif [ $OPT = w2332 ]; then
-        g3wf-install-parsl-w2332
+        g3wf-install-parsl-w2332 $wq_env
       else
         echo $MYNAME: Invalid install option: $OPT
         rm -rf $wq_env

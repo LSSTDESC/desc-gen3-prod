@@ -1,14 +1,21 @@
 #!/bin/bash
 
-MYNAME=$(basename $0)
 echo $MYNAME: Begin at $(date)
+
+MYNAME=$(basename $0)
+PFX=$1
+
+PIPPFX=
+if [ -n "$PFX" ]; then
+  PIPPFX="--prefix $PFX"
+fi
 
 PKGS=(pep8 pylint black ipython nose jupyter jupyter_client==7.4.2 GitPython)
 PKGS+=("-U --no-deps 'parsl[monitoring,workqueue] @ git+https://github.com/parsl/parsl@desc'")
 PKGS+=(typeguard tblib paramiko dill globus sqlalchemy_utils flask_sqlalchemy)
 for PKG in "${PKGS[@]}"; do
   echo "========== Pip installing $PKG ========="
-  pip install $PKG
+  pip install $PIPPFX $PKG
 done
 
 #PKG="-c conda-forge ndcctools=7.6.1=py311h689c632_0 --no-deps"
