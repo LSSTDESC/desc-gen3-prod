@@ -78,6 +78,8 @@ else
         if ! pip install -I --prefix ${wq_env} 'parsl[monitoring,workqueue] @ git+https://github.com/parsl/parsl@desc'; then
           echo $MYNAME: ERROR: Install of parsl failed! Env is at $wq_env
         fi
+      elif [ $OPT = w2332 ]; then
+        g3wf-install-parsl-w2332
       else
         echo $MYNAME: Invalid install option: $OPT
         rm -rf $wq_env
