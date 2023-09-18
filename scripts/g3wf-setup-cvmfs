@@ -34,6 +34,8 @@ if [ -z "$LVER" -o "$LVER" = "-h" -o -z "$OPT" ]; then
   echo Usage: source $MYNAME LSST_TAG:OPT
 elif [ -z "$LVER" ]; then
   echo $MYNAME: ERROR: Unable to interpret LSST tag $LVERTAG
+elif [ $LVER = $LVERTAG ]; then
+  echo $MYNAME: ERROR: Specify version by nickname not proper name $LVER.
 elif ! outbase=$(descprod-output-dir create installs); then
   echo $MYNAME: ERROR: Unable to find decprod output dir.
 else
