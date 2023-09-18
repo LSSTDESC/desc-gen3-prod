@@ -35,7 +35,8 @@ if [[ -z $1 || $1 = -h ]]; then
   echo "  butler: Run test of the Butler."
   echo HFG = HF1-HF2-... where HFi is any of
   echo "  exec:XX where XX = wq, tp or wqMM"
-  echo "  cvmfs: Code taken from cvmfs"
+  echo "  cvmfs: Code taken from default env using LSST cvmfs"
+  echo "  cvmfs:BBB: Code taken from env option BBB using LSST cvmfs code"
   echo "  shifter: Code taken from shifter"
   echo "  shifter:VV: Code taken from shifter env version VV"
   echo "  tmax:TMAX Timeout TMAX in with unit {s, m, h}"
@@ -237,8 +238,8 @@ strace=false
 for OPT in ${HOPTS[@]}; do
   if [ ${OPT:0:7} = shifter ]; then
     CSRC=$OPT
-  elif [ $OPT = cvmfs ]; then
-    CSRC=cvmfs
+  elif [ ${OPT:0:5} = cvmfs ]; then
+    CSRC=$OPT
   elif [ ${OPT:0:3} = wq: ]; then
     EXEC=$OPT
   elif [ ${OPT:0:3} = tp: ]; then
