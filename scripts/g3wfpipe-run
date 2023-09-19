@@ -50,10 +50,12 @@ if echo $ARGS | grep proc >/dev/null; then
 fi
 echo $THISBAS: Starting workflow script with args $ARGS
 $THISPTH.py $ARGS
+RSTAT=$?
 if [ -r sysmon.pid ]; then
   echo $THISBAS: Terminating sysmon.
   kill $(cat sysmon.pid)
 else
   echo $THISBAS: It appears sysmon is not running.
 fi
-echo $THISBAS: Exiting.
+echo $THISBAS: Exiting with status $RSTAT.
+exit $RSTAT
