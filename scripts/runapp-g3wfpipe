@@ -424,9 +424,9 @@ PIPEVAL=
 fi
 
 G3WF_BRANCH=
-if [ $IVER -ge 2331 ]; then
-  G3WF_BRANCH=u/jchiang/w_2023_32_qbb_changes
-fi
+#if [ $IVER -ge 2331 ]; then
+#  G3WF_BRANCH=u/jchiang/w_2023_32_qbb_changes
+#fi
 
 if [[ -n $WFARGS ]]; then
   info_echo Creating run script.
