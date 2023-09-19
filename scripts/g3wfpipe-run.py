@@ -245,7 +245,7 @@ if doProc:
         except Exception as e:
             logmsg(f"Try {count} raised exception: {e}")
             #traceback.print(e.__traceback__)
-            if count > 10:
+            if count > 1000:
                 statlogmsg("Unable to retrieve futures.")
                 sys.exit(1)
             futures = None
