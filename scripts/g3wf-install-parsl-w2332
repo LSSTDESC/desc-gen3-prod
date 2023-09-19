@@ -7,7 +7,7 @@ PFX=$1
 
 PIPPFX=
 if [ -n "$PFX" ]; then
-  PIPPFX="--prefix $PFX"
+  PIPPFX="--prefix $PFX --ignore-installed"
 fi
 
 PKGS=(pep8 pylint black ipython nose jupyter jupyter_client==7.4.2 GitPython)
