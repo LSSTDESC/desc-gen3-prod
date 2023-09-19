@@ -11,7 +11,7 @@ if [ -n "$PFX" ]; then
 fi
 
 PKGS=(pep8 pylint black ipython nose jupyter jupyter_client==7.4.2 GitPython)
-PKGS+=("-U --no-deps 'parsl[monitoring,workqueue] @ git+https://github.com/parsl/parsl@desc'")
+PKGS+=("-U --no-deps \'parsl[monitoring,workqueue] @ git+https://github.com/parsl/parsl@desc\'")
 PKGS+=(typeguard tblib paramiko dill globus sqlalchemy_utils flask_sqlalchemy)
 for PKG in "${PKGS[@]}"; do
   echo "========== Pip installing $PKG ========="
