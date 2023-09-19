@@ -89,9 +89,9 @@ else
       fi
     fi
     if [ -r $wq_env ]; then
-      export PYTHONPATH=${wq_env}/lib/python3.8/site-packages:${PYTHONPATH}
-      export PYTHONPATH=${wq_env}/lib/python3.10/site-packages:${PYTHONPATH}
-      export PYTHONPATH=${wq_env}/lib/python3.11/site-packages:${PYTHONPATH}
+      for PYDIR in $(find ${wq_env}/lib -name site_packages); do
+        PYTHONPATH=$PYDIR${PYTHONPATH}
+      done
       export PATH=${wq_env}/bin:${PATH}
       export PS1="cvmfs $cnam> "
     fi
