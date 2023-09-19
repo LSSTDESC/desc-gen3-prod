@@ -244,7 +244,7 @@ if doProc:
             futures = [job.get_future() for job in pg.values() if not job.dependencies]
         except Exception as e:
             logmsg(f"Try {count} raised exception: {e}")
-            traceback.print(e.__traceback__)
+            #traceback.print(e.__traceback__)
             if count > 10:
                 statlogmsg("Unable to retrieve futures.")
                 sys.exit(1)
