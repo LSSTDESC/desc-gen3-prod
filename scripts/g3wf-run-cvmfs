@@ -2,18 +2,31 @@
 
 LVER=$1
 shift
+if [ "$LVER" = -v ]; then
+  OPT=$1
+  shift
+  LVER=$1
+  shift
+fi
 COM=$*
 MYCOM=$BASH_SOURCE
 MYNAME=$(basename $MYCOM)
 
 if [ -z "$LVER" ]; then
-  echo Usage: $MYCOM LSST_VERSION COM
+  echo Usage: $MYCOM LSST_VERSION:OPT COM
+  echo    or: $MYCOM -v OPT LSST_VERSION COM
   exit 0
 fi
 
+if [ -n "$OPT" ]; then
+  OPTS="-v $OPT -x"
+else
+  OPTS="-x"
+fi
+ 
 if [ -n "$COM" ]; then
   MYECHO=$(echo $MYNAME: Running command $COM)
-  (source g3wf-setup-cvmfs $LVER; echo $MYECHO; /bin/bash -c "$COM")
+  (source g3wf-setup-cvmfs $OPTS $LVER; echo $MYECHO; /bin/bash -c "$COM")
 else
-  (source g3wf-setup-cvmfs $LVER; /bin/bash)
+  (source g3wf-setup-cvmfs $OPTS $LVER; /bin/bash)
 fi
