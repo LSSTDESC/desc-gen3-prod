@@ -35,9 +35,9 @@ HELP=true
 OPT=
 DOEXIT=false
 LVEROPT=
-ARG=$1
-shift
 while true; do
+  ARG=$1
+  shift
   echo $MYNAME: Arg is $ARG
   if [ $# -eq 0 ]; then
     break
