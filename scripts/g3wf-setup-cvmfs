@@ -22,78 +22,128 @@
 # Installation base directory is found with the command
 #   g3wf-output-dir
 
-LVEROPT=$1
-LVERTAG=$(echo $LVEROPT | cut -d':' -f1)
-LVER=$(g3wf-convert-lsst-version $LVERTAG)
-OPT=$(echo $LVEROPT | grep : | cut -d':' -f2-)
-if [[ -z $OPT ]]; then OPT=parsl; fi
-MYNAME=$(basename ${BASH_SOURCE[0]})
-export PS1="Failed $MYNAME> "
-
-if [ -z "$LVER" -o "$LVER" = "-h" -o -z "$OPT" ]; then
-  echo Usage: source $MYNAME LSST_TAG:OPT
-elif [ -z "$LVER" ]; then
-  echo $MYNAME: ERROR: Unable to interpret LSST tag $LVERTAG
-elif [ $LVER = $LVERTAG ]; then
-  echo $MYNAME: ERROR: Specify version by nickname not proper name $LVER.
-elif ! outbase=$(descprod-output-dir create installs); then
-  echo $MYNAME: ERROR: Unable to find decprod output dir.
-else
-  SUPFIL=/cvmfs/sw.lsst.eu/linux-x86_64/lsst_distrib/$LVER/loadLSST-ext.bash
-  if [ ! -r $SUPFIL ]; then
-    echo $MYNAME: LSST setup not found: $SUPFIL
+myexit() {
+  if [ $DOEXIT = true ]; then
+    exit $1
   else
-    echo $MYNAME: Setting up LSST cvmfs distrib $LVER
-    source /cvmfs/sw.lsst.eu/linux-x86_64/lsst_distrib/$LVER/loadLSST-ext.bash
-    setup lsst_distrib
-    export OMP_NUM_THREADS=1
-    export NUMEXPR_MAX_THREADS=1
-    cnam=g3wf-$LVERTAG-$OPT
-    wq_env=$outbase/$cnam
-    if [ -r $wq_env ]; then
-      echo $MYNAME: Activating conda env $wq_env
-      conda activate --stack ${wq_env}
-    else
-      echo $MYNAME: Creating conda env $wq_env
-      conda create -y --prefix ${wq_env}
-      echo $MYNAME: Activating conda env $wq_env
-      conda activate --stack ${wq_env}
-      #echo $MYNAME: Updating conda
-      #conda update -n base -c conda-forge -y conda
-      echo $MYNAME: Applying option $OPT
-      if [ $OPT = g3wf -o $OPT = tyx ]; then
-        PRODS="tblib paramiko dill globus-sdk sqlalchemy_utils zmq"
-        if [ $OPT = tyx ]; then
-          PRODS="$PRODS typing_extensions==4.6.3"
-        fi
-        PRODS="$PRODS typeguard<3"
-        echo $MYNAME: Installing ndcctools
-        conda install -y -c conda-forge ndcctools=7.3.0=py38h4630a5e_0 --no-deps
-        echo $MYNAME: Installing parsl without dependencies
-        pip install -I --prefix ${wq_env} --no-deps 'parsl[monitoring,workqueue] @ git+https://github.com/parsl/parsl@desc'
-        echo $MYNAME: Installing $PRODS
-        pip install --prefix ${wq_env} $PRODS
-        echo $MYNAME: Installing desc-wfmon
-        pip install --prefix ${wq_env} git+https://github.com/LSSTDESC/desc-wfmon
-      elif [ $OPT = parsl ]; then
-        echo $MYNAME: Installing parsl with dependencies
-        if ! pip install -I --prefix ${wq_env} 'parsl[monitoring,workqueue] @ git+https://github.com/parsl/parsl@desc'; then
-          echo $MYNAME: ERROR: Install of parsl failed! Env is at $wq_env
-        fi
-      elif [ $OPT = w2332 ]; then
-        g3wf-install-parsl-w2332 $wq_env
-      else
-        echo $MYNAME: Invalid install option: $OPT
-        rm -rf $wq_env
-        exit 0
-      fi
+    export PS1="Failed $MYNAME> "
+  fi
+}
+
+MYNAME=$(basename ${BASH_SOURCE[0]})
+HELP=true
+OPT=
+DOEXIT=false
+LVEROPT=
+ARG=$1
+shift
+while true; do
+  if [ $# -eq 0 ]; then
+    break
+  fi
+  if [ "$ARG" = "" -o "$ARG" = -h ]; then
+    break
+  fi
+  if [ $ARG = -v ]; then
+    if [ $# -eq 0 ]; then
+      break
     fi
-    if [ -r $wq_env ]; then
-      for PYDIR in $(find ${wq_env}/lib -name site-packages); do
-        PYTHONPATH=$PYDIR:${PYTHONPATH}
-      done
-      export PATH=${wq_env}/bin:${PATH}
-      export PS1="cvmfs $cnam> "
+    OPT=$1
+    shift
+  elif [ $ARG = -x ]; then
+    DOEXIT=true
+    break
+  else
+    LVEROPT=$1
+    shift
+    if [ $# -eq 0 ]; then
+      HELP=false
+    fi
+    break
+  fi
+done
+
+if [ $HELP = true ]; then
+  echo Usage: source $MYNAME LSST_TAG:OPT
+  echo    or: source $MYNAME -v OPT LSST_TAG
+  myexit 0
+else
+  if [ -z "$OPT" ]; then
+    # If OPT was not given as -v OPT, then look for it as LVER:OPT
+    # This is for backward compatability.
+    LVERTAG=$(echo $LVEROPT | cut -d':' -f1)
+    OPT=$(echo $LVEROPT | grep : | cut -d':' -f2-)
+  else
+    LVERTAG=$LVEROPT
+    OPT=parsl
+  fi
+  LVER=$(g3wf-convert-lsst-version $LVERTAG)
+  if [ -z "$LVER" ]; then
+    echo $MYNAME: ERROR: Unable to interpret LSST tag $LVERTAG
+    myexit 1
+  elif [ $LVER = $LVERTAG ]; then
+    echo $MYNAME: ERROR: Specify version by nickname not proper name $LVER.
+    myexit 1
+  elif ! outbase=$(descprod-output-dir create installs); then
+    echo $MYNAME: ERROR: Unable to find decprod output dir.
+    myexit 1
+  else
+    SUPFIL=/cvmfs/sw.lsst.eu/linux-x86_64/lsst_distrib/$LVER/loadLSST-ext.bash
+    if [ ! -r $SUPFIL ]; then
+      echo $MYNAME: LSST setup not found: $SUPFIL
+    else
+      echo $MYNAME: Setting up LSST cvmfs distrib $LVER
+      source /cvmfs/sw.lsst.eu/linux-x86_64/lsst_distrib/$LVER/loadLSST-ext.bash
+      setup lsst_distrib
+      export OMP_NUM_THREADS=1
+      export NUMEXPR_MAX_THREADS=1
+      cnam=g3wf-$LVERTAG-$OPT
+      wq_env=$outbase/$cnam
+      if [ -r $wq_env ]; then
+        echo $MYNAME: Activating conda env $wq_env
+        conda activate --stack ${wq_env}
+      else
+        echo $MYNAME: Creating conda env $wq_env
+        conda create -y --prefix ${wq_env}
+        echo $MYNAME: Activating conda env $wq_env
+        conda activate --stack ${wq_env}
+        #echo $MYNAME: Updating conda
+        #conda update -n base -c conda-forge -y conda
+        echo $MYNAME: Applying option $OPT
+        if [ $OPT = g3wf -o $OPT = tyx ]; then
+          PRODS="tblib paramiko dill globus-sdk sqlalchemy_utils zmq"
+          if [ $OPT = tyx ]; then
+            PRODS="$PRODS typing_extensions==4.6.3"
+          fi
+          PRODS="$PRODS typeguard<3"
+          echo $MYNAME: Installing ndcctools
+          conda install -y -c conda-forge ndcctools=7.3.0=py38h4630a5e_0 --no-deps
+          echo $MYNAME: Installing parsl without dependencies
+          pip install -I --prefix ${wq_env} --no-deps 'parsl[monitoring,workqueue] @ git+https://github.com/parsl/parsl@desc'
+          echo $MYNAME: Installing $PRODS
+          pip install --prefix ${wq_env} $PRODS
+          echo $MYNAME: Installing desc-wfmon
+          pip install --prefix ${wq_env} git+https://github.com/LSSTDESC/desc-wfmon
+        elif [ $OPT = parsl ]; then
+          echo $MYNAME: Installing parsl with dependencies
+          if ! pip install -I --prefix ${wq_env} 'parsl[monitoring,workqueue] @ git+https://github.com/parsl/parsl@desc'; then
+            echo $MYNAME: ERROR: Install of parsl failed! Env is at $wq_env
+          fi
+        elif [ $OPT = w2332 ]; then
+          g3wf-install-parsl-w2332 $wq_env
+        else
+          echo $MYNAME: Invalid install option: $OPT
+          rm -rf $wq_env
+          myexit 1
+        fi
+      fi
+      if [ -r $wq_env ]; then
+        for PYDIR in $(find ${wq_env}/lib -name site-packages); do
+          PYTHONPATH=$PYDIR:${PYTHONPATH}
+        done
+        export PATH=${wq_env}/bin:${PATH}
+        export PS1="cvmfs $cnam> "
+      fi
     fi
   fi
 fi
