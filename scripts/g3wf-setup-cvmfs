@@ -53,7 +53,6 @@ while true; do
     shift
   elif [ $ARG = -x ]; then
     DOEXIT=true
-    break
   else
     LVEROPT=$1
     shift
