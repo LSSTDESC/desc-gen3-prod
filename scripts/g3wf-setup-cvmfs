@@ -38,6 +38,7 @@ LVEROPT=
 ARG=$1
 shift
 while true; do
+  echo $MYNAME: Arg is $ARG
   if [ $# -eq 0 ]; then
     break
   fi
