@@ -234,7 +234,7 @@ TMAX=
 TMAX2=
 TMAX3=
 PMONDT=${CON_PMONDT:-3}
-strace=false
+STRACE=$CON_STRACE
 for OPT in ${HOPTS[@]}; do
   if [ ${OPT:0:7} = shifter ]; then
     CSRC=$OPT
@@ -337,6 +337,7 @@ echo "CON_QUERY=\"$QUERY\"" >>consetup.sh
 echo "CON_PREPEND=\"$PREPEND\"" >>consetup.sh
 echo "CON_PIPE=$PIPE" >>consetup.sh
 echo "CON_PMONDT=$PMONDT" >>consetup.sh
+echo "CON_STRACE=$STRACE" >>consetup.sh
 
 if [ $DOINIT = true ]; then
 PIPEVAL=
