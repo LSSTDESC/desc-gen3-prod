@@ -325,7 +325,7 @@ if [ -n "$STRACE" ]; then
     PREPEND="g3wf-strace -f -c $PREPEND"
   else
     info_echo "Tasks will run strace with expression $STOPT"
-    PREPEND="g3wf-strace -f -e $STOPT $PREPEND"
+    PREPEND="g3wf-strace -f -t -T -C -e $STOPT $PREPEND"
   fi
 fi
 

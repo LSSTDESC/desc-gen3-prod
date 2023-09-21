@@ -35,13 +35,14 @@ HELP=true
 OPT=
 DOEXIT=false
 LVEROPT=
+DBG=true
 while true; do
-  echo $MYNAME: Arg is $ARG
-  ARG=$1
-  shift
   if [ $# -eq 0 ]; then
     break
   fi
+  ARG=$1
+  shift
+  if [ $DBG = true ]; then echo $MYNAME: Arg is $ARG; fi
   if [ "$ARG" = "" -o "$ARG" = -h ]; then
     break
   fi
@@ -54,8 +55,11 @@ while true; do
   elif [ $ARG = -x ]; then
     DOEXIT=true
   else
-    LVEROPT=$1
-    shift
+    LVEROPT=$ARG
+    if [ $DBG = true ]; then
+      echo $MYNAME: Set LVEROPT to $LVEROPT
+      echo $MYNAME: Remaining args [$#]: $*
+    fi
     if [ $# -eq 0 ]; then
       HELP=false
     fi
@@ -65,7 +69,7 @@ done
 
 if [ $HELP = true ]; then
   echo Usage: source $MYNAME LSST_TAG:OPT
-  echo    or: source $MYNAME -v OPT LSST_TAG
+  echo "   or: source $MYNAME -v OPT LSST_TAG"
   myexit 0
 else
   if [ -z "$OPT" ]; then
