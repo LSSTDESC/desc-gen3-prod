@@ -36,9 +36,9 @@ OPT=
 DOEXIT=false
 LVEROPT=
 while true; do
+  echo $MYNAME: Arg is $ARG
   ARG=$1
   shift
-  echo $MYNAME: Arg is $ARG
   if [ $# -eq 0 ]; then
     break
   fi
