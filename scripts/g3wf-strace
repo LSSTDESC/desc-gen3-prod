@@ -7,6 +7,6 @@
 #
 # Run strace without output file that replaces stderr
 # XXX.sterr --> XXX.strace
-SLOG=$(descprod-get-stderr | sed 's/.stderr/.strace/g')
+SLOG=$(g3wf-get-stderr | sed 's/.stderr/.strace/g')
 strace -o $SLOG $*
 

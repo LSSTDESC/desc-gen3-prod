@@ -1,0 +1,4 @@
+#!/usr/bin/env python3
+import os
+fnam = os.readlink('/proc/%d/fd/2' % os.getpid())
+print(fnam)
