@@ -37,7 +37,7 @@ done
 if [ $DOTRACE = true ]; then
   SLOG=$(g3wf-get-stderr | sed 's/.stderr/.strace/g')
   if [ -n "$SLOG" ]; then
-    $DBG strace -o $SLOG $ARGS $*
+    $DBG bash -c strace -o $SLOG $ARGS $*
   fi
 else
   $DBG bash -c "$*"
