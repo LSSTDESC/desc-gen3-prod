@@ -301,7 +301,8 @@ fi
 
 # Define the task command prepend.
 #PREPEND="iotrace -cmd time perf stat -d"
-PREPEND="time perf stat -d"
+#PREPEND="time perf stat -d"
+PREPEND="perf stat -d"
 if [ -n "$STRACE" ]; then
   #PREPEND="myiotrace $PREPEND"  # job000831
   #PREPEND="strace -o strace.log -e read,write,open,openat,close $PREPEND" # 832
