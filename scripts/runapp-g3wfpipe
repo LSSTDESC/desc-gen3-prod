@@ -283,7 +283,7 @@ for OPT in ${HOPTS[@]}; do
     WFARGS2=$(echo $WFARGS | sed 's/.*proc//g' | sed 's/^-//g')
     WFARGS=$(echo $WFARGS | sed 's/proc.*//g' | sed 's/-$//g')
   elif [ ${OPT:0:7} = "strace:" -a ${#OPT} -gt 7 ]; then
-    STRACE=$(echo ${OPT:7} | sed 's/:/,/g')
+    STRACE=${OPT:7}
   elif [ $OPT = strace ]; then
     STRACE=file2
   elif [ $OPT = stime ]; then
@@ -309,23 +309,38 @@ if [ -n "$STRACE" ]; then
   #PREPEND="g3wf-strace -f -e read,write,open,openat,close,rename,renameat,renameat2,link,linkat,unlink,unlinkat $PREPEND"
   STOPT=
   STIME=
-  if [ $STRACE = file1 ]; then
+  STFREQ=1
+  VALS=($(echo $STRACE | tr ":" "\n" ))
+  for VAL in ${VALS[@]}; do
+    if [ "${VAL:0:1}" = n ]; then
+      STFREQ=${VAL:1}
+      if ! [ "$STFREQ" -eq "$STFREQ" ] 2>/dev/null; then
+        err_echo strace frequency must be a number: $VAL
+        exit 14
+      fi
+    elif [ -z "$STVAL" ]; then
+      STVAL=$VAL
+    else
+      STVAL=$STVAL,$VAL
+    fi
+  done
+  if [ $STVAL = file1 ]; then
     STOPT="open,openat"
-  elif [ $STRACE = file2 ]; then
+  elif [ $STVAL = file2 ]; then
     STOPT="open,openat,close,rename,renameat,renameat2,link,linkat,unlink,unlinkat"
-  elif [ $STRACE = file3 ]; then
+  elif [ $STVAL = file3 ]; then
     STOPT="read,write,open,openat,close,rename,renameat,renameat2,link,linkat,unlink,unlinkat"
-  elif [ $STRACE = timesum ]; then
+  elif [ $STVAL = timesum ]; then
     STIME=true
   else
-    STOPT="trace=$STRACE"
+    STOPT="trace=$TRACE"
   fi
   if [ -n "$STIME" ]; then
     info_echo "Tasks will be run with an strace time summary"
     PREPEND="g3wf-strace -f -c $PREPEND"
   else
     info_echo "Tasks will run strace with expression $STOPT"
-    PREPEND="g3wf-strace -f -t -T -C -e $STOPT $PREPEND"
+    PREPEND="g3wf-strace --freq=$STFREQ --args="-t -T -C -e $STOPT" $PREPEND"
   fi
 fi
 

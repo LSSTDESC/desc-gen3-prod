@@ -6,7 +6,40 @@
 # September 2023
 #
 # Run strace without output file that replaces stderr
-# XXX.sterr --> XXX.strace
-SLOG=$(g3wf-get-stderr | sed 's/.stderr/.strace/g')
-strace -o $SLOG $*
+# XXX.stderr --> XXX.strace
+
+
+DOTRACE=true
+ARGS=
+DBG=
+while true; do
+  ARG=$1
+  if [ "$ARG" = "-h" -o "$ARG" = "--help" ];then
+    echo "Usage: $(basename $0): [--freq=N] [--args=' sarg1 sarg2 ...'] COM CARG1 CARG2 ..."
+    echo "  Runs strace -o SLOG sarg1 sarg2 ... COM CARG1 CARG2 ..."
+    echo "  where slog is stderr with '.stderr' replaced by '.strace'"
+    exit 0
+  elif [ "${ARG:0:7}" = "--freq=" ]; then
+    STFREQ=${ARG:7}
+    if [ $((RANDOM%STFREQ)) -gt 0 ]; then
+      DOTRACE=false
+    fi
+  elif [ "${ARG:0:7}" = "--args=" ]; then
+    ARGS="${ARG:7}"
+  elif [ "${ARG:0:5}" = "--dbg" ]; then
+    DBG=echo
+  else
+    break
+  fi
+  shift
+done
+
+if [ $DOTRACE = true ]; then
+  SLOG=$(g3wf-get-stderr | sed 's/.stderr/.strace/g')
+  if [ -n "$SLOG" ]; then
+    $DBG strace -o $SLOG $ARGS $*
+  fi
+else
+  $DBG $*
+fi
 
