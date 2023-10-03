@@ -311,6 +311,7 @@ if [ -n "$STRACE" ]; then
   STIME=
   STFREQ=1
   VALS=($(echo $STRACE | tr ":" "\n" ))
+  STVAL=file2
   for VAL in ${VALS[@]}; do
     if [ "${VAL:0:1}" = n ]; then
       STFREQ=${VAL:1}
