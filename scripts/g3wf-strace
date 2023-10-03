@@ -40,6 +40,6 @@ if [ $DOTRACE = true ]; then
     $DBG strace -o $SLOG $ARGS $*
   fi
 else
-  $DBG $*
+  bash -c $DBG $*
 fi
 
