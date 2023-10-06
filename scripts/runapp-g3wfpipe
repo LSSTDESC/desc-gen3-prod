@@ -34,6 +34,8 @@ if [[ -z $1 || $1 = -h ]]; then
   echo "  status: Display processing status."
   echo "  butler: Run test of the Butler."
   echo "  usuf:USUF: Append -USUF to the user name for data output."
+  echo "  pmsXXX: Append -pmsXXX to the user name for data output."
+  echo "  cfsXXX: Append -cfsXXX to the user name for data output."
   echo HFG = HF1-HF2-... where HFi is any of
   echo "  exec:XX where XX = wq, tp or wqMM"
   echo "  cvmfs: Code taken from default env using LSST cvmfs"
@@ -151,6 +153,8 @@ for OPT in ${COPTS[@]}; do
     fi
   elif [ $OPTNAME = usuf ]; then
     USUF=$OPTARGS
+  elif [ ${OPTNAME:0:3} = cfs -o ${OPTNAME:0:3} = pms ]; then
+    USUF=$OPTNAME
   else
     LVER=$(g3wf-convert-lsst-version $OPTNAME)
     if [ -z "$LVER" ]; then
