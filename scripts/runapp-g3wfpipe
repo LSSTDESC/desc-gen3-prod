@@ -421,18 +421,19 @@ PIPEVAL=
     >config.yaml
   if [ ! -r config.yaml -o true ]; then
     err_echo Unable to build config.yaml
-    echo "         PIPE = $PIPE"
-    echo "   BUTLER_DIR = $BUTLER_DIR"
-    echo "   DRP_INGDIR = $DRP_INGDIR"
-    echo "  PIPEVALSPEC = $PIPEVALSPEC"
-    echo "        QUERY = $QUERY"
-    echo "          MEM = $MEM"
-    echo "         NNOD = $NNOD"
-    echo "      LOGINIT = $LOGINIT"
-    echo "    RMIENABLE = $RMIENABLE"
-    echo "  RMIINTERVAL = $RMIINTERVAL"
-    echo "         USER = $USER"
-    echo "      PREPEND = $PREPEND"
+    echo "         PIPE=$PIPE"
+    echo "   BUTLER_DIR=$BUTLER_DIR"
+    echo "   DRP_INGDIR=$DRP_INGDIR"
+    echo "  PIPEVALSPEC=$PIPEVALSPEC"
+    echo "        QUERY=$QUERY"
+    echo "          MEM=$MEM"
+    echo "         NNOD=$NNOD"
+    echo "      LOGINIT=$LOGINIT"
+    echo "    RMIENABLE=$RMIENABLE"
+    echo "  RMIINTERVAL=$RMIINTERVAL"
+    echo "         USER=$USER"
+    echo "      PREPEND=\"$PREPEND\""
+    cat config.yaml
     exit 1
   fi
   
