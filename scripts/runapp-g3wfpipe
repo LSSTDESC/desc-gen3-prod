@@ -433,7 +433,7 @@ PIPEVAL=
     echo "  RMIINTERVAL=$RMIINTERVAL"
     echo "         USER=$USER"
     echo "      PREPEND=\"$PREPEND\""
-    cat config.yaml
+    ls -ls config.yaml
     exit 1
   fi
   
