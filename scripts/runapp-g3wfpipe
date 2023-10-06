@@ -419,7 +419,7 @@ PIPEVAL=
     | sed s/%USER%/$UOUT/g \
     | sed s/%PREPEND%/"$PREPEND"/g \
     >config.yaml
-  if [ ! -r config.yaml ]; then
+  if [ ! -r config.yaml -o true ]; then
     err_echo Unable to build config.yaml
     echo "         PIPE = $PIPE"
     echo "   BUTLER_DIR = $BUTLER_DIR"
