@@ -406,7 +406,7 @@ PIPEVAL=
     exit 1
   fi
   g3wfpipe-template \
-    | sed s/%PAYLOAD%/$PIPE/g \
+    #| sed s/%PAYLOAD%/$PIPE/g \
     #| sed s/%BUTLER_DIR%/$BUTLER_DIR/g \
     #| sed "s#%DRP_INGDIR%#$DRP_INGDIR#g" \
     #| sed s/%PIPE%/$PIPEVALSPEC/g \
