@@ -396,7 +396,7 @@ PIPEVAL=
   echo Creating config.yaml.
   BUTLER_DIR=/global/cfs/cdirs/lsst/production/gen3/DC2/Run2.2i/repo
   UOUT=$USER
-  if [ -n "$USUB" ]; then
+  if [ -n "$USUF" ]; then
     UOUT=$UOUT-$USUF
   fi
   DOUTDIR=$BUTLER_DIR/u/$UOUT
