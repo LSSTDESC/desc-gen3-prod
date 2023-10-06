@@ -405,7 +405,7 @@ PIPEVAL=
     echo "Please create $DOUTDIR"
     exit 1
   fi
-  if ! g3wfpipe-template \
+  g3wfpipe-template \
     | sed s/%PAYLOAD%/$PIPE/g \
     | sed s/%BUTLER_DIR%/$BUTLER_DIR/g \
     | sed "s#%DRP_INGDIR%#$DRP_INGDIR#g" \
@@ -418,7 +418,8 @@ PIPEVAL=
     | sed s/%RMIINTERVAL%/$RMII/g \
     | sed s/%USER%/$UOUT/g \
     | sed s/%PREPEND%/"$PREPEND"/g \
-    >config.yaml; then
+    >config.yaml
+  if [ ! -r config.yaml ]; then
     err_echo Unable to build config.yaml
     echo "         PIPE = $PIPE"
     echo "   BUTLER_DIR = $BUTLER_DIR"
