@@ -406,6 +406,7 @@ PIPEVAL=
     exit 1
   fi
   g3wfpipe-template \
+    >config.yaml
     #| sed s/%PAYLOAD%/$PIPE/g \
     #| sed s/%BUTLER_DIR%/$BUTLER_DIR/g \
     #| sed "s#%DRP_INGDIR%#$DRP_INGDIR#g" \
@@ -418,9 +419,10 @@ PIPEVAL=
     #| sed s/%RMIINTERVAL%/$RMII/g \
     #| sed s/%USER%/$UOUT/g \
     #| sed s/%PREPEND%/"$PREPEND"/g \
-    >config.yaml
   if [ ! -s config.yaml ]; then
     err_echo Unable to build config.yaml
+    echo Unable to build config.yaml
+    ls -ls config.yaml
     echo "         PIPE=$PIPE"
     echo "   BUTLER_DIR=$BUTLER_DIR"
     echo "   DRP_INGDIR=$DRP_INGDIR"
@@ -433,7 +435,6 @@ PIPEVAL=
     echo "  RMIINTERVAL=$RMIINTERVAL"
     echo "         USER=$USER"
     echo "      PREPEND=\"$PREPEND\""
-    ls -ls config.yaml
     exit 1
   fi
   exit 2
