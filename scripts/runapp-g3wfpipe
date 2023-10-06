@@ -33,6 +33,7 @@ if [[ -z $1 || $1 = -h ]]; then
   echo "  finalize: Finalize (register output data products)."
   echo "  status: Display processing status."
   echo "  butler: Run test of the Butler."
+  echo "  usuf:USUF: Append -USUF to the user name for data output."
   echo HFG = HF1-HF2-... where HFi is any of
   echo "  exec:XX where XX = wq, tp or wqMM"
   echo "  cvmfs: Code taken from default env using LSST cvmfs"
@@ -48,7 +49,12 @@ if [[ -z $1 || $1 = -h ]]; then
   echo "  strace: Run strace with trace=file for each task."
   echo "  strace:fileI: Run strace with selected file calls. I in {1,2,3}"
   echo "  strace:V1:V2:...: Run strace with trace=V1,V2,... for each task."
+  echo "  strace:nNN:...: Strace is only run for 1/NN of the tasks."
   echo "  stime: Create an strace system time summary."
+  echo "DC2 data is processed and output data is written to"
+  echo "  /global/cfs/cdirs/lsst/production/gen3/DC2/Run2.2i/repo/u/UOUT"
+  echo "where UOUT is USER where USER is user name"
+  echo "or USER-USUF if the usuf option is used above."
   exit 1
 fi
 
@@ -107,6 +113,7 @@ CJOB=
 DOINIT=false
 WFARGS_ARR=()
 USER=$(whoami)
+USUF=
 DRP_INGDIR=pipelines/_ingredients  # w2321 and later
 for OPT in ${COPTS[@]}; do
   dbg_echo Parsing option $OPT
@@ -142,6 +149,8 @@ for OPT in ${COPTS[@]}; do
     else
       QUERY="$NEWQUERY"
     fi
+  elif [ $OPTNAME = usuf ]; then
+    USUF=$OPTARGS
   else
     LVER=$(g3wf-convert-lsst-version $OPTNAME)
     if [ -z "$LVER" ]; then
@@ -385,8 +394,20 @@ PIPEVAL=
   echo "    Query: $QUERY"
   echo " LSST release opts: $LVEROPTS"
   echo Creating config.yaml.
+  BUTLER_DIR=/global/cfs/cdirs/lsst/production/gen3/DC2/Run2.2i/repo
+  UOUT=$USER
+  if [ -n "$USUB" ]; then
+    UOUT=$UOUT-$USUF
+  fi
+  DOUTDIR=$BUTLER_DIR/u/$UOUT
+  if [ ! -r $DOUTDIR ]; then
+    err_echo "Data output dir not found."
+    echo "Please create $DOUTDIR"
+    exit 1
+  fi
   g3wfpipe-template \
     | sed s/%PAYLOAD%/$PIPE/g \
+    | sed s/%BUTLER_DIR%/$BUTLER_DIR/g \
     | sed "s#%DRP_INGDIR%#$DRP_INGDIR#g" \
     | sed s/%PIPE%/$PIPEVALSPEC/g \
     | sed s/%QUERY%/"$QUERY"/g \
@@ -395,7 +416,7 @@ PIPEVAL=
     | sed s/%LOGINIT%/$LOGINIT/g \
     | sed s/%RMIENABLE%/$RMIE/g \
     | sed s/%RMIINTERVAL%/$RMII/g \
-    | sed s/%USER%/$USER/g \
+    | sed s/%USER%/$UOUT/g \
     | sed s/%PREPEND%/"$PREPEND"/g \
     >config.yaml
   

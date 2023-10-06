@@ -7,10 +7,12 @@ pipelineYaml: \"\${DRP_PIPE_DIR}/%DRP_INGDIR%/LSSTCam-imSim/DRP.yaml%PIPE%\"
 payload:
   inCollection: LSSTCam-imSim/defaults
   payloadName: %PAYLOAD%
-  butlerConfig: /global/cfs/cdirs/lsst/production/gen3/DC2/Run2.2i/repo
+  butlerConfig: %BUTLER_DIR%
   dataQuery: \"visit>0 and skymap='DC2' and %QUERY%\"
 
 commandPrepend: %PREPEND%
+
+operator: %USER%
 
 # Default task properties.
 requestCpus: 1
