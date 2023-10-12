@@ -75,8 +75,12 @@ else
   if [ -z "$OPT" ]; then
     # If OPT was not given as -v OPT, then look for it as LVER:OPT
     # This is for backward compatability.
+    # If also missing there, use OPT = parsl.
     LVERTAG=$(echo $LVEROPT | cut -d':' -f1)
     OPT=$(echo $LVEROPT | grep : | cut -d':' -f2-)
+    if [ -z "$OPT" ]; then
+      OPT=parsl
+    fi
   else
     LVERTAG=$LVEROPT
     OPT=parsl
