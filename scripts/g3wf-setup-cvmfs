@@ -35,7 +35,7 @@ HELP=true
 OPT=
 DOEXIT=false
 LVEROPT=
-DBG=true
+DBG=false
 while true; do
   if [ $# -eq 0 ]; then
     break
