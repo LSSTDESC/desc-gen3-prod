@@ -504,7 +504,10 @@ if [[ -n $WFARGS ]]; then
     COM=g3wf-run-cvmfs
   elif [ ${CSRC:0:6} = cvmfs: ]; then
     COM=g3wf-run-cvmfs
-    LVEROPTS=$LVEROPTS:${CSRC:6}
+    CSRCOPT=${CSRC:6}
+    if [ -n "$CSRCOPT" ]; then
+      CSRCARG="-v $CSRCOPT"
+    fi
   else
     err_echo Invalid source: $CSRC.
     exit 15

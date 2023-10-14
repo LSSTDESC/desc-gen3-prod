@@ -36,6 +36,7 @@ OPT=
 DOEXIT=false
 LVEROPT=
 DBG=false
+REBUILD=false
 while true; do
   if [ $# -eq 0 ]; then
     break
@@ -54,6 +55,8 @@ while true; do
     shift
   elif [ $ARG = -x ]; then
     DOEXIT=true
+  elif [ $ARG = -r ]; then
+    REBUILD=true
   else
     LVEROPT=$ARG
     if [ $DBG = true ]; then
@@ -68,8 +71,10 @@ while true; do
 done
 
 if [ $HELP = true ]; then
-  echo Usage: source $MYNAME LSST_TAG:OPT
-  echo "   or: source $MYNAME -v OPT LSST_TAG"
+  echo Usage: source $MYNAME [-x] [-r] LSST_TAG:OPT
+  echo "   or: source $MYNAME [-x] [-r] -v OPT LSST_TAG"
+  echo "  -r: Remove and rebuild cached build."
+  echo "  -x: Call exit when leaving this script."
   myexit 0
 else
   if [ -z "$OPT" ]; then
@@ -107,6 +112,10 @@ else
       export NUMEXPR_MAX_THREADS=1
       cnam=g3wf-$LVERTAG-$OPT
       wq_env=$outbase/$cnam
+      if [ $REBUILD = true -a -r $wq_env ]; then
+        echo $MYNAME: Removing conda env $wq_env
+        rm -rf $wq_env
+      fi
       if [ -r $wq_env ]; then
         echo $MYNAME: Activating conda env $wq_env
         conda activate --stack ${wq_env}

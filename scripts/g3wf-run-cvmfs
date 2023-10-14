@@ -1,31 +1,58 @@
 #!/bin/bash
 
-LVER=$1
+LVER=
 shift
-if [ "$LVER" = -v ]; then
-  OPT=$1
-  shift
-  LVER=$1
-  shift
-fi
-COM=$*
+OPTS=
+HELP=
+# Parse command line.
+# Pass flags other than -h to g3wf-setup-cvmfs.
 MYCOM=$BASH_SOURCE
-MYNAME=$(basename $MYCOM)
-
+MYNAM=$(basename $MYCOM)
+while true; do
+  OPT=$1
+  if [ -z "$OPT" ]; then
+    break
+  elif [ $OPT = "-h" ]; then
+    HELP=0
+    break
+  elif [ $OPT = "-v" ]; then
+    OPTS="$OPTS $OPT"
+    shift
+    OPT=$1
+    if [ -z "$OPT" ]; then
+      HELP=2
+      break
+    fi
+    OPTS="$OPTS $OPT"
+  elif [ ${OPT:0:1} = "-" ]; then
+    OPTS="$OPTS $OPT"
+    shift
+  else
+    if [ -z "$LVER" ]; then
+      LVER=$OPT
+    else
+      COM=$*
+      break
+    fi
+  fi
+  shift
+done
 if [ -z "$LVER" ]; then
-  echo Usage: $MYCOM LSST_VERSION:OPT COM
-  echo    or: $MYCOM -v OPT LSST_VERSION COM
+  HELP=3
+fi
+
+if [ -n "$HELP" ]; then
+  echo Usage: $MYNAM [-r] LSST_VERSION:OPT COM
+  echo    or: $MYNAM [-r] -v OPT LSST_VERSION COM
+  echo "  -r: Rebuild build cache if existing."
   exit 0
 fi
 
-if [ -n "$OPT" ]; then
-  OPTS="-v $OPT -x"
-else
-  OPTS="-x"
-fi
- 
+ENV=g3wf-$LVER
+if [ -n "$LVER" ]; then
+  ENV=$ENV-$LVER
 if [ -n "$COM" ]; then
-  MYECHO=$(echo $MYNAME: Running command $COM)
+  MYECHO=$(echo $MYNAM: Running command $COM)
   (source g3wf-setup-cvmfs $OPTS $LVER; echo $MYECHO; /bin/bash -c "$COM")
 else
   (source g3wf-setup-cvmfs $OPTS $LVER; /bin/bash)
