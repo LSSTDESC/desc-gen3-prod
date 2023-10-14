@@ -15,7 +15,7 @@
 #     tract: Which tracts to process. Either VAL or [VAL1,VAL2]
 #     patch: Which patches to process. Either VAL or [VAL1,VAL2]
 # Howfig fields:
-#   exec: Parsl executor wq, ht or tp. Also wqMM to run WorkQueue with MM GB memor=y limit.
+#   exec: Parsl executor wq, ht or tp.
 #   code source: cvmfs or shifter
 #   time limit: tmax:TT where TT is time limit in sec or
 #   memory limit [GB]: memMMM
@@ -29,7 +29,7 @@ if [[ -z $1 || $1 = -h ]]; then
   echo "  patch:NNN: Patch for query e.g. patch:85"
   echo "  wYYWW: Use LSSST release w_20YY_WW"
   echo "  init: Initialize (create DAG)."
-  echo "  proc: Process data."
+  echo "  proc: Run the tasks."
   echo "  finalize: Finalize (register output data products)."
   echo "  status: Display processing status."
   echo "  butler: Run test of the Butler."
@@ -37,7 +37,8 @@ if [[ -z $1 || $1 = -h ]]; then
   echo "  pmsXXX: Append -pmsXXX to the user name for data output."
   echo "  cfsXXX: Append -cfsXXX to the user name for data output."
   echo HFG = HF1-HF2-... where HFi is any of
-  echo "  exec:XX where XX = wq, tp or wqMM"
+  echo "  exec:XX where XX = wq (XX is GB memory) or tp (XX is process count)"
+  echo "  rebuild: Rebuild the SW cache (cvmfs only)."
   echo "  cvmfs: Code taken from default env using LSST cvmfs"
   echo "  cvmfs:BBB: Code taken from env option BBB using LSST cvmfs code"
   echo "  shifter: Code taken from shifter"
@@ -248,11 +249,14 @@ TMAX2=
 TMAX3=
 PMONDT=${CON_PMONDT:-3}
 STRACE=$CON_STRACE
+REBUILD=false
 for OPT in ${HOPTS[@]}; do
   if [ ${OPT:0:7} = shifter ]; then
     CSRC=$OPT
   elif [ ${OPT:0:5} = cvmfs ]; then
     CSRC=$OPT
+  elif [ $OPT = rebuild ]; then
+    REBUILD=true
   elif [ ${OPT:0:3} = wq: ]; then
     EXEC=$OPT
   elif [ ${OPT:0:3} = tp: ]; then
@@ -500,13 +504,17 @@ if [[ -n $WFARGS ]]; then
     if [ -n "$CSRCOPT" ]; then
       CSRCARG="-v $CSRCOPT"
     fi
-  elif [ $CSRC = cvmfs ]; then
-    COM=g3wf-run-cvmfs
-  elif [ ${CSRC:0:6} = cvmfs: ]; then
+    if [ $REBUILD = true ]; then
+      err_echo "Ignoring rebuild directive for shifter."
+    fi
+  elif [ $CSRC = cvmfs -o ${CSRC:0:6} = cvmfs: ]; then
     COM=g3wf-run-cvmfs
     CSRCOPT=${CSRC:6}
     if [ -n "$CSRCOPT" ]; then
       CSRCARG="-v $CSRCOPT"
+    fi
+    if [ $REBUILD = true ]; then
+      CSRCARG="$CSRCARG -r"
     fi
   else
     err_echo Invalid source: $CSRC.
