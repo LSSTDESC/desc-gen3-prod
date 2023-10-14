@@ -1,7 +1,6 @@
 #!/bin/bash
 
 LVER=
-shift
 OPTS=
 HELP=
 # Parse command line.
