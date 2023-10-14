@@ -49,8 +49,6 @@ if [ -n "$HELP" ]; then
 fi
 
 ENV=g3wf-$LVER
-if [ -n "$LVER" ]; then
-  ENV=$ENV-$LVER
 if [ -n "$COM" ]; then
   MYECHO=$(echo $MYNAM: Running command $COM)
   (source g3wf-setup-cvmfs $OPTS $LVER; echo $MYECHO; /bin/bash -c "$COM")
