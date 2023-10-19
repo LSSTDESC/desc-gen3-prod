@@ -329,7 +329,7 @@ fi
 #PREPEND="time perf stat -d"
 PREPEND="perf stat -d"
 if [ -n "$STRACE" ]; then
-  info_echo "Decoding STRACE = $STRACE"
+  echo "Decoding STRACE = \"$STRACE\""
   #PREPEND="myiotrace $PREPEND"  # job000831
   #PREPEND="strace -o strace.log -e read,write,open,openat,close $PREPEND" # 832
   #PREPEND="strace -f -o strace.log -e read,write,open,openat,close $PREPEND"
