@@ -49,6 +49,7 @@ if [[ -z $1 || $1 = -h ]]; then
   echo "          DT = false or 0 disables monitoring. Default is 3."
   echo "  bproc:BPO: Run pre,proc,post multistage with proc in pmbs-BPO"
   echo "    Options BPO are those for pmbs here colon separated."
+  echo "  repo:RRR - Use repo at $HOME/scratch/repo-RRR."
   echo "  strace: Run strace with trace=file for each task."
   echo "  strace:fileI: Run strace with selected file calls. I in {1,2,3}"
   echo "  strace:V1:V2:...: Run strace with trace=V1,V2,... for each task."
@@ -242,6 +243,7 @@ WFARGS="${WFARGS_ARR[*]}"
 
 
 # Parse the howfig.
+BUTLER_DIR=/global/cfs/cdirs/lsst/production/gen3/DC2/Run2.2i/repo
 TMAXS=()
 NTMAX=0
 TMAX=
@@ -299,6 +301,12 @@ for OPT in ${HOPTS[@]}; do
     fi
     WFARGS2=$(echo $WFARGS | sed 's/.*proc//g' | sed 's/^-//g')
     WFARGS=$(echo $WFARGS | sed 's/proc.*//g' | sed 's/-$//g')
+  elif [ ${OPT:0:5} = repo: ]; then
+    BUTLER_DIR=$SCRATCH/repo-${REPO:5}
+    if [ ! -r $BUTLER_DIR ]; then
+      err_echo Butler dir not found: $BUTLER_DIR
+      exit 15
+    fi
   elif [ ${OPT:0:7} = "strace:" -a ${#OPT} -gt 7 ]; then
     STRACE=${OPT:7}
   elif [ $OPT = strace ]; then
@@ -402,7 +410,6 @@ PIPEVAL=
   echo "    Query: $QUERY"
   echo " LSST release opts: $LVEROPTS"
   echo Creating config.yaml.
-  BUTLER_DIR=/global/cfs/cdirs/lsst/production/gen3/DC2/Run2.2i/repo
   UOUT=$USER
   if [ -n "$USUF" ]; then
     UOUT=$UOUT-$USUF
