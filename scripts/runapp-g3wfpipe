@@ -342,7 +342,7 @@ if [ -n "$STRACE" ]; then
   STIME=
   STFREQ=1
   VALS=($(echo $STRACE | tr ":" "\n" ))
-  STVAL=file2
+  STVAL=
   for VAL in ${VALS[@]}; do
     if [ "${VAL:0:1}" = n ]; then
       STFREQ=${VAL:1}
@@ -365,7 +365,7 @@ if [ -n "$STRACE" ]; then
   elif [ $STVAL = timesum ]; then
     STIME=true
   else
-    STOPT="trace=$STRACE"
+    STOPT="trace=$STVAL"
   fi
   if [ -n "$STIME" ]; then
     info_echo "Tasks will be run with an strace time summary"
@@ -375,7 +375,7 @@ if [ -n "$STRACE" ]; then
     PREPEND="g3wf-strace --freq=$STFREQ --args=\"-t -T -C -f -e $STOPT\" $PREPEND"
   fi
 fi
-info_echo "Command prepend: \"PREPEND\""
+info_echo "Command prepend: \"$PREPEND\""
 
 # Record the setup for continuation jobs.
 info_echo Creating consetup.sh
