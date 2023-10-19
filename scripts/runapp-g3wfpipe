@@ -253,6 +253,7 @@ PMONDT=${CON_PMONDT:-3}
 STRACE=$CON_STRACE
 REBUILD=false
 for OPT in ${HOPTS[@]}; do
+  echo Processing howfig opt $OPT
   if [ ${OPT:0:7} = shifter ]; then
     CSRC=$OPT
   elif [ ${OPT:0:5} = cvmfs ]; then
@@ -371,6 +372,7 @@ if [ -n "$STRACE" ]; then
     PREPEND="g3wf-strace --freq=$STFREQ --args=\"-t -T -C -f -e $STOPT\" $PREPEND"
   fi
 fi
+echo "Command prepend: \"PREPEND\""
 
 # Record the setup for continuation jobs.
 echo Creating consetup.sh
