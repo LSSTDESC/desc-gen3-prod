@@ -1,0 +1,80 @@
+#!/bin/bash
+
+# g3wf-create-qg-repo
+
+repsize() {
+    NMB=$(du -hsm $REPO | sed 's#/.*##g')
+    echo Repository $REPO holds $NMB MB
+}
+
+#REPO=$HOME/scratch/mylsstsimrepo
+REPO=$1
+MAXQ=${2:-0}
+REPLY=$3
+
+if test -r $REPO; then
+  if [ -z "$REPLY" ]; then
+    echo Directory already exists: $REPO
+    echo -n "Do you wish to recreate (y/n)> "
+    read
+  fi
+  if [ ${REPLY:0:1} = y ]; then
+    echo Removing $REPO
+    rm -rf $REPO
+  else
+    echo No action taken.
+    exit 0
+  fi
+fi
+
+echo
+date
+echo Creating repository $REPO
+butler create $REPO && \
+ls -ls $REPO
+INSTR=lsst.obs.lsst.LsstCam
+INSTR=lsst.obs.lsst.LsstCamImSim
+if [ -n "$INSTR" ]; then
+  echo Registering instrument $INSTR
+  butler register-instrument $REPO $INSTR
+fi
+mkdir $REPO/u
+mkdir $REPO/u/$(whoami)
+
+echo
+date
+echo Creating skymap.
+wget https://raw.githubusercontent.com/lsst-dm/gen3_shared_repo_admin/main/python/lsst/gen3_shared_repo_admin/config/skymaps/DC2.py
+butler register-skymap --config-file DC2.py $REPO
+repsize
+
+echo
+date
+SLIM=0
+if [ $MAXQ -gt 0 ]; then
+  SLIM=" first $MAXQ quanta"
+fi
+echo Processing QG $SLIM
+echo python g3wf-create-qg-repo.py $REPO $MAXQ
+python g3wf-create-qg-repo.py $REPO $MAXQ
+# butler ingest-raws $REPO /global/cfs/cdirs/lsst/shared/DC2-prod/Run2.2i/sim/y1-wfd/00000250/lsst_a_250_R32_S12_g.fits
+# butler query-datasets $REPO
+repsize
+
+echo
+date
+echo Inserting raw data.
+RAWDIR=$REPO/raw
+if [ ! -r $RAWDIR ]; then mkdir $RAWDIR; fi
+for FIL in $(cat $REPO/raw.txt); do
+  echo $FIL
+  OUTFIL=$RAWDIR/$(basename $FIL)
+  echo "    $OUTFIL"
+  cp $FIL $OUTFIL
+  butler ingest-raws $REPO $OUTFIL
+done
+butler define-visits --collections LSSTCam-imSim/raw/all ${repo} LSSTCam-imSim
+repsize
+
+echo
+date
