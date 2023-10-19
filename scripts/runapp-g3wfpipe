@@ -64,7 +64,7 @@ fi
 
 DBG=0
 SFIL=current-status.txt
-LFIL=run-g3wfpipe.log
+LFIL=debug-g3wfpipe.log
 
 err_echo() {
   MSG="$*"
