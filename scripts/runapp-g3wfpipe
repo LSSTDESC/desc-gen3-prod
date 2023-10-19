@@ -302,7 +302,7 @@ for OPT in ${HOPTS[@]}; do
     WFARGS2=$(echo $WFARGS | sed 's/.*proc//g' | sed 's/^-//g')
     WFARGS=$(echo $WFARGS | sed 's/proc.*//g' | sed 's/-$//g')
   elif [ ${OPT:0:5} = repo: ]; then
-    BUTLER_DIR=$SCRATCH/repo-${REPO:5}
+    BUTLER_DIR=$SCRATCH/repo-${OPT:5}
     if [ ! -r $BUTLER_DIR ]; then
       err_echo Butler dir not found: $BUTLER_DIR
       exit 15
