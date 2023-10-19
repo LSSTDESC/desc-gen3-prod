@@ -77,8 +77,8 @@ nqua = 0
 for qnode in qg.inputQuanta:
     nqua = nqua + 1
 ssub = ''
-if maxq:
-    ssub = f"{maxq} of "
+if maxqua:
+    ssub = f"{maxqua} of "
 print(f"{myname}: Looping over {ssub}{nqua} inputquanta.")
 irawfil = 0
 ifil = 0
