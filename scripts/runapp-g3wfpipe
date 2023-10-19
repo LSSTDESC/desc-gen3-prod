@@ -64,17 +64,20 @@ fi
 
 DBG=0
 SFIL=current-status.txt
+LFIL=run-g3wfpipe.log
 
 err_echo() {
   MSG="$*"
   echo "$MSG" >$SFIL
   echo "ERROR: $MSG" >&2
+  echo "ERROR: $MSG" >>$LFIL
 }
 
 info_echo() {
   MSG="$*"
   echo "$MSG" >$SFIL
   echo "INFO: $MSG" >&2
+  echo "INFO: $MSG" >>$LFIL
 }
 
 dbg_echo() {
@@ -184,18 +187,18 @@ NNOD=1
 EXEC=none
 if [[ -n $CJOB ]]; then
   if [[ -n $QUERY ]]; then
-    echo "ERROR: Query may not be specified for a continuation job."
+    err_echo "uery may not be specified for a continuation job."
     exit 1
   fi
   if [[ -n $PIPE ]]; then
-    echo "ERROR: Pipeline may not be specified for a continuation job."
+    err_echo "ipeline may not be specified for a continuation job."
     exit 1
   fi
   if [[ -n $LVEROPTS ]]; then
-    echo "ERROR: The LSST release may not be specified for a continuation job."
+    err_echo "The LSST release may not be specified for a continuation job."
     exit 1
   fi
-  echo "Connecting to job $CJOB."
+  info_echo "Connecting to job $CJOB."
   if ! PDIR=$(descprod-get-job $CJOB | grep rundir: | sed 's/ *rundir: //g'); then
     err_echo "Unable to find continuation job $CJOB"
     exit 1
@@ -212,20 +215,20 @@ if [[ -n $CJOB ]]; then
   for FIL in config.yaml submit runinfo repos local; do
     SRCFIL=$PDIR/$FIL
     if [ -r $SRCFIL ]; then
-      echo "Linking source $SRCFIL"
+      info_echo "Linking source $SRCFIL"
       if ! ln -s $SRCFIL .; then
         err_echo "Unable to link $SRCFIL to $(pwd)"
         exit 1
       fi
     else
-      echo "Source not found: $SRCFIL"
+      info_echo "Source not found: $SRCFIL"
     fi
   done
   # Read the old configuration.
   # This should define CON_LVER, CON_PIPEVAL, CON_QUERY, CON_CSRC, CON_PREPEND
   SUPFIL=$PDIR/consetup.sh
   if [ ! -r $SUPFIL ]; then
-    echo "ERROR: Unable to find continuation source setup $SUPFIL"
+    info_echo "ERROR: Unable to find continuation source setup $SUPFIL"
     exit 1
   fi
   source $SUPFIL
@@ -253,7 +256,7 @@ PMONDT=${CON_PMONDT:-3}
 STRACE=$CON_STRACE
 REBUILD=false
 for OPT in ${HOPTS[@]}; do
-  echo Processing howfig opt $OPT
+  info_echo Processing howfig opt $OPT
   if [ ${OPT:0:7} = shifter ]; then
     CSRC=$OPT
   elif [ ${OPT:0:5} = cvmfs ]; then
@@ -330,7 +333,7 @@ fi
 #PREPEND="time perf stat -d"
 PREPEND="perf stat -d"
 if [ -n "$STRACE" ]; then
-  echo "Decoding STRACE = \"$STRACE\""
+  info_echo "Decoding STRACE = \"$STRACE\""
   #PREPEND="myiotrace $PREPEND"  # job000831
   #PREPEND="strace -o strace.log -e read,write,open,openat,close $PREPEND" # 832
   #PREPEND="strace -f -o strace.log -e read,write,open,openat,close $PREPEND"
@@ -372,10 +375,10 @@ if [ -n "$STRACE" ]; then
     PREPEND="g3wf-strace --freq=$STFREQ --args=\"-t -T -C -f -e $STOPT\" $PREPEND"
   fi
 fi
-echo "Command prepend: \"PREPEND\""
+info_echo "Command prepend: \"PREPEND\""
 
 # Record the setup for continuation jobs.
-echo Creating consetup.sh
+info_echo Creating consetup.sh
 echo "CON_CSRC=$CSRC" >consetup.sh
 echo "CON_LVEROPTS=$LVEROPTS" >>consetup.sh
 echo "CON_QUERY=\"$QUERY\"" >>consetup.sh
@@ -409,10 +412,10 @@ PIPEVAL=
   fi
   PIPEVALSPEC=
   if [ -n "$PIPEVAL" ]; then PIPEVALSPEC="#$PIPEVAL"; fi
-  echo Pipeline: $PIPEVAL
-  echo "    Query: $QUERY"
-  echo " LSST release opts: $LVEROPTS"
-  echo Creating config.yaml.
+  info_echo Pipeline: $PIPEVAL
+  info_echo "    Query: $QUERY"
+  info_echo " LSST release opts: $LVEROPTS"
+  info_echo Creating config.yaml.
   UOUT=$USER
   if [ -n "$USUF" ]; then
     UOUT=$UOUT-$USUF
@@ -420,7 +423,7 @@ PIPEVAL=
   DOUTDIR=$BUTLER_DIR/u/$UOUT
   if [ ! -r $DOUTDIR ]; then
     err_echo "Data output dir not found."
-    echo "Please create $DOUTDIR"
+    info_echo "Please create $DOUTDIR"
     exit 1
   fi
   g3wfpipe-template \
@@ -440,18 +443,18 @@ PIPEVAL=
   if [ ! -s config.yaml ]; then
     err_echo Unable to build config.yaml
     ls -ls config.yaml
-    echo "         PIPE=$PIPE"
-    echo "   BUTLER_DIR=$BUTLER_DIR"
-    echo "   DRP_INGDIR=$DRP_INGDIR"
-    echo "  PIPEVALSPEC=$PIPEVALSPEC"
-    echo "        QUERY=$QUERY"
-    echo "          MEM=$MEM"
-    echo "         NNOD=$NNOD"
-    echo "      LOGINIT=$LOGINIT"
-    echo "    RMIENABLE=$RMIENABLE"
-    echo "  RMIINTERVAL=$RMIINTERVAL"
-    echo "         USER=$USER"
-    echo "      PREPEND=\"$PREPEND\""
+    info_echo "         PIPE=$PIPE"
+    info_echo "   BUTLER_DIR=$BUTLER_DIR"
+    info_echo "   DRP_INGDIR=$DRP_INGDIR"
+    info_echo "  PIPEVALSPEC=$PIPEVALSPEC"
+    info_echo "        QUERY=$QUERY"
+    info_echo "          MEM=$MEM"
+    info_echo "         NNOD=$NNOD"
+    info_echo "      LOGINIT=$LOGINIT"
+    info_echo "    RMIENABLE=$RMIENABLE"
+    info_echo "  RMIINTERVAL=$RMIINTERVAL"
+    info_echo "         USER=$USER"
+    info_echo "      PREPEND=\"$PREPEND\""
     exit 1
   fi
   
@@ -494,7 +497,7 @@ PIPEVAL=
     err_echo Unknown executor: $EXEC
     exit 1
   fi
-  echo Executor: $EXEC
+  info_echo Executor: $EXEC
 fi
 
 G3WF_BRANCH=
@@ -530,7 +533,7 @@ if [[ -n $WFARGS ]]; then
     err_echo Invalid source: $CSRC.
     exit 15
   fi
-  echo Code source: $CSRC
+  info_echo Code source: $CSRC
   COM="${TMAX:+timeout $TMAX }$COM $CSRCARG $LVEROPTS ./run"
   # Create the run script.
   # It installs desc-gen3-prod and then runs the pipeline.
@@ -598,7 +601,7 @@ fi
 if [ $RSTAT != 0 ]; then exit $RSTAT; fi
 
 if [ -n "$BPROC" ]; then
-  echo Creating batch job for stage 2.
+  info_echo Creating batch job for stage 2.
   JOBID=$(grep '"id"' config.json | sed 's/.*: //' | sed 's/,.*//')
   if [ -z "$JOBID" ]; then
     err_echo Unable to extract job ID.
@@ -617,7 +620,7 @@ if [ -n "$BPROC" ]; then
     fi
     cat $LOG
     JOBID2=$(grep " id:" $LOG | sed 's/.*id: //')
-    echo Starting job $JOBID2 for stage 2.
+    info_echo Starting job $JOBID2 for stage 2.
     descprod-start-job $JOBID2
   else
     mkdir stage2
