@@ -8,7 +8,7 @@ def myexit(rc):
 
 myname = 'qgread'
 maxfil = 8
-xfer = True
+xfer = False
 
 outrepo=''
 maxqua = 0

@@ -43,6 +43,14 @@ mkdir $REPO/u/$(whoami)
 
 echo
 date
+echo Importing calibs.
+butler import $REPO /global/cfs/cdirs/lsst/production/gen3/DC2/calibs --export-file export.yaml
+butler collection-chain $REPO LSSTCam-imSim/defaults 2.2i/calib/gen2/20220101T000000Z,2.2i/calib/gen2/20220806T000000Z,LSSTCam-imSim/raw/all
+repsize
+
+echo
+echo
+date
 SLIM=0
 if [ $MAXQ -gt 0 ]; then
   SLIM=" first $MAXQ quanta"
@@ -54,13 +62,10 @@ python g3wf-create-qg-repo.py $REPO $MAXQ
 # butler query-datasets $REPO
 repsize
 
-butler collection-chain $REPO LSSTCam-imSim/defaults 2.2i/calib/gen2/20220101T000000Z,2.2i/calib/gen2/20220806T000000Z,LSSTCam-imSim/raw/all
-
-echo
 date
 echo Creating skymap.
 wget https://raw.githubusercontent.com/lsst-dm/gen3_shared_repo_admin/main/python/lsst/gen3_shared_repo_admin/config/skymaps/DC2.py
-butler register-skymap --config-file DC2.py $REPO
+butler register-skymap --config-file DC2.py $REPO >skymap.log
 repsize
 
 echo

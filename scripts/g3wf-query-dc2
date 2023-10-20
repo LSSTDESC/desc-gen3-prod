@@ -11,48 +11,65 @@ def myprint(msg):
         ofil.write(f"{tmsg}\n")
 
 import sys
-argv = sys.argv
-if len(argv) < 2:
-    print(f"Usage: {argv[0]} OPT")
+myname = sys.argv[0]
+args = list(sys.argv[1:])
+rc = -1
+repo = '/global/cfs/cdirs/lsst/production/gen3/DC2/Run2.2i/repo'
+dtyp = 'raw'
+while len(args):
+    opt = args.pop(0)
+    if opt.startswith('-'):
+        val = opt[1:]
+        if val == 'h':
+            rc = 0
+        elif val == 'r':
+            repo = args.pop(0)
+            print(f"{myname}: Using repository {repo}")
+            continue
+        elif val == 'd':
+            dtyp = args.pop(0)
+            print(f"{myname}: Using dat type {dtyp}")
+            continue
+        else:
+            print(f"{myname}: Invalid option {opt}")
+            rc = 1
+    if opt == 'help':
+        rc = 0
+    break
+            
+if rc >= 0:
+    print(f"Usage: {myname}: [-h] [-r REPO] [-d DATATYPE] OPT")
     print(f"  OPT = help XXX: Python help on XXX")
     print(f"        dim: Show all dimension names")
-    print(f"        query QRY: Return # refs matchin QRY")
-    exit(1)
+    print(f"        query QRY: Return # refs matching QRY")
+    exit(rc)
 
 myprint(f"{time.time()-t0:6.1f}: Importing the Butler.")
 from lsst.daf.butler import Butler
 
-repo = '/global/cfs/cdirs/lsst/production/gen3/DC2/Run2.2i/repo'
 col = 'LSSTCam-imSim/raw/all'
-myprint(f"Creating Butler")
+myprint(f"{myname}: Creating Butler at {repo}")
 butler = Butler(repo, collections=[col])
 reg = butler.registry
-opt = argv[1]
 if opt == 'test':
-    argv = [sys.argv[0], 'query', 'visit=231', '10']
-    opt = argv[1]
+    args = ['visit=231', '10']
+    opt = 'query'
 myprint(f"Executing {opt}")
-if opt == 'help':
-    code = f"help({argv[2]})"
-    print(f"Executing {code}")
-    exec(code)
-    msgend = "Gave help."
-elif opt == 'dim':
+if opt == 'dim':
     ndim = 0
     for dim in reg.dimensions.getStaticDimensions():
         print(f"  {dim}")
         ndim = ndim + 1
-    msgend = "Found {ndim} dimensions."
+    msgend = f"Found {ndim} dimensions."
 elif opt == 'query':
     '''Process a query, e.g. "visit=231"'''
-    typ = "raw"
-    query = argv[2]
-    if len(argv) > 3:
-        maxref = int(argv[3])
+    query = args.pop(0)
+    if len(args):
+        maxref = int(args.pop())
     else:
         maxref = 4
-    myprint(f"Fetching refs.")
-    rawrefs = reg.queryDatasets(typ, where=query)
+    myprint(f"Fetching refs for data type {dtyp} and query {query}.")
+    rawrefs = reg.queryDatasets(dtyp, where=query)
     myprint(f"Listing refs.")
     lstrefs = list(rawrefs)
     myprint(f"Filtering {len(lstrefs)} refs.")
