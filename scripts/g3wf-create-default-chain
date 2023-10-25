@@ -1,0 +1,37 @@
+#!/bin/bash
+
+MYNAME=$(basename $0)
+REPO=${1:-$REPO}
+CHNAM=LSSTCam-imSim/defaults
+RC=-1
+if [ -z "$REPO" ]; then
+  RC=1
+elif [ "$REPO" = "-h" ]; then
+  RC=0
+fi
+
+if [ $RC -ge 0 ]; then
+  echo "Usage: $MYNAME [REPO]"
+  echo "  Creates collection chain $CHNAM holding all RUN collections."
+  echo "  Butler repo must be 1st argument or exported in env var REPO."
+  exit $RC
+fi
+
+DSNAMS=
+butler query-collections --collection-type RUN $REPO |
+{
+  while IFS= read -r LINE
+  do
+    if [ "${LINE:0:1}" = ' ' ]; then continue; fi
+    if [ "${LINE:0:1}" = '-' ]; then continue; fi
+    DSNAM=$(echo $LINE | sed 's/ .*//g')
+    #echo $DSNAM
+    if [ -z "$DSNAMS" ]; then
+      DSNAMS+=$DSNAM
+    else
+      DSNAMS=$DSNAMS,$DSNAM
+    fi
+  done
+  echo $MYNAME: Creating butler chain $CHNAM
+  butler collection-chain $REPO $CHNAM $DSNAMS
+}

@@ -1,3 +1,10 @@
+#!/usr/bin/env python3
+
+# g3wf-create-qg-repo.py
+#
+# David Adams
+# October 2023
+
 import os
 import sys
 from lsst.pipe.base import QuantumGraph
@@ -8,48 +15,64 @@ def myexit(rc):
 
 myname = 'qgread'
 maxfil = 8
-xfer = False
 
 outrepo=''
 maxqua = 0
-if len(sys.argv) > 1:
-    outrepo = sys.argv[1]
-if len(sys.argv) > 2:
-    maxqua = int(sys.argv[2])
-if len(outrepo) == 0 or outrepo == '-h':
-    print(f"Usage: python qgread.py REPO")
+docopy = False
+rc=-1
+args = sys.argv[1:]
+narg = len(args)
+if narg > 0 and args[0] == '-h':
+    rc = 0
+elif narg < 2:
+    rc = 1
+else:
+    qfnam = sys.argv[1]
+    outrepo = sys.argv[2]
+    for arg in args[2:]:
+        if arg.isdigit():
+            maxqua = int(arg)
+        elif arg == 'copy':
+            docopy = True
+        else:
+            print(f"{myname}: Invalid argument: {arg}")
+            rc = 2
+            break
+
+if rc >= 0:
+    print(f"Usage: python qgread.py QGFIL REPO [MAXQ] [copy]")
     myexit(0)
 
-repo = "/global/cfs/cdirs/lsst/production/gen3/DC2/Run2.2i/repo"
-butler = modbutler.Butler(repo)
+inrepo = "/global/cfs/cdirs/lsst/production/gen3/DC2/Run2.2i/repo"
+butler = modbutler.Butler(inrepo)
 
 showCollections = True
 if showCollections:
     cnams = sorted(butler.registry.queryCollections())
-    print(f"{myname}: Repo has {len(cnams)} collections:")
+    print(f"{myname}: Input repo has {len(cnams)} collections:")
     #for cnam in cnams:
     #    print(f"{myname}:   {cnam}")
 
 show = True
-user = 'dladams'
-run = 1066
-srun = str(run)
-while len(srun) < 6: srun = '0' + srun
-topdir = f"/pscratch/sd/{user[0:1]}/{user}/descprod-out/jobs/job{srun}/submit"
-qnams = []
-for path, dnams, fnams in os.walk(topdir):
-    for fnam in fnams:
-        if fnam.endswith('.qgraph'):
-            qnams.append(f"{path}/{fnam}")
-if len(qnams) == 0:
-    print(f"{myname}: No quantum graphs found.")
-    myexit(1)
-if len(qnams) > 1:
-    print(f"{myname}: Multiple quantum graphs found:")
-    for qnam in qnams:
-        print(f"{myname}:   {qnam}")
-    myexit(2)
-qfnam = qnams[0]
+if qfnam.isdigit():
+    user = os.getlogin()
+    srun = qfnam
+    while len(srun) < 6: srun = '0' + srun
+    topdir = f"/pscratch/sd/{user[0:1]}/{user}/descprod-out/jobs/job{srun}/submit"
+    qnams = []
+    for path, dnams, fnams in os.walk(topdir):
+        for fnam in fnams:
+            if fnam.endswith('.qgraph'):
+                qnams.append(f"{path}/{fnam}")
+    if len(qnams) == 0:
+        print(f"{myname}: No quantum graphs found for job {srun}.")
+        myexit(1)
+    if len(qnams) > 1:
+        print(f"{myname}: Multiple quantum graphs found for job {srun}:")
+        for qnam in qnams:
+            print(f"{myname}:   {qnam}")
+        myexit(2)
+    qfnam = qnams[0]
 
 print('Loading quantum graph...')
 qg = QuantumGraph.loadUri(qfnam)
@@ -58,8 +81,8 @@ if show:
     print(f"Graph ID: {qg.graphID}")
 
 dtyps = {}
-rawfilnam = outrepo +  '/raw.txt'
-rawfil = open(rawfilnam, 'w')
+record_file_name = outrepo +  '/qg-recorded-files.txt'
+recfil = open(record_file_name, 'w')
 for dnam in qg.allDatasetTypes:
     try:
         dtyps[dnam] = butler.registry.getDatasetType(dnam)
@@ -68,7 +91,7 @@ for dnam in qg.allDatasetTypes:
 print(f"{myname}: Found {len(dtyps)} of {len(qg.allDatasetTypes)} dataset types:")
 for dnam, dtyp in dtyps.items():
     print(f"{dnam:>10}: {dtyp}")
-    if xfer:
+    if docopy:
         outbutler = modbutler.Butler(outrepo, writeable=True)
         outbutler.registry.registerDatasetType(dtyp)
 
@@ -80,11 +103,12 @@ ssub = ''
 if maxqua:
     ssub = f"{maxqua} of "
 print(f"{myname}: Looping over {ssub}{nqua} inputquanta.")
-irawfil = 0
+nrecfil = 0
 ifil = 0
 idup = 0
 drefs = []
 keeptypes = []
+record_types = ['raw']
 quit = False
 iqua = 0
 for qnode in qg.inputQuanta:
@@ -102,23 +126,23 @@ for qnode in qg.inputQuanta:
             dtyp = dref.datasetType.name
             if len(keeptypes):
                 if dtyp not in keeptypes: continue
-            dfbutler = modbutler.Butler(repo, collections=dref.run)
+            dfbutler = modbutler.Butler(inrepo, collections=dref.run)
             dfuri = dfbutler.getURI(dref).geturl()
             if dfuri[0:7] != 'file://':
                 print(f"{myname}: WARNING: Dataset type {dtyp} URI is not a file: {furi}")
             dfnam = dfuri[7:]
-            if dtyp == 'raw':
-                irawfil = irawfil + 1
-                rawfil.write(f"{dfnam}\n")
+            if dtyp in record_types:
+                nrecfil = nrecfil + 1
+                recfil.write(f"{dfnam}\n")
                 print(f"{iqua:>8}: Recording {dtyp} {dref}")
                 continue
-            if xfer:
+            if docopy:
                 outbutler = modbutler.Butler(outrepo, run=dref.run)
                 if outbutler.stored(dref):
                     print(f"{myname}:  Skipping {dref}")
                     continue
                 print(f"{iqua:>8}: Inserting {dref}")
-                dfbutler = modbutler.Butler(repo, collections=dref.run)
+                dfbutler = modbutler.Butler(inrepo, collections=dref.run)
                 outref = outbutler.registry.insertDatasets(dref.datasetType, [dref.dataId], dref.run)[0]
                 dst = butler.get(dref)
                 outbutler.put(dst, outref)
@@ -129,7 +153,7 @@ for qnode in qg.inputQuanta:
 
 print(f"{myname}: Processed {iqua} quanta with")
 print(f"{myname}: {ifil:>8} datasets")
-print(f"{myname}: {irawfil:>8} raw datasets")
+print(f"{myname}: {nrecfil:>8} recorded datasets")
 print(f"{myname}: {idup:>8} duplicate datasets")
 
 print('Bye')

@@ -7,10 +7,88 @@ repsize() {
     echo Repository $REPO holds $NMB MB
 }
 
-#REPO=$HOME/scratch/mylsstsimrepo
-REPO=$1
-MAXQ=${2:-0}
-REPLY=$3
+set -e
+
+# Process command line.
+MYNAME=$(basename $0)
+RC=-1
+MAXQ=0
+REPLY=
+COPT=qg
+QGFIL=
+REPO=
+while [ $# -gt 0 ]; do
+  OPT=$1
+  shift
+  #echo XXX $OPT $#
+  if [ ${OPT:0:1} = "-" ]; then
+    if [ -n "$QGFIL" ]; then
+      echo "$MYNAME: ERROR: Bad syntax at $OPT."
+      RC=1
+    elif [ $OPT = "-h" ]; then
+      RC=0
+    elif [ $OPT = "-m" ]; then
+      MAXQ=$1
+      shift
+      if [ ! "$MAXQ" -eq "$MAXQ" ]; then
+        echo "$MYNAME: $ERROR: MAXQ must be integral."
+        RC=2
+      fi
+    elif [ $OPT = "-d" ]; then
+      REPLY=y
+    elif [ $OPT = "-c" ]; then
+      COPT=$1
+      shift
+      if [[ ! _none_qg_dc2_ =~ _${COPT}_ ]]; then
+        echo $MYNAME: ERROR: Invalid calib option: $COPT
+        RC=6
+      fi
+    else
+      echo "$MYNAME: ERROR: Invalid option $OPT."
+      RC=4
+    fi
+  elif [ -z "$QGFIL" ]; then
+    QGFIL=$OPT
+  elif [ -z "$REPO" ]; then
+    REPO=$OPT
+    if [[ ! $REPO =~ / ]]; then
+      REPO=$SCRATCH/repo-$REPO
+    fi
+  else
+    echo "$MYNAME: ERROR: Too many argumnnts at $OPT"
+    RC=3
+  fi
+  if [ $RC -ge 0 ]; then break; fi
+done
+if [ $RC -lt 0 -a -z "$REPO" ]; then
+  echo "$MYNAME ERROR: Both QGFIL and REPO must be supplied."
+  RC=5
+fi
+
+
+if [ $RC -ge 0 ]; then
+  echo "Usage: $MYNAME [-m MAXQ] [-d] [-c COPT]: QGFIL REPO"
+  echo "Creates a butler repo from a QG file"
+  echo "  QGFIL: Path to the QG file or"
+  echo "         if an integer, take QG file from that job directory."
+  echo "  REPO: Path to the new repository if containing '/' or"
+  echo "        Repository path is $SCRATCH/repo-REPO"
+  echo "    -m: Only include files from the first MAXQ quanta."
+  echo "    -d: Delete the repository if it already exists."
+  echo "    -c: Option for calibration files [$COPT]:"
+  echo "        none - Do not include calibration files."
+  echo "          qg - Include only calibration files from quantum graph."
+  echo "         dc2 - Include all DC2 calibration files."
+  exit $RC
+fi
+
+if [ $QGFIL -eq $QGFIL ]; then
+  echo "$MYNAME:     QG run: $QGFIL"
+else
+  echo "$MYNAME:    QG file: $QGFIL"
+fi
+echo "$MYNAME:       Repo: $REPO"
+echo "$MYNAME:  Calib opt: $COPT"
 
 if test -r $REPO; then
   if [ -z "$REPLY" ]; then
@@ -29,51 +107,53 @@ fi
 
 echo
 date
-echo Creating repository $REPO
-butler create $REPO && \
+echo $MYNAME: Creating empty repository $REPO
+butler create $REPO
 ls -ls $REPO
-INSTR=lsst.obs.lsst.LsstCam
+#INSTR=lsst.obs.lsst.LsstCam
 INSTR=lsst.obs.lsst.LsstCamImSim
 if [ -n "$INSTR" ]; then
-  echo Registering instrument $INSTR
+  echo $MYNAME: Registering instrument $INSTR
   butler register-instrument $REPO $INSTR
 fi
 mkdir $REPO/u
 mkdir $REPO/u/$(whoami)
 
-echo
-date
-echo Importing calibs.
-butler import $REPO /global/cfs/cdirs/lsst/production/gen3/DC2/calibs --export-file export.yaml
-butler collection-chain $REPO LSSTCam-imSim/defaults 2.2i/calib/gen2/20220101T000000Z,2.2i/calib/gen2/20220806T000000Z,LSSTCam-imSim/raw/all
-repsize
+if [ $COPT = dc2 ]; then
+  echo
+  date
+  echo $MYNAME: Importing calibs.
+  butler import $REPO /global/cfs/cdirs/lsst/production/gen3/DC2/calibs --export-file export.yaml
+  butler collection-chain $REPO LSSTCam-imSim/defaults 2.2i/calib/gen2/20220101T000000Z,2.2i/calib/gen2/20220806T000000Z,LSSTCam-imSim/raw/all
+  repsize
+fi
 
 echo
-echo
 date
-SLIM=0
-if [ $MAXQ -gt 0 ]; then
-  SLIM=" first $MAXQ quanta"
+echo $MYNAME: Processing QG
+DOCOPY=
+if [ $COPT = qg ]; then
+  DOCOPY=copy
 fi
-echo Processing QG $SLIM
-echo python g3wf-create-qg-repo.py $REPO $MAXQ
-python g3wf-create-qg-repo.py $REPO $MAXQ
+echo $MYNAME: python g3wf-create-qg-repo.py $QGFIL $REPO $MAXQ $DOCOPY
+python g3wf-create-qg-repo.py $QGFIL $REPO $MAXQ $DOCOPY
 # butler ingest-raws $REPO /global/cfs/cdirs/lsst/shared/DC2-prod/Run2.2i/sim/y1-wfd/00000250/lsst_a_250_R32_S12_g.fits
 # butler query-datasets $REPO
 repsize
 
+echo
 date
-echo Creating skymap.
+echo $MYNAME: Creating skymap.
 wget https://raw.githubusercontent.com/lsst-dm/gen3_shared_repo_admin/main/python/lsst/gen3_shared_repo_admin/config/skymaps/DC2.py
-butler register-skymap --config-file DC2.py $REPO >skymap.log
+butler --no-log-tty register-skymap --config-file DC2.py $REPO
 repsize
 
 echo
 date
-echo Inserting raw data.
+echo $MYNAME: Inserting raw data.
 RAWDIR=$REPO/raw
 if [ ! -r $RAWDIR ]; then mkdir $RAWDIR; fi
-for FIL in $(cat $REPO/raw.txt); do
+for FIL in $(cat $REPO/qg-recorded-files.txt); do
   echo $FIL
   OUTFIL=$RAWDIR/$(basename $FIL)
   echo "    $OUTFIL"
@@ -82,6 +162,34 @@ for FIL in $(cat $REPO/raw.txt); do
 done
 butler define-visits --collections LSSTCam-imSim/raw/all $REPO LSSTCam-imSim
 repsize
+
+if [ $COPT = qg ]; then
+  echo
+  date
+  CHNAM=LSSTCam-imSim/defaults
+  echo $MYNAME: Creating default chain $CHNAM
+  butler query-collections --collection-type RUN $REPO |
+  {
+    DSNAMS=
+    while IFS= read -r LINE
+    do
+      if [ "${LINE:0:1}" = ' ' ]; then continue; fi
+      if [ "${LINE:0:1}" = '-' ]; then continue; fi
+      DSNAM=$(echo $LINE | sed 's/ .*//g')
+      #echo $DSNAM
+      if [ -z "$DSNAMS" ]; then
+        DSNAMS+=$DSNAM
+      else
+        DSNAMS=$DSNAMS,$DSNAM
+      fi
+    done
+    echo $DSNAMS
+    echo
+    echo Creating chain $CHNAM
+    butler collection-chain $REPO $CHNAM $DSNAMS
+  }
+  butler query-collections $REPO
+fi
 
 echo
 date
