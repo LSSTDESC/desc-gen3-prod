@@ -32,6 +32,10 @@ procstate() {
 # Format: Involuntary voluntary
 get-ctxt() {
   FNAM=/proc/$1/status
+  if [ ! -r $FNAM ]; then
+    echo get-ctxt: Process $1 does not exist.
+    return 1
+  fi
   VALS=
   for NAM in nonvoluntary_ctxt_switches voluntary_ctxt_switches; do
     VAL=$(grep ^$NAM: $FNAM | sed "s/$NAM: *//g")
@@ -45,7 +49,7 @@ get-ctxt() {
 }
 
 # Return the CPU number and affinity for a process.
-# Format: Involuntary voluntary
+# Format: CPU-number affinity
 get-cpunum() {
   PROCID=$1
   FNAM=/proc/$PROCID/stat
@@ -76,7 +80,7 @@ monloop() {
   SLP=$1
   shift
   LCOM="$*"
-  TMPFIL=$LAB.tmp
+  TMPFIL=${LAB}$BASHID.tmp
   rm -f $TMPFIL
   while true; do
     TIM=$(tstamp)
@@ -233,10 +237,6 @@ if [ $NORUN -eq 0 ]; then
 else
   NRPRE="NOT "
 fi
-for MCOM in "${MCOMS[@]}"; do
-  MCOM=$(echo $MCOM | sed "s/#PID#/$COMPID/g")
-  dbgecho ${NRPRE}Executing monitor command: $MCOM
-done
 
 # Start the process.
 dbgecho ${NRPRE}Starting process $COMPID
