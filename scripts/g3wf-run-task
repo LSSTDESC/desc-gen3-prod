@@ -52,19 +52,12 @@ get-ctxt() {
 # Format: CPU-number affinity
 get-cpunum() {
   PROCID=$1
-  FNAM=$(mktemp get-cpunum-status-$PROCID-XXXXXX.tmp)
-  if ! cp /proc/$PROCID/status $FNAM; then
-    echo get-ctxt: Process $1 does not exist.
-    return 1
+  FNAM=/proc/$PROCID/status
+  if PROCS=($(cat $FNAM 2>/dev/null)); then
+    CPU=${PROCS[38]}
+    AFF=$(taskset -cp $PROCID 2>/dev/null | sed 's/.*: *//g')
+    echo $CPU $AFF
   fi
-  if [ ! -r $FNAM ]; then
-    echo get-cpunum: Process $PROCID is not running.
-    return 1
-  fi
-  PROCS=($(cat $FNAM))
-  CPU=${PROCS[38]}
-  AFF=$(taskset -cp $PROCID 2>/dev/null | sed 's/.*: *//g')
-  echo $CPU $AFF
 }
 
 # Return time stamp seconds.nanoseconds
