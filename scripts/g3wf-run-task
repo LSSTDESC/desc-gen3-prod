@@ -31,7 +31,7 @@ procstate() {
 # Return the context switches for a process.
 # Format: Involuntary voluntary
 get-ctxt() {
-  FNAM=get-ctxt-status-$1.tmp
+  FNAM=$(mktemp get-ctxt-status-$1-XXXXXX.tmp)
   if ! cp /proc/$1/status $FNAM; then
     echo get-ctxt: Process $1 does not exist.
     return 1
@@ -52,7 +52,7 @@ get-ctxt() {
 # Format: CPU-number affinity
 get-cpunum() {
   PROCID=$1
-  FNAM=ge-cpunum-status-$PROCID.tmp
+  FNAM=$(mktemp get-cpunum-status-$PROCID-XXXXXX.tmp)
   if ! cp /proc/$PROCID/status $FNAM; then
     echo get-ctxt: Process $1 does not exist.
     return 1
