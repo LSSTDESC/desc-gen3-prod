@@ -52,7 +52,7 @@ get-ctxt() {
 # Format: CPU-number affinity
 get-cpunum() {
   PROCID=$1
-  FNAM=/proc/$PROCID/status
+  FNAM=/proc/$PROCID/stat
   if PROCS=($(cat $FNAM 2>/dev/null)); then
     CPU=${PROCS[38]}
     AFF=$(taskset -cp $PROCID 2>/dev/null | sed 's/.*: *//g')
