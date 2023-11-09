@@ -94,7 +94,7 @@ monloop() {
 # Display a message line with prefix.
 DBG=0
 msgecho() {
-  echo "<<<<<$(date)>>>>> $*"
+  echo "<<<<<$(date)>>>>> $*" >&2
   return 0
 }
 
@@ -199,7 +199,7 @@ while [ $(procstate $COMPID) != T ]; do
 done
 
 dbgecho DEBUG is on
-msgecho Script pid is $BASHPID
+dbgecho Script pid is $BASHPID
 dbgecho User command: $RUNCOM
 
 NMCOM=${#MCOMS[@]}
@@ -240,7 +240,7 @@ done
 
 # Start the process.
 dbgecho ${NRPRE}Starting process $COMPID
-msgecho Starting command process $COMMPID: $RUNCOM
+msgecho Starting command process $COMPID: $RUNCOM
 if [ $NORUN -eq 0 ]; then
   kill -CONT $COMPID
   while ps -p $COMPID 2>&1 1>/dev/null; do
