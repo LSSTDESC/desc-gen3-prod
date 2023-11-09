@@ -1,0 +1,259 @@
+#!/bin/bash
+
+# g3wf-run-task
+#
+# David Adams
+# November 2023
+#
+# This command is intended to be prepended to the command running an LSST task.
+# It provides options to monitor and change the scheduling of that task.
+
+######### Functions ########
+
+# Start process for a command and stop it immediately.
+# The command will be started when singal CONT is set to the process.
+runcom() {
+  MYPID=$BASHPID
+  kill -SIGSTOP $MYPID
+  exec $@
+}
+
+# Return the state for a process.
+#  R - Running
+#  S - Interruptible sleep.
+#  T - Stopped.
+#  D - Uninterruptible sleep.
+#  Z - Zombie.
+procstate() {
+  ps -o state= -p $1
+}
+
+# Return the context switches for a process.
+# Format: Involuntary voluntary
+get-ctxt() {
+  FNAM=/proc/$1/status
+  VALS=
+  for NAM in nonvoluntary_ctxt_switches voluntary_ctxt_switches; do
+    VAL=$(grep ^$NAM: $FNAM | sed "s/$NAM: *//g")
+    if [ -z "$VALS" ]; then
+      VALS=$VAL
+    else
+      VALS="$VALS $VAL"
+    fi
+  done
+  echo $VALS
+}
+
+# Return the CPU number and affinity for a process.
+# Format: Involuntary voluntary
+get-cpunum() {
+  PROCID=$1
+  FNAM=/proc/$PROCID/stat
+  if [ ! -r $FNAM ]; then
+    echo get-cpunum: Process $PROCID is not running.
+    return 1
+  fi
+  PROCS=($(cat $FNAM))
+  CPU=${PROCS[38]}
+  AFF=$(taskset -cp $PROCID | sed 's/.*: *//g')
+  echo $CPU $AFF
+}
+
+# Return time stamp seconds.nanoseconds
+tstamp() {
+  date +%s.%N
+}
+
+# Run command CCC every TTT seconds
+# Usage: monloop TTT CCC
+monloop() {
+  local T0=0
+  if [ $T0 = 0 ]; then
+    T0=$(tstamp)
+  fi
+  LAB=$1
+  shift
+  SLP=$1
+  shift
+  LCOM="$*"
+  TMPFIL=$LAB.tmp
+  rm -f $TMPFIL
+  while true; do
+    TIM=$(tstamp)
+    DTIM=$(echo $TIM - $T0 | bc -l)
+    FTIM="$(printf "%10.3f" $DTIM)"
+    $LCOM 2>&1 >>$TMPFIL
+    sed -i "s/^/$LAB[$FTIM]: /g" $TMPFIL
+    cat $TMPFIL
+    rm -f $TMPFIL
+    STIM=$(echo $TIM - $(tstamp) + $SLP| bc -l)
+    if [ ${STIM:0:1} != - ]; then sleep $STIM; fi
+  done
+}
+
+# Display a message line with prefix.
+DBG=0
+msgecho() {
+  echo "<<<<<$(date)>>>>> $*"
+  return 0
+}
+
+# Display a line if the debug flag is set.
+DBG=0
+dbgecho() {
+  if [ $DBG -gt 0 ]; then
+    msgecho $*
+    return 0
+  fi
+  return 1
+}
+
+show-help() {
+  echo Usage: $(basename $0) [OPT1 OPT2 ...] COM
+  echo "  COM is the run command"
+  echo "  OPTi is any of"
+  echo "    --verbose: Enable verbose logging"
+  echo "      --norun: Do not run user or monitor commands"
+  echo "      -t TSAM: Set sampling period to TSAM seconds (0 to disable)"
+  echo "       --date: Monitor date and time."
+  echo "         --ps: Monitor user process."
+  echo "     --pstree: Monitor user process tree."
+  echo "      --wtree: Monitor process tree for this script."
+  echo "   --procstat: Monitor status for the run process (/proc/PID/stat)."
+  echo "     --cpunum: Monitor CPU number and affinity for the run process."
+  echo "   --perfstat: Run task inside \"perf stat -d\"."
+  echo "All monitoring commands are run every TSAM seconds with that period"
+  echo "in seconds set to 10 or the preceding -t value."
+  echo "All output lines for monitor flag --FFF begin with \"FFF[ TTT]: \""
+  echo "where TTT is the time in seconds since the monitor was started."
+}
+
+########## End functions. #########
+
+# Read the command line.
+TSAM=10
+MCOMS=()
+MPIDS=()
+RUNPFX=
+NORUN=0
+while [ $# -gt 0 ]; do
+  ARG=$1
+  if [ ${ARG:0:1} != "-" ]; then
+    break
+  fi
+  shift
+  dbgecho Processing flag $ARG
+  if [ $ARG = --verbose ]; then
+    DBG=1
+  elif [ $ARG = -h -o $ARG = --help ]; then
+    show-help
+    exit 0
+  elif [ $ARG = --norun ]; then
+    NORUN=1
+  elif [ $ARG = -t ]; then
+    TSAM=$1
+    shift
+  elif [ $ARG = -m ]; then
+    ARG=$1
+    shift
+    MCOMS+=("$ARG")
+  elif [ $ARG = --date ]; then
+    MCOMS+=("monloop date $TSAM date")
+  elif [ $ARG = --ps ]; then
+    MCOMS+=("monloop ps $TSAM ps -f #PID#")
+  elif [ $ARG = --pstree ]; then
+    MCOMS+=("monloop pstree $TSAM pstree -pg #PID#")
+  elif [ $ARG = --wtree ]; then
+    MCOMS+=("monloop wtree $TSAM pstree -pg $BASHPID")
+  elif [ $ARG = --procstat ]; then
+    MCOMS+=("monloop procstat $TSAM cat /proc/#PID#/stat")
+  elif [ $ARG = --procctxt ]; then
+    MCOMS+=("monloop procctxt $TSAM get-ctxt #PID#")
+  elif [ $ARG = --cpunum ]; then
+    MCOMS+=("monloop cpunum $TSAM get-cpunum #PID#")
+  elif [ $ARG = --perfstat ]; then
+    RUNPFX="perf stat -d"
+  else
+    msgecho "ERROR: Invalid flag: $ARG"
+    exit 1
+  fi
+done
+RUNCOM="$*"
+if [ -z "$RUNCOM" ]; then
+  msgecho ERROR: Run command not found.
+  exit 1
+fi
+if [ -n "$RUNPFX" ]; then
+  RUNCOM="$RUNPFX $RUNCOM"
+fi
+
+# Create a stopped process that will exec the user command
+# when it is restarted.
+(runcom "$RUNCOM") &
+COMPID=$!
+dbgecho Command pid is $COMPID
+# Wait for the user process to stop.
+while [ $(procstate $COMPID) != T ]; do
+  dbgecho Waiting for command process $COMPID to be ready.
+  sleep 1
+done
+
+dbgecho DEBUG is on
+msgecho Script pid is $BASHPID
+dbgecho User command: $RUNCOM
+
+NMCOM=${#MCOMS[@]}
+if [ $NMCOM -gt 0 ]; then
+  dbgecho Monitor commands [$NMCOM]:
+  for IMCOM in "${!MCOMS[@]}"; do
+      MCOM=${MCOMS[$IMCOM]}
+      MCOM=$(echo $MCOM | sed "s/#PID#/$COMPID/g")
+      dbgecho "  $MCOM"
+      if [ $NORUN -eq 0 ]; then
+        $MCOM &
+        MPID=$!
+        MPIDS+=($MPID)
+        msgecho Started monitoring process $MPID: $MCOM
+      fi
+  done
+else
+  dbgecho No monitor commands.
+fi
+if [ $DBG -gt 1 ]; then exit 0; fi
+
+
+if [ $DBG -gt 0 ]; then
+  dbgecho  Displaying process $COMPID
+  ps -f $COMPID
+fi
+
+# Start the monitor commands.
+if [ $NORUN -eq 0 ]; then
+  NRPRE=
+else
+  NRPRE="NOT "
+fi
+for MCOM in "${MCOMS[@]}"; do
+  MCOM=$(echo $MCOM | sed "s/#PID#/$COMPID/g")
+  dbgecho ${NRPRE}Executing monitor command: $MCOM
+done
+
+# Start the process.
+dbgecho ${NRPRE}Starting process $COMPID
+msgecho Starting command process $COMMPID: $RUNCOM
+if [ $NORUN -eq 0 ]; then
+  kill -CONT $COMPID
+  while ps -p $COMPID 2>&1 1>/dev/null; do
+    dbgecho Waiting for command process $COMPID to end.
+    #pstree -pg $BASHPID
+    sleep 1
+  done
+  msgecho Command process ended.
+else
+  kill -STOP $COMPID
+fi
+dbgecho Killing monitor processes.
+for MPID in "${MPIDS[@]}"; do
+  dbgecho Killing $MPID.
+  kill $MPID
+done

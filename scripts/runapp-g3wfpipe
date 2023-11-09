@@ -331,7 +331,8 @@ fi
 # Define the task command prepend.
 #PREPEND="iotrace -cmd time perf stat -d"
 #PREPEND="time perf stat -d"
-PREPEND="perf stat -d"
+#PREPEND="perf stat -d"
+PREPEND="g3wf-run-task --perfstat"
 if [ -n "$STRACE" ]; then
   info_echo "Decoding STRACE = \"$STRACE\""
   #PREPEND="myiotrace $PREPEND"  # job000831
