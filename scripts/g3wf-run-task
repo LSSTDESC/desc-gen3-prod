@@ -84,7 +84,7 @@ monloop() {
     FTIM="$(printf "%10.3f" $DTIM)"
     $LCOM 2>&1 >>$TMPFIL
     sed -i "s/^/$LAB[$FTIM]: /g" $TMPFIL
-    cat $TMPFIL
+    cat $TMPFIL >&2
     rm -f $TMPFIL
     STIM=$(echo $TIM - $(tstamp) + $SLP| bc -l)
     if [ ${STIM:0:1} != - ]; then sleep $STIM; fi
