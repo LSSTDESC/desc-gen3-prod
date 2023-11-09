@@ -80,7 +80,7 @@ monloop() {
   SLP=$1
   shift
   LCOM="$*"
-  TMPFIL=${LAB}$BASHID.tmp
+  TMPFIL=${LAB}$BASHPID.tmp
   rm -f $TMPFIL
   while true; do
     TIM=$(tstamp)
