@@ -31,18 +31,18 @@ procstate() {
 # Return the context switches for a process.
 # Format: Involuntary voluntary
 get-ctxt() {
-  FNAM=$(mktemp get-ctxt-status-$1-XXXXXX.tmp)
-  if ! cp /proc/$1/status $FNAM; then
-    echo get-ctxt: Process $1 does not exist.
-    return 1
-  fi
   VALS=
+  PROCID=$1
+  FNAM=/proc/$PROCID/status
   for NAM in nonvoluntary_ctxt_switches voluntary_ctxt_switches; do
-    VAL=$(grep ^$NAM: $FNAM | sed "s/$NAM: *//g")
-    if [ -z "$VALS" ]; then
-      VALS=$VAL
+    if VAL=$(grep ^$NAM: $FNAM 2>/dev/null | sed "s/$NAM: *//g"); then
+      if [ -z "$VALS" ]; then
+        VALS=$VAL
+      else
+        VALS="$VALS $VAL"
+      fi
     else
-      VALS="$VALS $VAL"
+      break
     fi
   done
   echo $VALS
