@@ -2,7 +2,6 @@ from lsstsqre/centos:7-stack-lsst_distrib-%LSSTVERSION%
 
 USER root
 RUN  yum --assumeyes --quiet install vim
-RUN  yum --assumeyes --quiet install perf
 USER lsst
 
 RUN echo source /opt/lsst/software/stack/loadLSST.bash >setup.sh
@@ -15,5 +14,9 @@ RUN echo "export NUMEXPR_MAX_THREADS=1" >> setup.sh
 RUN source setup.sh &&\
     conda create -y --prefix parslenv &&\
     conda activate $parslenv &&\
-    pip install -I 'parsl[monitoring,workqueue] @ git+https://github.com/parsl/parsl@desc'
+    #conda install -n base conda-libmamba-solver &&\
+    #conda config --set solver libmamba &&\
+    pip install git+https://github.com/LSSTDESC/desc-gen3-prod.git &&\
+    g3wf-install-parsl-w2332
+
 RUN echo "conda activate parslenv" >>  setup.sh

@@ -3,6 +3,8 @@ from lsstsqre/centos:7-stack-lsst_distrib-%LSSTVERSION%
 USER root
 RUN  yum --assumeyes --quiet install vim
 RUN  yum --assumeyes --quiet install perf
+RUN  yum --assumeyes --quiet install strace
+RUN  yum --assumeyes --quiet install bc
 USER lsst
 
 RUN echo source /opt/lsst/software/stack/loadLSST.bash >setup.sh
@@ -13,7 +15,6 @@ RUN echo "export OMP_NUM_THREADS=1" >> setup.sh
 RUN echo "export NUMEXPR_MAX_THREADS=1" >> setup.sh
 
 RUN source setup.sh &&\
-    conda create -y --prefix parslenv &&\
-    conda activate $parslenv &&\
-    pip install -I 'parsl[monitoring,workqueue] @ git+https://github.com/parsl/parsl@desc'
-RUN echo "conda activate parslenv" >>  setup.sh
+    pip install -I parsl[monitoring,workqueue]@git+https://github.com/parsl/parsl@desc
+RUN source setup.sh &&\
+    conda install -y -c conda-forge ndcctools --no-deps

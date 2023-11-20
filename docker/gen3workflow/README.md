@@ -56,3 +56,6 @@ On perlmutter or cori, install with shifter:
 00 - Another failed attempt.
 09 - Another failed attempt.
 11 - Another failed attempt.
+12 - Switch to Jim's RX to for w2332 via g3wf-install-parsl-w2332: fails with missing IPython
+13 - Try to fix 12 but the new parsl is not picked up?
+14 - Start from 09 and add workqueue

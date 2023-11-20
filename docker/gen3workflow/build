@@ -1,7 +1,7 @@
 #!/bin/bash
 
 LVER=$1
-TAG=${2:-11}
+TAG=${2:-16}
 NAME=$(basename $PWD)
 if [ -z "$TAG" -o "$TAG" = -h ]; then
   echo Usage: $0 TAG
@@ -9,4 +9,6 @@ if [ -z "$TAG" -o "$TAG" = -h ]; then
 fi
 cat dockerfile-$TAG | sed s"/%LSSTVERSION%/$LVER/g" > fix-dockerfile-$LVER-$TAG
 echo Building $NAME
-docker build --no-cache -t "$NAME-$LVER:$TAG" -f fix-dockerfile-$LVER-$TAG .
+FULLNAME=$NAME-$LVER:$TAG
+LOG=$FULLNAME.log
+docker build --no-cache --progress=plain -t $FULLNAME -f fix-dockerfile-$LVER-$TAG . 2>&1 | tee $LOG
