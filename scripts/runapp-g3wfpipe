@@ -570,7 +570,7 @@ if [[ -n $WFARGS ]]; then
   echo 'if [ -r $SRC ]; then' >>$RFIL
   echo '  echo setup: WARNING: Using user copy of gen3_workflow: $SRC' >>$RFIL
   echo '  cp -r $SRC .' >>$RFIL
-  echo 'elif -r ./gen3_workflow; then' >>$RFIL
+  echo 'elif [ -r ./gen3_workflow ]; then' >>$RFIL
   echo '  echo setup: WARNING: Using already installed gen3_workflow' >>$RFIL
   echo 'else' >>$RFIL
   echo '  SRC=https://github.com/LSSTDESC/gen3_workflow.git' >>$RFIL
