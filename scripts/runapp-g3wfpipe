@@ -592,6 +592,7 @@ if [[ -n $WFARGS ]]; then
   echo "# and was run with the command $COM" >>$RFIL
   echo 'source ./setup.sh' >>$RFIL
   echo 'echo run: Running pipeline.' >>$RFIL
+  echo 'echo run: Location for g3wf-run-task: $(which g3wf-run-task)' >>$RFIL
   echo "g3wfpipe-run $WFARGS" >>$RFIL
   chmod +x ./run
   info_echo Starting run script with steps $WFARGS.
