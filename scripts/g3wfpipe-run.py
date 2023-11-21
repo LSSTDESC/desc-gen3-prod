@@ -95,6 +95,7 @@ def get_pg(readonly=False, require=True):
                 haveQG = get_haveQG(pgro)
                 return pgro
             else:
+                com = 'g3wf-run-task'
                 logmsg(f"get_pg: Location for {com}: {shutil.which(com)}")
                 pg = ParslGraph.restore(pg_pickle_path)
     haveQG = get_haveQG(pg)
