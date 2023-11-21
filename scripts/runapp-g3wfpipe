@@ -565,6 +565,7 @@ if [[ -n $WFARGS ]]; then
   echo 'PATH=./local/desc-gen3-prod/bin:$PATH' >>$RFIL
   echo 'PYTHONPATH=./local/desc-gen3-prod:$PYTHONPATH' >>$RFIL
   echo 'echo setup: Running with desc-gen3-prod version $(desc-gen3-prod-version)' >>$RFIL
+  echo 'echo setup: Location for g3wf-run-task: $(which g3wf-run-task)' >>$RFIL
   echo 'echo setup: Running with desc-wfmon version $(desc-wfmon-parsltest -v)' >>$RFIL
   echo 'SRC=$HOME/descprod/repos/gen3_workflow' >>$RFIL
   echo 'if [ -r $SRC ]; then' >>$RFIL
