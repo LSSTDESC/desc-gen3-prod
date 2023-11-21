@@ -49,7 +49,7 @@ if echo $ARGS | grep proc >/dev/null; then
   fi
 fi
 echo $THISBAS: Starting workflow script with args $ARGS
-echo $THISBAS: Location for g3wf-run-task: $(which g3wf-run-task)' >>$RFIL
+echo $THISBAS: Location for g3wf-run-task: $(which g3wf-run-task)
 $THISPTH.py $ARGS
 RSTAT=$?
 if [ -r sysmon.pid ]; then
