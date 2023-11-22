@@ -202,6 +202,8 @@ if doInit:
         sys.exit(1)
     else:
         statlogmsg("Creating quantum graph.")
+        com = 'g3wf-run-task'
+        logmsg(f"doInit: Location for {com}: {shutil.which(com)}")
         # The log for the QG generati is at submit/u/<user>/<name>/<timestamp>/quantumGraphGeneration.out
         # Also see execution_butler_creation.out in that same dir.
         # There should messages reporting daset transfers after the quanta are reported.
