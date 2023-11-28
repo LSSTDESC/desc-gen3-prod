@@ -548,7 +548,7 @@ if [[ -n $WFARGS ]]; then
   fi
   echo "if [ ! -r ./local/desc-wfmon ]; then" >>$RFIL
   echo "  echo setup: Installing desc-wfmon." >>$RFIL
-  echo '  mkdir repos && cd repos && git clone https://github.com/LSSTDESC/desc-wfmon && cd ..' >>$RFIL
+  echo '  (mkdir repos && cd repos && git clone https://github.com/LSSTDESC/desc-wfmon && cd ..)' >>$RFIL
   echo "  pip install -t local/desc-wfmon repos/desc-wfmon" >>$RFIL
   echo "fi" >>$RFIL
   echo 'PATH=./local/desc-wfmon/bin:$PATH' >>$RFIL

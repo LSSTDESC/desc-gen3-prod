@@ -137,7 +137,7 @@ for opt in sys.argv[1:]:
     if opt in ["-h", "help"]:
         print('Usage:', sys.argv[0], '[OPTS]')
         print('  Supported valuse for OPTS:')
-        print('    init - Create QG (QuandunGraph).')
+        print('    init - Create QG (QuantumGraph).')
         print('    proc - Process tasks in the existing QG.')
         print('    status - Report on the status of processing for the existing QG.')
         print('    qgre - Prepare report describing the existing QG.')
@@ -246,7 +246,8 @@ if doProc:
         try:
             ntskall = len(pg.values())
             statlogmsg(f"Try {count} task count: {ntskall}")
-            futures = [job.get_future() for job in pg.values() if not job.dependencies]
+            #futures = [job.get_future() for job in pg.values() if not job.dependencies]
+            futures = [job.get_future() for job in pg.values()]
         except Exception as e:
             logmsg(f"Try {count} raised exception: {e}")
             #traceback.print(e.__traceback__)
