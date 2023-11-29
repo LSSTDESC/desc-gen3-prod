@@ -249,7 +249,7 @@ if doProc:
     while True:
         newrems = []
         for task in remtasks:
-            tstat = task.status()
+            tstat = task.status
             if tstat in ('succeeded', 'failed'):
                 if tstat == 'suceeded': nfail += 1
                 if tstat == 'failed': nfail += 1
