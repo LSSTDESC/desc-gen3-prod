@@ -265,6 +265,7 @@ if doProc:
         statlogmsg(msg)
         update_monexp()
         if len(remtasks) == 0: break
+        time.sleep(10)
 
 if doProcOld:
     logmsg()
