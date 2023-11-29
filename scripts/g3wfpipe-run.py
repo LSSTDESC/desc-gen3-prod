@@ -16,6 +16,7 @@ import traceback
 statfilename = 'current-status.txt'
 doInit = False
 doProc = False
+doProcOld = False
 doFina = False
 doQgReport = False
 blockJob=True      # Set false for interactive running.
