@@ -45,6 +45,8 @@ if [[ -z $1 || $1 = -h ]]; then
   echo "  shifter:VV: Code taken from shifter env version VV"
   echo "  tmax:TMAX Timeout TMAX in with unit {s, m, h}"
   echo "  tmax:TMAX1:TMAX2:...: Stage timeouts for multistage jobs"
+  echo "  group:GNAM: Group jobs where GNAM is one of the following group names:"
+  echo "    ccd: isr, characterizeImaage, calibrate "
   echo "  pmon:DT Sampling time for the parsl process monitor is DT sec."
   echo "          DT = false or 0 disables monitoring. Default is 3."
   echo "  bproc:BPO: Run pre,proc,post multistage with proc in pmbs-BPO"
@@ -279,6 +281,8 @@ for OPT in ${HOPTS[@]}; do
     TMAX=${TMAXS[0]}
     if [ $NTMAX -ge 2 ]; then TMAX2=${TMAXS[1]}; fi
     if [ $NTMAX -ge 3 ]; then TMAX3=${TMAXS[2]}; fi
+  elif [ ${OPT:0:6} = group: ]; then
+    GROUPS=$(echo ${OPT:6} | sed 's/:/ /g')
   elif [ ${OPT:0:6} = bproc: ]; then
     if ! echo $WFARGS | grep proc 1>/dev/null; then
       err_echo WFARGS: $WFARGS
@@ -499,6 +503,34 @@ PIPEVAL=
     exit 1
   fi
   info_echo Executor: $EXEC
+fi
+
+if [ -n "$GROUPS" ]; then
+  echo >>config.yaml
+  echo "clusterAlgorithm: lsst.ctrl.bps.quantum_clustering_funcs.dimension_clustering" >>config.yaml
+  for GRP in $GROUPS; do
+    # For now GRP is GNAM. Later GNAM:GMEM:GCPU. 
+    echo "cluster:" >>config.yaml
+    echo Adding processing group $GRP to config.yaml
+    GNAM=$GRP
+    GMEM=
+    GCPU=
+    echo "  $GNAM:" >>config.yaml
+    if [ $GNAM = 'ccd' ]; then
+      echo "    pipetasks: isr, characterizeImage, calibrate" >>config.yaml
+      echo "    dimensions: detector, visit" >>config.yaml
+      echo "    equalDimensions: visit:exposure" >>config.yaml
+    else
+      err_echo "Invalid procesing group name: $GNAM"
+      exit 21
+    fi
+    if [ -m "$GCPU" ]; then
+      echo "    requestCpus: $GCPU" >>config.yaml
+    fi
+    if [ -m "$GMEM" ]; then
+      echo "    requestMemory: $GMEM" >>config.yaml
+    fi
+  done  
 fi
 
 G3WF_BRANCH=
