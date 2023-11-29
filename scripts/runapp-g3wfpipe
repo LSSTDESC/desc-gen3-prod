@@ -525,10 +525,10 @@ if [ -n "$PGROUPS" ]; then
       err_echo "Invalid procesing group name: $GNAM"
       exit 21
     fi
-    if [ -m "$GCPU" ]; then
+    if [ -n "$GCPU" ]; then
       echo "    requestCpus: $GCPU" >>config.yaml
     fi
-    if [ -m "$GMEM" ]; then
+    if [ -n "$GMEM" ]; then
       echo "    requestMemory: $GMEM" >>config.yaml
     fi
   done  
