@@ -254,6 +254,7 @@ NTMAX=0
 TMAX=
 TMAX2=
 TMAX3=
+PGROUPS=
 PMONDT=${CON_PMONDT:-3}
 STRACE=$CON_STRACE
 REBUILD=false
@@ -282,7 +283,7 @@ for OPT in ${HOPTS[@]}; do
     if [ $NTMAX -ge 2 ]; then TMAX2=${TMAXS[1]}; fi
     if [ $NTMAX -ge 3 ]; then TMAX3=${TMAXS[2]}; fi
   elif [ ${OPT:0:6} = group: ]; then
-    GROUPS=$(echo ${OPT:6} | sed 's/:/ /g')
+    PGROUPS=$(echo ${OPT:6} | sed 's/:/ /g')
   elif [ ${OPT:0:6} = bproc: ]; then
     if ! echo $WFARGS | grep proc 1>/dev/null; then
       err_echo WFARGS: $WFARGS
@@ -505,10 +506,10 @@ PIPEVAL=
   info_echo Executor: $EXEC
 fi
 
-if [ -n "$GROUPS" ]; then
+if [ -n "$PGROUPS" ]; then
   echo >>config.yaml
   echo "clusterAlgorithm: lsst.ctrl.bps.quantum_clustering_funcs.dimension_clustering" >>config.yaml
-  for GRP in $GROUPS; do
+  for GRP in $PGROUPS; do
     # For now GRP is GNAM. Later GNAM:GMEM:GCPU. 
     echo "cluster:" >>config.yaml
     echo Adding processing group $GRP to config.yaml
