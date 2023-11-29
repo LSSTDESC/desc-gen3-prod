@@ -251,8 +251,8 @@ if doProc:
         for task in remtasks:
             tstat = task.status()
             if tstat in ('succeeded', 'failed'):
-                if tstat = 'suceeded': nfail += 1
-                if tstat = 'failed': nfail += 1
+                if tstat == 'suceeded': nfail += 1
+                if tstat == 'failed': nfail += 1
                 ndone += 1
             else:
                 if tstat not in ('pending', 'scheduled', 'running'):
