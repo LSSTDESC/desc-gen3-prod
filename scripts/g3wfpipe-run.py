@@ -236,7 +236,45 @@ if doProc:
     if not haveQG:
         statlogmsg("ERROR: Quantum graph not found.")
         sys.exit(1)
-    statlogmsg('Starting workflow')
+    statlogmsg('Starting new workflow')
+    tasks = pg.values()
+    ntask = len(tasks)
+    endpoints = [task for task in tasks if not task.dependencies]
+    for task in endpoints:
+        task.get_future()
+    ndone = 0
+    nsucc = 0
+    nfail = 0
+    remtasks = tasks
+    while True:
+        newrems = []
+        for task in remtasks:
+            tstat = task.status()
+            if tstat in ('succeeded', 'failed'):
+                if tstat = 'suceeded': nfail += 1
+                if tstat = 'failed': nfail += 1
+                ndone += 1
+            else:
+                if tstat not in ('pending', 'scheduled', 'running'):
+                    logmsg(f"WARNING: Unexpected task status: {tstat}")
+                newrems += [task]
+        remtasks = newrems
+        msg = f"Finished {ndone} of {ntask} tasks."
+        if nfail:
+            msg += f" {nfail} failed."
+        statlogmsg(msg)
+        update_monexp()
+        if len(remtasks) == 0: break
+
+if doProcOld:
+    logmsg()
+    monexpUpdate = False
+    statlogmsg('Fetching workflow QG.')
+    get_pg()
+    if not haveQG:
+        statlogmsg("ERROR: Quantum graph not found.")
+        sys.exit(1)
+    statlogmsg('Starting old workflow')
     pg.run()
     count = 0
     futures = None
