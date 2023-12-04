@@ -639,7 +639,7 @@ fi
 if [ $RSTAT != 0 ]; then exit $RSTAT; fi
 
 if [ -n "$BPROC" ]; then
-  info_echo Creating batch job for stage 2.
+  info_echo "Creating job for stage 2."
   JOBID=$(grep '"id"' config.json | sed 's/.*: //' | sed 's/,.*//')
   if [ -z "$JOBID" ]; then
     err_echo Unable to extract job ID.
@@ -658,7 +658,7 @@ if [ -n "$BPROC" ]; then
     fi
     cat $LOG
     JOBID2=$(grep " id:" $LOG | sed 's/.*id: //')
-    info_echo Starting job $JOBID2 for stage 2.
+    info_echo "Starting job $JOBID2 for stage 2."
     descprod-start-job $JOBID2
   else
     mkdir stage2
@@ -673,7 +673,12 @@ if [ -n "$BPROC" ]; then
       err_echo "Unable to submit batch job for stage 2."
       exit 21
     fi
-    cd ..
+    BIDFILE=batch_id.dat
+    SBID="<UNKNOWN>"
+    if [ -r $BIDFILE ]; then
+      SBID=$(cat $BIDFILE)
+    fi
+    info_echo "Created batch job $SBID for stage 2."
   fi
 fi
 
