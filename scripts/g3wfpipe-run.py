@@ -16,7 +16,6 @@ import traceback
 statfilename = 'current-status.txt'
 doInit = False
 doProc = False
-doProcOld = False
 doFina = False
 doQgReport = False
 blockJob=True      # Set false for interactive running.
@@ -167,6 +166,9 @@ for opt in sys.argv[1:]:
         statlogmsg(f"Invalid option: '{opt}'")
         sys.exit(1)
 
+doProc0 = doProc
+doProc1 = False
+
 import parsl
 from desc.wfmon import MonDbReader
 import desc.sysmon
@@ -266,7 +268,7 @@ if doProc1:
         if len(remtasks) == 0: break
         time.sleep(10)
 
-if doProc0 or doProc:
+if doProc0:
     logmsg()
     monexpUpdate = False
     statlogmsg('Fetching workflow QG.')
