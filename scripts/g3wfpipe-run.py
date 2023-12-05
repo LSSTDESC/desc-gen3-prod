@@ -166,8 +166,9 @@ for opt in sys.argv[1:]:
         statlogmsg(f"Invalid option: '{opt}'")
         sys.exit(1)
 
-doProc0 = doProc
+doProc0 = False
 doProc1 = False
+doProc2 = doProc
 
 import parsl
 from desc.wfmon import MonDbReader
@@ -230,6 +231,54 @@ if doQgReport:
     ofil.write(f"          Graph ID: {pg.qgraph.graphID}\n")
     ofil.write(f"  Input node count: {len(pg.qgraph.inputQuanta)}\n")
     ofil.write(f" Output node count: {len(pg.qgraph.oputputQuanta)}\n")
+
+if doProc2:
+    logmsg()
+    monexpUpdate = False
+    statlogmsg('Fetching workflow QG.')
+    get_pg()
+    if not haveQG:
+        statlogmsg("ERROR: Quantum graph not found.")
+        sys.exit(1)
+    statlogmsg('Starting new workflow')
+    typenames = pg._task_list
+    type_tasknames = dict()
+    all_tasknames = []
+    for typename in typenames:
+        type_tasknames[typename] = pg.get_jobs(typename)
+        all_tasknames += type_tasknames[typename]
+    ntask = len(all_tasknames)
+    end_tasknames = []
+    for taskname in all_tasknames:
+        task = pg[taskname]
+        if not task.dependencies:
+            end_tasknames.append(taskname)
+    for task in end_tasknames:
+        task = pg[taskname]
+        task.get_future()
+    ndone = 0
+    nfail = 0
+    rem_tasknames = all_tasknames
+    while True:
+        newrems = []
+        for taskname in rem_tasknames:
+            task = pg[taskname]
+            tstat = task.status
+            if tstat in ('succeeded', 'failed'):
+                if tstat == 'failed': nfail += 1
+                ndone += 1
+            else:
+                if tstat not in ('pending', 'scheduled', 'running'):
+                    logmsg(f"WARNING: Unexpected task status: {tstat}")
+                newrems += [taskname]
+        rem_tasknames = newrems
+        msg = f"Finished {ndone} of {ntask} tasks."
+        if nfail:
+            msg += f" {nfail} failed."
+        statlogmsg(msg)
+        update_monexp()
+        if len(rem_tasknames) == 0: break
+        time.sleep(10)
 
 if doProc1:
     logmsg()
