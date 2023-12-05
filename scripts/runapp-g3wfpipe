@@ -46,7 +46,7 @@ if [[ -z $1 || $1 = -h ]]; then
   echo "  tmax:TMAX Timeout TMAX in with unit {s, m, h}"
   echo "  tmax:TMAX1:TMAX2:...: Stage timeouts for multistage jobs"
   echo "  group:GNAM: Group jobs where GNAM is one of the following group names:"
-  echo "    ccd: isr, characterizeImaage, calibrate "
+  echo "    ccd: isr, characterizeImage, calibrate "
   echo "  pmon:DT Sampling time for the parsl process monitor is DT sec."
   echo "          DT = false or 0 disables monitoring. Default is 3."
   echo "  bproc:BPO: Run pre,proc,post multistage with proc in pmbs-BPO"

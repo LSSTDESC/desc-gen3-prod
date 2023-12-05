@@ -229,7 +229,7 @@ if doQgReport:
     ofil.write(f"  Input node count: {len(pg.qgraph.inputQuanta)}\n")
     ofil.write(f" Output node count: {len(pg.qgraph.oputputQuanta)}\n")
 
-if doProc:
+if doProc1:
     logmsg()
     monexpUpdate = False
     statlogmsg('Fetching workflow QG.')
@@ -244,7 +244,6 @@ if doProc:
     for task in endpoints:
         task.get_future()
     ndone = 0
-    nsucc = 0
     nfail = 0
     remtasks = tasks
     while True:
@@ -252,7 +251,6 @@ if doProc:
         for task in remtasks:
             tstat = task.status
             if tstat in ('succeeded', 'failed'):
-                if tstat == 'suceeded': nfail += 1
                 if tstat == 'failed': nfail += 1
                 ndone += 1
             else:
@@ -268,7 +266,7 @@ if doProc:
         if len(remtasks) == 0: break
         time.sleep(10)
 
-if doProcOld:
+if doProc0 or doProc:
     logmsg()
     monexpUpdate = False
     statlogmsg('Fetching workflow QG.')
