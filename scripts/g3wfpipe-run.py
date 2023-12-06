@@ -261,16 +261,17 @@ if doProc2:
     rem_tasknames = all_tasknames
     while True:
         newrems = []
-        for taskname in rem_tasknames:
-            task = pg[taskname]
-            tstat = task.status
+        pg._update_status()
+        tstats = pg.df.set_index('job_name').status.to_dict()
+        for tnam in rem_tasknames:
+            tstat = tstats[tnam]
             if tstat in ('succeeded', 'failed'):
                 if tstat == 'failed': nfail += 1
                 ndone += 1
             else:
                 if tstat not in ('pending', 'scheduled', 'running'):
                     logmsg(f"WARNING: Unexpected task status: {tstat}")
-                newrems += [taskname]
+                newrems += [tnam]
         rem_tasknames = newrems
         msg = f"Finished {ndone} of {ntask} tasks."
         if nfail:
