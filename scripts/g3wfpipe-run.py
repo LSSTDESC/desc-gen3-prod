@@ -254,9 +254,14 @@ if doProc2:
         task = pg[taskname]
         if not task.dependencies:
             end_tasknames.append(taskname)
+    logmsg(f"Total task count is {len(all_tasknames}")
+    logmsg(f"Endpoint task count is {len(end_tasknames}")
+    nend_start = 0
     for task in end_tasknames:
         task = pg[taskname]
         task.get_future()
+        nend_start += 1
+    logmsg(f"Endpoint start count is {len(end_tasknames}")
     ndone = 0
     nsucc = 0
     nfail = 0
@@ -318,6 +323,7 @@ if doProc2:
                 logmsg(f"Aborting job because state is not changing and no tasks are active.")
         else:
             nsame_counts = 0
+            last_counts = counts
         time.sleep(tsleep)
 
 if doProc1:
