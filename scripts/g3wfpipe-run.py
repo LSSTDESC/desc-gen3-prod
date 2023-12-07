@@ -254,8 +254,8 @@ if doProc2:
         task = pg[taskname]
         if not task.dependencies:
             end_tasknames.append(taskname)
-    logmsg(f"Total task count is {len(all_tasknames}")
-    logmsg(f"Endpoint task count is {len(end_tasknames}")
+    logmsg(f"Total task count is {len(all_tasknames)}")
+    logmsg(f"Endpoint task count is {len(end_tasknames)}")
     nend_start = 0
     for task in end_tasknames:
         task = pg[taskname]
