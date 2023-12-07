@@ -261,7 +261,7 @@ if doProc2:
         task = pg[taskname]
         task.get_future()
         nend_start += 1
-    logmsg(f"Endpoint start count is {len(end_tasknames})")
+    logmsg(f"Endpoint start count is {len(end_tasknames)}")
     ndone = 0
     nsucc = 0
     nfail = 0
