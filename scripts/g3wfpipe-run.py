@@ -273,6 +273,9 @@ if doProc2:
             time.sleep(tsleep)
             continue
         tstats = pg.df.set_index('job_name').status.to_dict()
+        npend = 0
+        nlaun = 0
+        nrunn = 0
         for tnam in rem_tasknames:
             tstat = tstats[tnam]
             if tstat in ('exec_done'):
@@ -288,15 +291,22 @@ if doProc2:
                         nlbad += 1
                         logmsg(f"WARNING: Unexpected log task status: {log_tstat}")
             else:
-                if tstat not in ('launched', 'running'):
+                if tstat == 'pending':
+                    npend += 1
+                elif tstat == 'launched':
+                    nlaun += 1
+                elif tstat == 'running':
+                    nrunn += 1
+                else:
                     logmsg(f"WARNING: Unexpected task status: {tstat}")
-                newrems += [tnam]
+                newrems.append(tnam)
         rem_tasknames = newrems
         msg = f"Finished {ndone} of {ntask} tasks."
-        if nfail:
-            msg += f" {nfail} failed."
-        if nlbad:
-            msg += f" {nlbad} bad log."
+        counts = [nfail, nlbad, npend, nlaun, nrunn]
+        clabs = ['failed', 'bad log', 'pending', 'launched', 'running']
+        for i in range(len(counts)):
+            if counts[i]:
+                msg += f" {counts[i]} {clabs[i]}."
         statlogmsg(msg)
         update_monexp()
         if len(rem_tasknames) == 0: break
