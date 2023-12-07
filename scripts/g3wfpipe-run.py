@@ -257,10 +257,18 @@ if doProc2:
     logmsg(f"Total task count is {len(all_tasknames)}")
     logmsg(f"Endpoint task count is {len(end_tasknames)}")
     nend_start = 0
-    for task in end_tasknames:
-        task = pg[taskname]
-        task.get_future()
-        nend_start += 1
+    if 1:
+        tasks = pg.values()
+        ntask = len(tasks)
+        endpoints = [task for task in tasks if not task.dependencies]
+        for task in endpoints:
+            task.get_future()
+            nend_start += 1
+    else:
+        for task in end_tasknames:
+            task = pg[taskname]
+            task.get_future()
+            nend_start += 1
     logmsg(f"Endpoint start count is {len(end_tasknames)}")
     ndone = 0
     nsucc = 0
@@ -321,6 +329,7 @@ if doProc2:
             nsame_counts += 1
             if  nsame_counts > 5 and nlaun == 0 and nrunn == 0:
                 logmsg(f"Aborting job because state is not changing and no tasks are active.")
+                break
         else:
             nsame_counts = 0
             last_counts = counts
