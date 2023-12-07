@@ -264,6 +264,8 @@ if doProc2:
     rem_tasknames = all_tasknames
     logmsg(f"Monitoring DB: {pg.monitoring_db}")
     tsleep = 10
+    last_counts = []
+    nsame_counts = 0
     while True:
         newrems = []
         try:
@@ -283,7 +285,7 @@ if doProc2:
                 if getStatusFromLog:
                     task = pg[tnam]
                     log_tstat = task.status
-                    if log_tstat == 'suceeded':
+                    if log_tstat == 'succeeded':
                         nsucc += 1
                     elif log_tstat == 'failed':
                         nfail += 1
@@ -302,14 +304,20 @@ if doProc2:
                 newrems.append(tnam)
         rem_tasknames = newrems
         msg = f"Finished {ndone} of {ntask} tasks."
-        counts = [nfail, nlbad, npend, nlaun, nrunn]
-        clabs = ['failed', 'bad log', 'pending', 'launched', 'running']
+        counts = [nfail,    nlbad,     npend,     nlaun,      nrunn]
+        clabs =  ['failed', 'bad log', 'pending', 'launched', 'running']
         for i in range(len(counts)):
             if counts[i]:
                 msg += f" {counts[i]} {clabs[i]}."
         statlogmsg(msg)
         update_monexp()
         if len(rem_tasknames) == 0: break
+        if counts == last_counts:
+            nsame_counts += 1
+            if  nsame_counts > 5 and nlaun == 0 and nrunn == 0:
+                logmsg(f"Aborting job because state is not changing and no tasks are active.")
+        else:
+            nsame_counts = 0
         time.sleep(tsleep)
 
 if doProc1:
