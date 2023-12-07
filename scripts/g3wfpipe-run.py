@@ -260,9 +260,15 @@ if doProc2:
     nfail = 0
     rem_tasknames = all_tasknames
     logmsg(f"Monitoring DB: {pg.monitoring_db}")
+    tsleep = 10
     while True:
         newrems = []
-        pg._update_status()
+        try:
+            pg._update_status()
+        except:
+            logmsg(f"WARNING: Unable to update status for ParlsGraph.")
+            sleep(tsleep)
+            continue
         tstats = pg.df.set_index('job_name').status.to_dict()
         for tnam in rem_tasknames:
             tstat = tstats[tnam]
@@ -280,7 +286,7 @@ if doProc2:
         statlogmsg(msg)
         update_monexp()
         if len(rem_tasknames) == 0: break
-        time.sleep(10)
+        time.sleep(tsleep)
 
 if doProc1:
     logmsg()
