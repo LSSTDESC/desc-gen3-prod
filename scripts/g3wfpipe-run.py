@@ -270,7 +270,7 @@ if doProc2:
             pg._update_status()
         except:
             logmsg(f"WARNING: Unable to update status for ParlsGraph.")
-            sleep(tsleep)
+            time.sleep(tsleep)
             continue
         tstats = pg.df.set_index('job_name').status.to_dict()
         for tnam in rem_tasknames:
