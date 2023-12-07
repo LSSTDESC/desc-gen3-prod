@@ -24,6 +24,7 @@ showParslTables = False
 doWorkflow = True
 doTest = False
 doButlerTest = False
+getStatusFromLog = True  # If true, task status is retrieved from the task log file
 
 thisdir = os.getcwd()
 haveQG = False
@@ -257,7 +258,9 @@ if doProc2:
         task = pg[taskname]
         task.get_future()
     ndone = 0
+    nsucc = 0
     nfail = 0
+    nlbad = 0
     rem_tasknames = all_tasknames
     logmsg(f"Monitoring DB: {pg.monitoring_db}")
     tsleep = 10
@@ -272,17 +275,28 @@ if doProc2:
         tstats = pg.df.set_index('job_name').status.to_dict()
         for tnam in rem_tasknames:
             tstat = tstats[tnam]
-            if tstat in ('succeeded', 'failed'):
-                if tstat == 'failed': nfail += 1
+            if tstat in ('exec_done'):
                 ndone += 1
+                if getStatusFromLog:
+                    task = pg[tnam]
+                    log_tstat = task.status
+                    if log_tstat == 'suceeded':
+                        nsucc += 1
+                    elif log_tstat == 'failed':
+                        nfail += 1
+                    else:
+                        nlbad += 1
+                        logmsg(f"WARNING: Unexpected log task status: {log_tstat}")
             else:
-                if tstat not in ('pending', 'scheduled', 'running'):
+                if tstat not in ('launched', 'running'):
                     logmsg(f"WARNING: Unexpected task status: {tstat}")
                 newrems += [tnam]
         rem_tasknames = newrems
         msg = f"Finished {ndone} of {ntask} tasks."
         if nfail:
             msg += f" {nfail} failed."
+        if nlbad:
+            msg += f" {nlbad} bad log."
         statlogmsg(msg)
         update_monexp()
         if len(rem_tasknames) == 0: break
