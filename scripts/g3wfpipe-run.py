@@ -259,6 +259,7 @@ if doProc2:
     ndone = 0
     nfail = 0
     rem_tasknames = all_tasknames
+    logmsg(f"Monitoring DB: {pg.monitoring_db}")
     while True:
         newrems = []
         pg._update_status()
