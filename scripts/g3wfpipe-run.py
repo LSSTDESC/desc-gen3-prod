@@ -254,18 +254,18 @@ if doProc2:
         task = pg[taskname]
         if not task.dependencies:
             end_tasknames.append(taskname)
+    end_tasknames = end_tasknames[0:10]         # FIXME
     logmsg(f"Total task count is {len(all_tasknames)}")
     logmsg(f"Endpoint task count is {len(end_tasknames)}")
     nend_start = 0
-    if 1:
+    if 0:
         tasks = pg.values()
-        ntask = len(tasks)
         endpoints = [task for task in tasks if not task.dependencies]
         for task in endpoints:
             task.get_future()
             nend_start += 1
     else:
-        for task in end_tasknames:
+        for taskname in end_tasknames:
             task = pg[taskname]
             task.get_future()
             nend_start += 1
