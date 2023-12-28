@@ -106,6 +106,8 @@ decode_query() {
 }
 
 info_echo Running app g3wfpipe
+RUNLOG=$(g3wf-get-stderr$)
+info_echo Run log is $RUNLOG
 CFG=$1
 HFG=$2
 COPTS=(${CFG//-/ })
@@ -337,7 +339,7 @@ fi
 #PREPEND="iotrace -cmd time perf stat -d"
 #PREPEND="time perf stat -d"
 #PREPEND="perf stat -d"
-PREPEND="g3wf-run-task --perfstat -t 5 --cpunum --procctxt"
+PREPEND="g3wf-run-task --perfstat -t 5 --cpunum --procctxt --iotrace"
 if [ -n "$STRACE" ]; then
   info_echo "Decoding STRACE = \"$STRACE\""
   #PREPEND="myiotrace $PREPEND"  # job000831

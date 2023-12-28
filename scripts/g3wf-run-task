@@ -11,7 +11,7 @@
 ######### Functions ########
 
 # Start process for a command and stop it immediately.
-# The command will be started when singal CONT is set to the process.
+# The command will be started when signal CONT is set to the process.
 runcom() {
   MYPID=$BASHPID
   kill -SIGSTOP $MYPID
@@ -122,6 +122,7 @@ show-help() {
   echo "      --wtree: Monitor process tree for this script."
   echo "   --procstat: Monitor status for the run process (/proc/PID/stat)."
   echo "     --cpunum: Monitor CPU number and affinity for the run process."
+  echo "    --iotrace: Run iotrace on the process."
   echo "   --perfstat: Run task inside \"perf stat -d\"."
   echo "All monitoring commands are run every TSAM seconds with that period"
   echo "in seconds set to 10 or the preceding -t value."
@@ -172,6 +173,8 @@ while [ $# -gt 0 ]; do
     MCOMS+=("monloop procctxt $TSAM get-ctxt #PID#")
   elif [ $ARG = --cpunum ]; then
     MCOMS+=("monloop cpunum $TSAM get-cpunum #PID#")
+  elif [ $ARG = --iotrace ]; then
+    MCOMS+=("iotrace -p #PID#")
   elif [ $ARG = --perfstat ]; then
     RUNPFX="perf stat -d"
   else
