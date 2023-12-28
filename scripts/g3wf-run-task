@@ -134,7 +134,7 @@ show-help() {
 
 RUNLOG=$(g3wf-get-stderr)
 msgecho Run log is $RUNLOG
-RUNLOGBASE=$(basename $RUNLOG)
+RUNLOGBASE=$(echo $RUNLOG | sed 's/\.stderr$//g')
 msgecho Run log base is $RUNLOGBASE
 
 # Read the command line.
