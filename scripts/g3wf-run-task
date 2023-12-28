@@ -144,6 +144,7 @@ MPIDS=()
 RUNPFX=
 NORUN=0
 DOIOTRACE=no
+DOPERFSTAT=no
 while [ $# -gt 0 ]; do
   ARG=$1
   if [ ${ARG:0:1} != "-" ]; then
@@ -183,6 +184,7 @@ while [ $# -gt 0 ]; do
     DOIOTRACE=yes
   elif [ $ARG = --perfstat ]; then
     RUNPFX="perf stat -d"
+    DOPERFSTAT=true
   else
     msgecho "ERROR: Invalid flag: $ARG"
     exit 1
@@ -237,7 +239,12 @@ if [ $DBG -gt 1 ]; then exit 0; fi
 
 if [ $DOIOTRACE = yes ]; then
   msgecho "Starting iotrace for process $COMPID"
-  iotrace -p $COMPID -report $RUNLOGBASE.iotrace 2>&1 1>$RUNLOGBASE.iotrace.stdout &
+  iotrace -f -p $COMPID -report $RUNLOGBASE.iotrace 2>&1 1>$RUNLOGBASE.iotrace.stdout &
+fi
+
+if [ $DOPERFSTAT = yes ]; then
+  msgecho "Starting perf stat for process $COMPID"
+  perf stat -p $COMPID -o $RUNLOGBASE.perfstat 2>&1 1>$RUNLOGBASE.perfstat.stdout &
 fi
 
 if [ $DBG -gt 0 ]; then
