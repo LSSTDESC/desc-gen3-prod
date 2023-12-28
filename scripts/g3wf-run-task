@@ -143,6 +143,7 @@ MCOMS=()
 MPIDS=()
 RUNPFX=
 NORUN=0
+DOIOTRACE=no
 while [ $# -gt 0 ]; do
   ARG=$1
   if [ ${ARG:0:1} != "-" ]; then
@@ -179,7 +180,7 @@ while [ $# -gt 0 ]; do
   elif [ $ARG = --cpunum ]; then
     MCOMS+=("monloop cpunum $TSAM get-cpunum #PID#")
   elif [ $ARG = --iotrace ]; then
-    MCOMS+=("iotrace -p #PID# -report $RUNLOGBASE.iotrace")
+    DOIOTRACE=yes
   elif [ $ARG = --perfstat ]; then
     RUNPFX="perf stat -d"
   else
@@ -203,7 +204,7 @@ COMPID=$!
 dbgecho Command pid is $COMPID
 # Wait for the user process to stop.
 while [ $(procstate $COMPID) != T ]; do
-  dbgecho Waiting for command process $COMPID to be ready.
+  dbgecho "Waiting for command process $COMPID to be ready."
   sleep 1
 done
 
@@ -234,6 +235,10 @@ else
 fi
 if [ $DBG -gt 1 ]; then exit 0; fi
 
+if [ $DOIOTRACE = yes ]; then
+  msgecho "Starting iotrace for process $COMPID"
+  iotrace -p $COMPID -report $RUNLOGBASE.iotrace 2>&1 1>$RUNLOGBASE.iotrace.stdout &
+fi
 
 if [ $DBG -gt 0 ]; then
   dbgecho  Displaying process $COMPID
@@ -253,7 +258,7 @@ msgecho Starting command process $COMPID: $RUNCOM
 if [ $NORUN -eq 0 ]; then
   kill -CONT $COMPID
   while ps -p $COMPID 2>&1 1>/dev/null; do
-    dbgecho Waiting for command process $COMPID to end.
+    dbgecho "Waiting for command process $COMPID to end."
     #pstree -pg $BASHPID
     sleep 1
   done
@@ -263,6 +268,10 @@ else
 fi
 dbgecho Killing monitor processes.
 for MPID in "${MPIDS[@]}"; do
-  dbgecho Killing $MPID.
-  kill $MPID
+  if ps $MPID 2>&1 1>/dev/null; then
+    dbgecho Killing monitoring process $MPID.
+    kill $MPID
+  else
+    dbgecho "Unable to find and so not killing monitoring process $MPID."
+  fi
 done
