@@ -184,7 +184,7 @@ while [ $# -gt 0 ]; do
     DOIOTRACE=yes
   elif [ $ARG = --perfstat ]; then
     RUNPFX="perf stat -d"
-    DOPERFSTAT=true
+    DOPERFSTAT=yes
   else
     msgecho "ERROR: Invalid flag: $ARG"
     exit 1
@@ -239,7 +239,7 @@ if [ $DBG -gt 1 ]; then exit 0; fi
 
 if [ $DOIOTRACE = yes ]; then
   msgecho "Starting iotrace for process $COMPID"
-  iotrace -f -p $COMPID -report $RUNLOGBASE.iotrace 2>&1 1>$RUNLOGBASE.iotrace.stdout &
+  iotrace -f -p $COMPID -report $RUNLOGBASE.iotrace 1>$RUNLOGBASE.iotrace.stdout 2>&1 &
 fi
 
 if [ $DOPERFSTAT = yes ]; then
