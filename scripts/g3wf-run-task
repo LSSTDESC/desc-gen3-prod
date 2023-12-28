@@ -132,8 +132,10 @@ show-help() {
 
 ########## End functions. #########
 
-RUNLOG=$(g3wf-get-stderr$)
-msg_echo Run log is $RUNLOG
+RUNLOG=$(g3wf-get-stderr)
+msgecho Run log is $RUNLOG
+RUNLOGBASE=$(basename $RUNLOG)
+msgecho Run log base is $RUNLOGBASE
 
 # Read the command line.
 TSAM=10
@@ -177,7 +179,7 @@ while [ $# -gt 0 ]; do
   elif [ $ARG = --cpunum ]; then
     MCOMS+=("monloop cpunum $TSAM get-cpunum #PID#")
   elif [ $ARG = --iotrace ]; then
-    MCOMS+=("/global/homes/d/dladams/bin/iotrace -p #PID# -report $RUNLOG.iotrace")
+    MCOMS+=("iotrace -p #PID# -report $RUNLOGBASE.iotrace")
   elif [ $ARG = --perfstat ]; then
     RUNPFX="perf stat -d"
   else
