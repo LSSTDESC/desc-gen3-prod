@@ -106,8 +106,6 @@ decode_query() {
 }
 
 info_echo Running app g3wfpipe
-RUNLOG=$(g3wf-get-stderr$)
-info_echo Run log is $RUNLOG
 CFG=$1
 HFG=$2
 COPTS=(${CFG//-/ })

@@ -132,6 +132,9 @@ show-help() {
 
 ########## End functions. #########
 
+RUNLOG=$(g3wf-get-stderr$)
+msg_echo Run log is $RUNLOG
+
 # Read the command line.
 TSAM=10
 MCOMS=()
@@ -174,7 +177,7 @@ while [ $# -gt 0 ]; do
   elif [ $ARG = --cpunum ]; then
     MCOMS+=("monloop cpunum $TSAM get-cpunum #PID#")
   elif [ $ARG = --iotrace ]; then
-    MCOMS+=("iotrace -p #PID#")
+    MCOMS+=("/global/homes/d/dladams/bin/iotrace -p #PID# -report $RUNLOG.iotrace")
   elif [ $ARG = --perfstat ]; then
     RUNPFX="perf stat -d"
   else
@@ -216,8 +219,12 @@ if [ $NMCOM -gt 0 ]; then
       if [ $NORUN -eq 0 ]; then
         $MCOM &
         MPID=$!
-        MPIDS+=($MPID)
-        msgecho Started monitoring process $MPID: $MCOM
+        if ps $MPID 2>&1 1>/dev/null; then
+          MPIDS+=($MPID)
+          msgecho Started monitoring process $MPID: $MCOM
+        else
+          msgecho "Unable to start monitoring command: $MCOM"
+        fi
       fi
   done
 else
