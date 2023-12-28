@@ -53,7 +53,11 @@ if [[ -z $1 || $1 = -h ]]; then
   echo "    Options BPO are those for pmbs here colon separated."
   echo "  repo:RRR - Use repo at $HOME/scratch/repo-RRR."
   echo "  strace: Run strace with trace=file for each task."
-  echo "  strace:fileI: Run strace with selected file calls. I in {1,2,3}"
+  echo "  strace:fileI: Run strace with selected file calls:"
+  echo "    file1: open and close"
+  echo "    file2: open, close, rename, link and unlink"
+  echo "    file3: open, close, rename, link, unlink, read and write"
+  echo "    file4: rename, link and unlink"
   echo "  strace:V1:V2:...: Run strace with trace=V1,V2,... for each task."
   echo "  strace:nNN:...: Strace is only run for 1/NN of the tasks."
   echo "  stime: Create an strace system time summary."
@@ -368,6 +372,8 @@ if [ -n "$STRACE" ]; then
     STOPT="open,openat,close,rename,renameat,renameat2,link,linkat,unlink,unlinkat"
   elif [ $STVAL = file3 ]; then
     STOPT="read,write,open,openat,close,rename,renameat,renameat2,link,linkat,unlink,unlinkat"
+  elif [ $STVAL = file4 ]; then
+    STOPT="rename,renameat,renameat2,link,linkat,unlink,unlinkat"
   elif [ $STVAL = timesum ]; then
     STIME=true
   else
