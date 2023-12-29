@@ -287,13 +287,14 @@ if [ $NORUN -eq 0 ]; then
 else
   kill -STOP $COMPID
 fi
-dbgecho Killing monitor processes.
+msgecho Killing monitor processes.
 for MPID in "${MPIDS[@]}"; do
   if ps $MPID 2>&1 1>/dev/null; then
-    dbgecho Killing monitoring process $MPID.
+    msgecho Killing monitoring process $MPID.
     kill $MPID
   else
-    dbgecho "Unable to find and so not killing monitoring process $MPID."
+    msgecho "Unable to find and so not killing monitoring process $MPID."
   fi
 done
 } >>$TWRAPLOG 2>&1 # End redirected stdout,stderr
+msgecho End task wrapper
