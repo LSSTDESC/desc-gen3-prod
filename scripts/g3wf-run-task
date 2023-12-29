@@ -135,12 +135,15 @@ show-help() {
 
 ########## End functions. #########
 
-{ # Begin redirected stdout,stderr
 RUNLOG=$(g3wf-get-stderr)
-msgecho Run log is $RUNLOG
 RUNLOGBASE=$(echo $RUNLOG | sed 's/\.stderr$//g')
-msgecho Run log base is $RUNLOGBASE
-TASKLOG=$RUNLOGBASE.tasklog
+TWRAPLOG=$RUNLOGBASE.tasklog
+
+{ # Begin redirected stdout,stderr
+
+msgecho Task log base is $RUNLOGBASE
+msgecho Task log is $RUNLOG
+msgecho Task wrapper log is $TWRAPLOG
 
 # Read the command line.
 TSAM=10
@@ -204,7 +207,7 @@ fi
 if [ -n "$RUNPFX" ]; then
   RUNCOM="$RUNPFX $RUNCOM"
 fi
-} >$TASKLOG 2>&1 # End redirected stdout,stderr
+} >$TWRAPLOG 2>&1 # End redirected stdout,stderr
 
 # Create a stopped process that will exec the user command
 # when it is restarted.
@@ -293,4 +296,4 @@ for MPID in "${MPIDS[@]}"; do
     dbgecho "Unable to find and so not killing monitoring process $MPID."
   fi
 done
-} >$TASKLOG 2>&1 # End redirected stdout,stderr
+} >$TWRAPLOG 2>&1 # End redirected stdout,stderr
