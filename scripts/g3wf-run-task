@@ -122,12 +122,15 @@ show-help() {
   echo "      --wtree: Monitor process tree for this script."
   echo "   --procstat: Monitor status for the run process (/proc/PID/stat)."
   echo "     --cpunum: Monitor CPU number and affinity for the run process."
-  echo "    --iotrace: Run iotrace on the process."
-  echo "   --perfstat: Run task inside \"perf stat -d\"."
+  echo "    --iotrace: Run iotrace on the task process. Output in BASE.iotrace"
+  echo "  --perfstat1: Prppend the task process with \"perf stat -d\"."
+  echo "  --perfstat2: Run \"perf stat -d\" on the task process. Output in BASE.perfstat"
+  echo "   --perfstat: Same as perfstat2."
   echo "All monitoring commands are run every TSAM seconds with that period"
   echo "in seconds set to 10 or the preceding -t value."
   echo "All output lines for monitor flag --FFF begin with \"FFF[ TTT]: \""
   echo "where TTT is the time in seconds since the monitor was started."
+  echo "Task log file is BASE.stderr with BASE assigned by parsl."
 }
 
 ########## End functions. #########
@@ -182,8 +185,9 @@ while [ $# -gt 0 ]; do
     MCOMS+=("monloop cpunum $TSAM get-cpunum #PID#")
   elif [ $ARG = --iotrace ]; then
     DOIOTRACE=yes
-  elif [ $ARG = --perfstat ]; then
+  elif [ $ARG = --perfstat1 ]; then
     RUNPFX="perf stat -d"
+  elif [ $ARG = --perfstat2 -o $ARG = --perfstat ]; then
     DOPERFSTAT=yes
   else
     msgecho "ERROR: Invalid flag: $ARG"
@@ -244,7 +248,7 @@ fi
 
 if [ $DOPERFSTAT = yes ]; then
   msgecho "Starting perf stat for process $COMPID"
-  perf stat -p $COMPID -o $RUNLOGBASE.perfstat 2>&1 1>$RUNLOGBASE.perfstat.stdout &
+  perf stat -d -p $COMPID -o $RUNLOGBASE.perfstat 2>&1 1>$RUNLOGBASE.perfstat.stdout &
 fi
 
 if [ $DBG -gt 0 ]; then
@@ -264,11 +268,13 @@ dbgecho ${NRPRE}Starting process $COMPID
 msgecho Starting command process $COMPID: $RUNCOM
 if [ $NORUN -eq 0 ]; then
   kill -CONT $COMPID
-  while ps -p $COMPID 2>&1 1>/dev/null; do
-    dbgecho "Waiting for command process $COMPID to end."
-    #pstree -pg $BASHPID
-    sleep 1
-  done
+  dbgecho "Waiting for command process $COMPID to end."
+  wait $COMPID
+  #while ps -p $COMPID 2>&1 1>/dev/null; do
+  #  dbgecho "Waiting for command process $COMPID to end."
+  #  #pstree -pg $BASHPID
+  #  sleep 1
+  #done
   msgecho Command process ended.
 else
   kill -STOP $COMPID
