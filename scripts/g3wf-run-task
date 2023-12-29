@@ -135,15 +135,19 @@ show-help() {
 
 ########## End functions. #########
 
-RUNLOG=$(g3wf-get-stderr)
-RUNLOGBASE=$(echo $RUNLOG | sed 's/\.stderr$//g')
-TWRAPLOG=$RUNLOGBASE.tasklog
+TSTART=$(date +%s.%N)
+TASKLOG=$(g3wf-get-stderr)
+LOGBASE=$(echo $TASKLOG | sed 's/\.stderr$//g')
+TWRAPLOG=$LOGBASE.tasklog
+MONILOG=$LOGBASE.monitor
 
 { # Begin redirected stdout,stderr
 
-msgecho Task log base is $RUNLOGBASE
-msgecho Task log is $RUNLOG
+msgecho Begin task wrapper
+msgecho Log base is $LOGBASE
+msgecho Task log is $TASKLOG
 msgecho Task wrapper log is $TWRAPLOG
+msgecho Monitor log is $MONILOG
 
 # Read the command line.
 TSAM=10
@@ -207,7 +211,7 @@ fi
 if [ -n "$RUNPFX" ]; then
   RUNCOM="$RUNPFX $RUNCOM"
 fi
-} >$TWRAPLOG 2>&1 # End redirected stdout,stderr
+} >>$TWRAPLOG 2>&1 # End redirected stdout,stderr
 
 # Create a stopped process that will exec the user command
 # when it is restarted.
@@ -234,7 +238,7 @@ if [ $NMCOM -gt 0 ]; then
       MCOM=$(echo $MCOM | sed "s/#PID#/$COMPID/g")
       dbgecho "  $MCOM"
       if [ $NORUN -eq 0 ]; then
-        $MCOM &
+        $MCOM >>$MONILOG 2>&1 &&
         MPID=$!
         if ps $MPID 2>&1 1>/dev/null; then
           MPIDS+=($MPID)
@@ -251,12 +255,12 @@ if [ $DBG -gt 1 ]; then exit 0; fi
 
 if [ $DOIOTRACE = yes ]; then
   msgecho "Starting iotrace for process $COMPID"
-  iotrace -f -p $COMPID -report $RUNLOGBASE.iotrace 1>$RUNLOGBASE.iotrace.stdout 2>&1 &
+  iotrace -f -p $COMPID -report $LOGBASE.iotrace 1>$LOGBASE.iotrace.stdout 2>&1 &
 fi
 
 if [ $DOPERFSTAT = yes ]; then
   msgecho "Starting perf stat for process $COMPID"
-  perf stat -d -p $COMPID -o $RUNLOGBASE.perfstat 2>&1 1>$RUNLOGBASE.perfstat.stdout &
+  perf stat -d -p $COMPID -o $LOGBASE.perfstat 2>&1 1>$LOGBASE.perfstat.stdout &
 fi
 
 if [ $DBG -gt 0 ]; then
@@ -276,13 +280,8 @@ dbgecho ${NRPRE}Starting process $COMPID
 msgecho Starting command process $COMPID: $RUNCOM
 if [ $NORUN -eq 0 ]; then
   kill -CONT $COMPID
-  dbgecho "Waiting for command process $COMPID to end."
+  msgecho "Waiting for command process $COMPID to end."
   wait $COMPID
-  #while ps -p $COMPID 2>&1 1>/dev/null; do
-  #  dbgecho "Waiting for command process $COMPID to end."
-  #  #pstree -pg $BASHPID
-  #  sleep 1
-  #done
   msgecho Command process ended.
 else
   kill -STOP $COMPID
@@ -296,4 +295,4 @@ for MPID in "${MPIDS[@]}"; do
     dbgecho "Unable to find and so not killing monitoring process $MPID."
   fi
 done
-} >$TWRAPLOG 2>&1 # End redirected stdout,stderr
+} >>$TWRAPLOG 2>&1 # End redirected stdout,stderr
