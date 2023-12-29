@@ -296,5 +296,5 @@ for MPID in "${MPIDS[@]}"; do
     msgecho "Unable to find and so not killing monitoring process $MPID."
   fi
 done
-} >>$TWRAPLOG 2>&1 # End redirected stdout,stderr
 msgecho End task wrapper
+} >>$TWRAPLOG 2>&1 # End redirected stdout,stderr
