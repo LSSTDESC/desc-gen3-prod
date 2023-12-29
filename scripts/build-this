@@ -1,0 +1,40 @@
+#!/bin/bash
+
+# build-this
+#
+# Build this package locally and commit and push any changes.
+
+DEFISS=5
+ISS=${1}
+
+if [ "$ISS" = "-h" ]; then
+  echo "Usage: ./build-this: ISSUE [MESSAGE]
+  echo "   or: ./build-this: [MESSAGE]
+  echo "    ISSUE: The desc-gen3-prod issue number [$DEFISSUE]."
+  echo "  MESSAGE: Brief message for the git log."
+  exit 0
+fi
+
+if [ -n "$ISS" -a "$ISS" -eq "$ISS" 2>/dev/null ]; then
+  shift
+else
+  ISS=$DEFISS
+fi
+MSG="$*"
+if [ -z "$MSG" ]; then
+  MSG="Version"
+fi
+
+VER=$(grep version ../setup.cfg | head -1 | sed 's/^version = //g')
+if [ $VER = $(desc-gen3-prod-version) ]; then
+  echo Please increment the version in ../setup.cfg.
+  exit 1
+fi
+
+echo "***** Building $VER *****" && \
+pip install .. && \
+echo "***** Committing $VER for issue $ISS *****" && \
+git commit -a -m "$MSG $VER #$ISS"
+echo "***** Pushing $VER for issue $ISS *****" && \
+git push && \
+echo "***** Done *****"
