@@ -236,13 +236,16 @@ if [ $NMCOM -gt 0 ]; then
   for IMCOM in "${!MCOMS[@]}"; do
       MCOM=${MCOMS[$IMCOM]}
       MCOM=$(echo $MCOM | sed "s/#PID#/$COMPID/g")
+      SUFF=$(echo ${MCOM:7} | sed 's/ .*//g')
+      MONILOG=$LOGBASE.$SUFF
       dbgecho "  $MCOM"
       if [ $NORUN -eq 0 ]; then
-        $MCOM >>$MONILOG 2>&1 &&
+        $MCOM >$MONILOGU 2>&1 &
         MPID=$!
         if ps $MPID 2>&1 1>/dev/null; then
           MPIDS+=($MPID)
           msgecho Started monitoring process $MPID: $MCOM
+          msgecho Output: $MONILOG
         else
           msgecho "Unable to start monitoring command: $MCOM"
         fi
