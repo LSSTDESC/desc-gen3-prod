@@ -139,7 +139,6 @@ TSTART=$(date +%s.%N)
 TASKLOG=$(g3wf-get-stderr)
 LOGBASE=$(echo $TASKLOG | sed 's/\.stderr$//g')
 TWRAPLOG=$LOGBASE.tasklog
-MONILOG=$LOGBASE.monitor
 
 { # Begin redirected stdout,stderr
 
@@ -147,7 +146,6 @@ msgecho Begin task wrapper
 msgecho Log base is $LOGBASE
 msgecho Task log is $TASKLOG
 msgecho Task wrapper log is $TWRAPLOG
-msgecho Monitor log is $MONILOG
 
 # Read the command line.
 TSAM=10
@@ -240,7 +238,7 @@ if [ $NMCOM -gt 0 ]; then
       MONILOG=$LOGBASE.$SUFF
       dbgecho "  $MCOM"
       if [ $NORUN -eq 0 ]; then
-        $MCOM >$MONILOGU 2>&1 &
+        $MCOM >$MONILOG 2>&1 &
         MPID=$!
         if ps $MPID 2>&1 1>/dev/null; then
           MPIDS+=($MPID)
