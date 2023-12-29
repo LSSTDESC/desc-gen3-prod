@@ -95,7 +95,7 @@ monloop() {
 # Display a message line with prefix.
 DBG=0
 msgecho() {
-  echo "<<<<<$(date)>>>>> $*" >&2
+  echo "<<<<<$(date)>>>>> $*"
   return 0
 }
 
@@ -103,7 +103,7 @@ msgecho() {
 DBG=0
 dbgecho() {
   if [ $DBG -gt 0 ]; then
-    msgecho $*
+    msgecho "$*"
     return 0
   fi
   return 1
@@ -135,10 +135,12 @@ show-help() {
 
 ########## End functions. #########
 
+{ # Begin redirected stdout,stderr
 RUNLOG=$(g3wf-get-stderr)
 msgecho Run log is $RUNLOG
 RUNLOGBASE=$(echo $RUNLOG | sed 's/\.stderr$//g')
 msgecho Run log base is $RUNLOGBASE
+TASKLOG=$RUNLOGBASE.tasklog
 
 # Read the command line.
 TSAM=10
@@ -202,11 +204,14 @@ fi
 if [ -n "$RUNPFX" ]; then
   RUNCOM="$RUNPFX $RUNCOM"
 fi
+} >$TASKLOG 2>&1 # End redirected stdout,stderr
 
 # Create a stopped process that will exec the user command
 # when it is restarted.
 (runcom "$RUNCOM") &
 COMPID=$!
+
+{ # Begin redirected stdout,stderr
 dbgecho Command pid is $COMPID
 # Wait for the user process to stop.
 while [ $(procstate $COMPID) != T ]; do
@@ -288,3 +293,4 @@ for MPID in "${MPIDS[@]}"; do
     dbgecho "Unable to find and so not killing monitoring process $MPID."
   fi
 done
+} >$TASKLOG 2>&1 # End redirected stdout,stderr
