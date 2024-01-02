@@ -7,7 +7,9 @@
 #
 # Run strace without output file that replaces stderr
 # XXX.stderr --> XXX.strace
-
+#
+# Jan2024: This command is now obsolete as the block of code calling it
+#          from runapp-g3wfpipe has been removed.
 
 DOTRACE=true
 ARGS=

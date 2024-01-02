@@ -260,7 +260,7 @@ TMAX2=
 TMAX3=
 PGROUPS=
 PMONDT=${CON_PMONDT:-3}
-STRACE=$CON_STRACE
+WOPTS="$CON_WOPTS"
 REBUILD=false
 for OPT in ${HOPTS[@]}; do
   info_echo Processing howfig opt $OPT
@@ -290,8 +290,8 @@ for OPT in ${HOPTS[@]}; do
     PGROUPS=$(echo ${OPT:6} | sed 's/:/ /g')
   elif [ ${OPT:0:6} = bproc: ]; then
     if ! echo $WFARGS | grep proc 1>/dev/null; then
-      err_echo WFARGS: $WFARGS
-      err_echo howfig bproc requires proc in config.
+      err_echo "WFARGS: $WFARGS"
+      err_echo "howfig bproc requires proc in config."
       exit 14
     fi
     BPROC=true
@@ -320,12 +320,8 @@ for OPT in ${HOPTS[@]}; do
       err_echo Butler dir not found: $BUTLER_DIR
       exit 15
     fi
-  elif [ ${OPT:0:7} = "strace:" -a ${#OPT} -gt 7 ]; then
-    STRACE=${OPT:7}
-  elif [ $OPT = strace ]; then
-    STRACE=file2
-  elif [ $OPT = stime ]; then
-    STRACE=timesum
+  elif [ ${OPT:0:6} = "strace" -a ${#OPT} -gt 6 ]; then
+    WOPTS=${WOPTS}${WOPTS:+ }$OPT
   else
     err_echo Invalid howfig field: $OPT
     exit 13
@@ -339,47 +335,10 @@ fi
 
 # Define the task command prepend.
 PREPEND="g3wf-run-task --perfstat -t 5 --cpunum --procctxt --iotrace --strace4"
-if [ -n "$STRACE" ]; then
-  info_echo "Decoding STRACE = \"$STRACE\""
-  STOPT=
-  STIME=
-  STFREQ=1
-  VALS=($(echo $STRACE | tr ":" "\n" ))
-  STVAL=
-  for VAL in ${VALS[@]}; do
-    if [ "${VAL:0:1}" = n ]; then
-      STFREQ=${VAL:1}
-      if ! [ "$STFREQ" -eq "$STFREQ" ] 2>/dev/null; then
-        err_echo strace frequency must be a number: $VAL
-        exit 14
-      fi
-    elif [ -z "$STVAL" ]; then
-      STVAL=$VAL
-    else
-      STVAL=$STVAL,$VAL
-    fi
-  done
-  if [ $STVAL = file1 ]; then
-    STOPT="open,openat"
-  elif [ $STVAL = file2 ]; then
-    STOPT="open,openat,close,rename,renameat,renameat2,link,linkat,unlink,unlinkat"
-  elif [ $STVAL = file3 ]; then
-    STOPT="read,write,open,openat,close,rename,renameat,renameat2,link,linkat,unlink,unlinkat"
-  elif [ $STVAL = file4 ]; then
-    STOPT="rename,renameat,renameat2,link,linkat,unlink,unlinkat"
-  elif [ $STVAL = timesum ]; then
-    STIME=true
-  else
-    STOPT="trace=$STVAL"
-  fi
-  if [ -n "$STIME" ]; then
-    info_echo "Tasks will be run with an strace time summary"
-    PREPEND="g3wf-strace-redirect -f -c $PREPEND"
-  else
-    info_echo "Tasks will run strace with expression $STOPT"
-    PREPEND="g3wf-strace-redirect --freq=$STFREQ --args=\"-t -T -C -f -e $STOPT\" $PREPEND"
-  fi
-fi
+for WOPT in $WOPTS; do
+  FLAG=--$WOPT
+  PREPEND="$PREPEND $FLAG"
+done
 info_echo "Command prepend: \"$PREPEND\""
 
 # Record the setup for continuation jobs.
@@ -390,7 +349,7 @@ echo "CON_QUERY=\"$QUERY\"" >>consetup.sh
 echo "CON_PREPEND=\"$PREPEND\"" >>consetup.sh
 echo "CON_PIPE=$PIPE" >>consetup.sh
 echo "CON_PMONDT=$PMONDT" >>consetup.sh
-echo "CON_STRACE=$STRACE" >>consetup.sh
+echo "CON_WOPTS=\"$WOPTS\"" >>consetup.sh
 
 if [ $DOINIT = true ]; then
 PIPEVAL=

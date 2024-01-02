@@ -1,0 +1,52 @@
+#! /bin/bash
+
+# g3wf-strace
+#
+# Return the strace command for a g3wf strace config.
+# Supported configs:
+#    strace:Fl1:FLD2:... - Report  FLD1,FLD2, ...
+#    strace1 - Report file opens and closes
+#    strace2 - Report file opens, closes, renames and links
+#    strace3 - Report file opens, closes, renames, links, read and writes
+#    strace4 - Report file renames and links
+#    straces - Report strace time summary
+
+CFG=${1:-"-h"}
+if [ $CFG = -h ]; then
+  echo Usage: $(basename $0): CFG
+  echo Returns the command to run strace for config CFG.
+  exit 0
+fi
+
+STOPT=
+STIME=
+if [ ${CFG:0:7} = 'strace:' ]; then
+  VALS=($(echo $CFG | tr ":" "\n" ))
+  for VAL in ${VALS[@]}; do
+    if [ -z "$STVAL" ]; then
+      STVAL=$VAL
+    else
+      STVAL=$STVAL,$VAL
+    fi
+  done
+elif [ $CFG = strace1 ]; then
+  STOPT="open,openat"
+elif [ $CFG = strace2 ]; then
+  STOPT="open,openat,close,rename,renameat,renameat2,link,linkat,unlink,unlinkat"
+elif [ $CFG = strace3 ]; then
+  STOPT="read,write,open,openat,close,rename,renameat,renameat2,link,linkat,unlink,unlinkat"
+elif [ $CFG = strace4 ]; then
+  STOPT="rename,renameat,renameat2,link,linkat,unlink,unlinkat"
+elif [ $CFG = straces ]; then
+  STIME=true
+else
+  echo Invalid strace config: $CFG
+  exit 1
+fi
+
+if [ -n "$STIME" ]; then
+  info_echo "Tasks will be run with an strace time summary"
+  echo "strace -f -c"
+else
+  echo "strace -t -T -C -f -e $STOPT"
+fi
