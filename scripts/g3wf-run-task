@@ -156,6 +156,7 @@ RUNPFX="time"
 NORUN=0
 DOIOTRACE=no
 DOPERFSTAT=no
+STRACES=
 while [ $# -gt 0 ]; do
   ARG=$1
   if [ ${ARG:0:1} != "-" ]; then
@@ -197,6 +198,8 @@ while [ $# -gt 0 ]; do
     RUNPFX="time perf stat -d"
   elif [ $ARG = --perfstat2 -o $ARG = --perfstat ]; then
     DOPERFSTAT=yes
+  elif [ ${ARG:0:7} = --strace ]; then
+    STRACES=${STRACES}${STRACES:+ }${ARG:2}
   else
     msgecho "ERROR: Invalid flag: $ARG"
     exit 1
@@ -264,6 +267,15 @@ if [ $DOPERFSTAT = yes ]; then
   msgecho "Starting perf stat for process $COMPID"
   perf stat -d -p $COMPID -o $LOGBASE.perfstat >$LOGBASE.perfstat.stdout 2>&1 &
 fi
+
+for STRACE in $STRACES; do
+  if STCOM=$(g3wf-strace-command $STRACE); then
+    msgecho "Adding $STRACE for process $COMPID"
+    $STCOM -p $COMPID -o $LOGBASE.$STRACE >$LOGBASE.$STRACE.stdout 2>&1 &
+  else
+    msgecho: WARNING: Ignoring invalid strace config: $STRACE
+  fi
+done
 
 if [ $DBG -gt 0 ]; then
   dbgecho  Displaying process $COMPID

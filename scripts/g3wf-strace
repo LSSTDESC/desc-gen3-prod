@@ -13,7 +13,7 @@
 
 CFG=${1:-"-h"}
 if [ $CFG = -h ]; then
-  echo Usage: $(basename $0): CFG
+  echo Usage: $(basename $0): CFG [OUTFILE]
   echo Returns the command to run strace for config CFG.
   exit 0
 fi
@@ -45,8 +45,13 @@ else
 fi
 
 if [ -n "$STIME" ]; then
-  info_echo "Tasks will be run with an strace time summary"
-  echo "strace -f -c"
+  COM="strace -f -c"
 else
-  echo "strace -t -T -C -f -e $STOPT"
+  COM="strace -t -T -C -f -e $STOPT"
 fi
+
+if [ -n "$OUTFILE" ]; then
+  COM="$COM -o $OUTFILE"
+fi
+
+echo $COM
