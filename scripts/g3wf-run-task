@@ -12,10 +12,11 @@
 
 # Start process for a command and stop it immediately.
 # The command will be started when signal CONT is set to the process.
+# Exec with bash so we use the bash time command.
 runcom() {
   MYPID=$BASHPID
   kill -SIGSTOP $MYPID
-  exec $@
+  exec bash -c "$@"
 }
 
 # Return the state for a process.
@@ -213,7 +214,7 @@ fi
 
 # Create a stopped process that will exec the user command
 # when it is restarted.
-(runcom "$RUNCOM") &
+(time runcom "$RUNCOM") &
 COMPID=$!
 
 { # Begin redirected stdout,stderr
