@@ -210,24 +210,24 @@ fi
 if [ -n "$RUNPFX" ]; then
   RUNCOM="$RUNPFX $RUNCOM"
 fi
+dbgecho DEBUG is on
+dbgecho Script pid is $BASHPID
+dbgecho User command: $RUNCOM
 } >>$TWRAPLOG 2>&1 # End redirected stdout,stderr
 
 # Create a stopped process that will exec the user command
 # when it is restarted.
-(time runcom "$RUNCOM") &
+(runcom "$RUNCOM") &
 COMPID=$!
 
 { # Begin redirected stdout,stderr
 dbgecho Command pid is $COMPID
+
 # Wait for the user process to stop.
 while [ $(procstate $COMPID) != T ]; do
   dbgecho "Waiting for command process $COMPID to be ready."
   sleep 1
 done
-
-dbgecho DEBUG is on
-dbgecho Script pid is $BASHPID
-dbgecho User command: $RUNCOM
 
 NMCOM=${#MCOMS[@]}
 if [ $NMCOM -gt 0 ]; then
@@ -299,3 +299,4 @@ for MPID in "${MPIDS[@]}"; do
 done
 msgecho End task wrapper
 } >>$TWRAPLOG 2>&1 # End redirected stdout,stderr
+exit 0

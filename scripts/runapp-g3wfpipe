@@ -338,16 +338,9 @@ if [ $PMONDT != false ] && [ $PMONDT != $PMONDT ]; then
 fi
 
 # Define the task command prepend.
-#PREPEND="iotrace -cmd time perf stat -d"
-#PREPEND="time perf stat -d"
-#PREPEND="perf stat -d"
-PREPEND="g3wf-run-task --perfstat -t 5 --cpunum --procctxt --iotrace"
+PREPEND="g3wf-run-task --perfstat -t 5 --cpunum --procctxt --iotrace --strace4"
 if [ -n "$STRACE" ]; then
   info_echo "Decoding STRACE = \"$STRACE\""
-  #PREPEND="myiotrace $PREPEND"  # job000831
-  #PREPEND="strace -o strace.log -e read,write,open,openat,close $PREPEND" # 832
-  #PREPEND="strace -f -o strace.log -e read,write,open,openat,close $PREPEND"
-  #PREPEND="g3wf-strace -f -e read,write,open,openat,close,rename,renameat,renameat2,link,linkat,unlink,unlinkat $PREPEND"
   STOPT=
   STIME=
   STFREQ=1
@@ -381,10 +374,10 @@ if [ -n "$STRACE" ]; then
   fi
   if [ -n "$STIME" ]; then
     info_echo "Tasks will be run with an strace time summary"
-    PREPEND="g3wf-strace -f -c $PREPEND"
+    PREPEND="g3wf-strace-redirect -f -c $PREPEND"
   else
     info_echo "Tasks will run strace with expression $STOPT"
-    PREPEND="g3wf-strace --freq=$STFREQ --args=\"-t -T -C -f -e $STOPT\" $PREPEND"
+    PREPEND="g3wf-strace-redirect --freq=$STFREQ --args=\"-t -T -C -f -e $STOPT\" $PREPEND"
   fi
 fi
 info_echo "Command prepend: \"$PREPEND\""
