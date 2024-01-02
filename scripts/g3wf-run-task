@@ -151,7 +151,7 @@ msgecho Task wrapper log is $TWRAPLOG
 TSAM=10
 MCOMS=()
 MPIDS=()
-RUNPFX=
+RUNPFX="time"
 NORUN=0
 DOIOTRACE=no
 DOPERFSTAT=no
@@ -193,7 +193,7 @@ while [ $# -gt 0 ]; do
   elif [ $ARG = --iotrace ]; then
     DOIOTRACE=yes
   elif [ $ARG = --perfstat1 ]; then
-    RUNPFX="perf stat -d"
+    RUNPFX="time perf stat -d"
   elif [ $ARG = --perfstat2 -o $ARG = --perfstat ]; then
     DOPERFSTAT=yes
   else
