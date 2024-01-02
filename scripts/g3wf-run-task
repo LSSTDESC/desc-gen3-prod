@@ -198,7 +198,7 @@ while [ $# -gt 0 ]; do
     RUNPFX="time perf stat -d"
   elif [ $ARG = --perfstat2 -o $ARG = --perfstat ]; then
     DOPERFSTAT=yes
-  elif [ ${ARG:0:7} = --strace ]; then
+  elif [ ${ARG:0:8} = --strace ]; then
     STRACES=${STRACES}${STRACES:+ }${ARG:2}
   else
     msgecho "ERROR: Invalid flag: $ARG"
