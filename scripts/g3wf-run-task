@@ -83,7 +83,7 @@ monloop() {
     TIM=$(tstamp)
     DTIM=$(echo $TIM - $T0 | bc -l)
     FTIM="$(printf "%10.3f" $DTIM)"
-    $LCOM 2>&1 >>$TMPFIL
+    $LCOM >>$TMPFIL 2>&1
     sed -i "s/^/$LAB[$FTIM]: /g" $TMPFIL
     cat $TMPFIL >&2
     rm -f $TMPFIL
@@ -240,7 +240,7 @@ if [ $NMCOM -gt 0 ]; then
       if [ $NORUN -eq 0 ]; then
         $MCOM >$MONILOG 2>&1 &
         MPID=$!
-        if ps $MPID 2>&1 1>/dev/null; then
+        if ps $MPID 1>/dev/null 2>&1; then
           MPIDS+=($MPID)
           msgecho Started monitoring process $MPID: $MCOM
           msgecho Output: $MONILOG
@@ -261,7 +261,7 @@ fi
 
 if [ $DOPERFSTAT = yes ]; then
   msgecho "Starting perf stat for process $COMPID"
-  perf stat -d -p $COMPID -o $LOGBASE.perfstat 2>&1 1>$LOGBASE.perfstat.stdout &
+  perf stat -d -p $COMPID -o $LOGBASE.perfstat >$LOGBASE.perfstat.stdout 2>&1 &
 fi
 
 if [ $DBG -gt 0 ]; then
@@ -289,7 +289,7 @@ else
 fi
 msgecho Killing monitor processes.
 for MPID in "${MPIDS[@]}"; do
-  if ps $MPID 2>&1 1>/dev/null; then
+  if ps $MPID 1>/dev/null 2>&1; then
     msgecho Killing monitoring process $MPID.
     kill $MPID
   else
