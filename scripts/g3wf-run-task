@@ -207,7 +207,7 @@ while [ $# -gt 0 ]; do
 done
 RUNCOM="$*"
 if [ -z "$RUNCOM" ]; then
-  msgecho ERROR: Run command not found.
+  msgecho ERROR: Task command not found.
   exit 1
 fi
 if [ -n "$RUNPFX" ]; then
@@ -215,20 +215,20 @@ if [ -n "$RUNPFX" ]; then
 fi
 dbgecho DEBUG is on
 dbgecho Script pid is $BASHPID
-dbgecho User command: $RUNCOM
+dbgecho Task command: $RUNCOM
 } >>$TWRAPLOG 2>&1 # End redirected stdout,stderr
 
-# Create a stopped process that will exec the user command
+# Create a stopped process that will exec the task command
 # when it is restarted.
 (runcom "$RUNCOM") &
 COMPID=$!
 
 { # Begin redirected stdout,stderr
-dbgecho Command pid is $COMPID
+msgecho Command pid is $COMPID
 
 # Wait for the user process to stop.
 while [ $(procstate $COMPID) != T ]; do
-  dbgecho "Waiting for command process $COMPID to be ready."
+  dbgecho "Waiting for task process $COMPID to be ready."
   sleep 1
 done
 
@@ -260,24 +260,23 @@ if [ $DBG -gt 1 ]; then exit 0; fi
 
 TRACE=false
 if [ $DOIOTRACE = yes ]; then
-  msgecho "Starting iotrace for process $COMPID"
+  msgecho "Starting iotrace for task process $COMPID"
   iotrace -f -p $COMPID -report $LOGBASE.iotrace 1>$LOGBASE.iotrace.stdout 2>&1 &
   TRACE=true
 fi
 
 if [ $DOPERFSTAT = yes ]; then
-  msgecho "Starting perf stat for process $COMPID"
+  msgecho "Starting perf stat for task process $COMPID"
   perf stat -d -p $COMPID -o $LOGBASE.perfstat >$LOGBASE.perfstat.stdout 2>&1 &
 fi
 
 for STRACE in $STRACES; do
   if STCOM=$(g3wf-strace-command $STRACE); then
     if [ $TRACE = true ]; then
-      msgecho WARNING: Only one trace may be run on a process.
-      msgecho WARNING: Ignoring strace config: $STRACE
+      msgecho WARNING: Only one trace may be run on a process. Ignoring strace config: $STRACE
       continue
     fi
-    msgecho "Adding $STRACE for process $COMPID"
+    msgecho "Adding $STRACE for task process $COMPID"
     $STCOM -p $COMPID -o $LOGBASE.$STRACE >$LOGBASE.$STRACE.stdout 2>&1 &
   else
     msgecho: WARNING: Ignoring invalid strace config: $STRACE
@@ -285,7 +284,7 @@ for STRACE in $STRACES; do
 done
 
 if [ $DBG -gt 0 ]; then
-  dbgecho  Displaying process $COMPID
+  dbgecho  Displaying task process $COMPID:
   ps -f $COMPID
 fi
 
@@ -297,11 +296,11 @@ else
 fi
 
 # Start the process.
-dbgecho ${NRPRE}Starting process $COMPID
-msgecho Starting command process $COMPID: $RUNCOM
+dbgecho ${NRPRE}Starting task process $COMPID
+msgecho Starting task process $COMPID: $RUNCOM
 if [ $NORUN -eq 0 ]; then
   kill -CONT $COMPID
-  msgecho "Waiting for command process $COMPID to end."
+  msgecho "Waiting for task process $COMPID to end."
   wait $COMPID
   msgecho Command process ended.
 else
@@ -310,10 +309,12 @@ fi
 msgecho Killing monitor processes.
 for MPID in "${MPIDS[@]}"; do
   if ps $MPID 1>/dev/null 2>&1; then
-    msgecho Killing monitoring process $MPID.
-    kill $MPID
+    msgecho Killing monitor process $MPID.
+    if ! EMSG=$(kill $MPID 2>&1); then
+       msgecho WARNING: Kill failed: $EMSG
+    fi
   else
-    msgecho "Unable to find and so not killing monitoring process $MPID."
+    msgecho "WARNING: Unable to find and so not killing monitoring process $MPID."
   fi
 done
 msgecho End task wrapper
