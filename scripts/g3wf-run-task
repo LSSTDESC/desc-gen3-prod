@@ -224,7 +224,7 @@ dbgecho Task command: $RUNCOM
 COMPID=$!
 
 { # Begin redirected stdout,stderr
-msgecho Command pid is $COMPID
+msgecho Task process ID is $COMPID
 
 # Wait for the user process to stop.
 while [ $(procstate $COMPID) != T ]; do
@@ -302,7 +302,7 @@ if [ $NORUN -eq 0 ]; then
   kill -CONT $COMPID
   msgecho "Waiting for task process $COMPID to end."
   wait $COMPID
-  msgecho Command process ended.
+  msgecho Task process ended.
 else
   kill -STOP $COMPID
 fi
