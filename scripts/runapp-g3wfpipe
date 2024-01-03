@@ -319,6 +319,8 @@ for OPT in ${HOPTS[@]}; do
     fi
   elif [ ${OPT:0:6} = "strace" -a ${#OPT} -gt 6 ]; then
     WOPTS=${WOPTS}${WOPTS:+ }$OPT
+  elif [ $OPT = iotrace ]; then
+    WOPTS=${WOPTS}${WOPTS:+ }$OPT
   else
     err_echo Invalid howfig field: $OPT
     exit 13
@@ -331,7 +333,7 @@ if [ $PMONDT != false ] && [ $PMONDT != $PMONDT ]; then
 fi
 
 # Define the task command prepend.
-PREPEND="g3wf-run-task --perfstat -t 5 --cpunum --procctxt --iotrace --strace4"
+PREPEND="g3wf-run-task --perfstat --iotrace -t 5 --cpunum --procctxt"
 for WOPT in $WOPTS; do
   FLAG=--$WOPT
   PREPEND="$PREPEND $FLAG"
