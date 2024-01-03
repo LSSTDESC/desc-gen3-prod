@@ -123,7 +123,7 @@ show-help() {
   echo "      --wtree: Monitor process tree for this script."
   echo "   --procstat: Monitor status for the run process (/proc/PID/stat)."
   echo "     --cpunum: Monitor CPU number and affinity for the run process."
-  echo "  --straceXXX: Run strace with config straceXXX. See g3wf-strace-command for config values.
+  echo "  --straceXXX: Run strace with config straceXXX. See g3wf-strace-command for config values."
   echo "  --perfstat1: Prppend the task process with \"perf stat -d\"."
   echo "  --perfstat2: Run \"perf stat -d\" on the task process. Output in BASE.perfstat"
   echo "   --perfstat: Same as perfstat2."
