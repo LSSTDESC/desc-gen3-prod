@@ -123,7 +123,7 @@ show-help() {
   echo "      --wtree: Monitor process tree for this script."
   echo "   --procstat: Monitor status for the run process (/proc/PID/stat)."
   echo "     --cpunum: Monitor CPU number and affinity for the run process."
-  echo "    --iotrace: Run iotrace on the task process. Output in BASE.iotrace"
+  echo "  --straceXXX: Run strace with config straceXXX. See g3wf-strace-command for config values.
   echo "  --perfstat1: Prppend the task process with \"perf stat -d\"."
   echo "  --perfstat2: Run \"perf stat -d\" on the task process. Output in BASE.perfstat"
   echo "   --perfstat: Same as perfstat2."
@@ -258,9 +258,11 @@ else
 fi
 if [ $DBG -gt 1 ]; then exit 0; fi
 
+TRACE=false
 if [ $DOIOTRACE = yes ]; then
   msgecho "Starting iotrace for process $COMPID"
   iotrace -f -p $COMPID -report $LOGBASE.iotrace 1>$LOGBASE.iotrace.stdout 2>&1 &
+  TRACE=true
 fi
 
 if [ $DOPERFSTAT = yes ]; then
@@ -270,6 +272,11 @@ fi
 
 for STRACE in $STRACES; do
   if STCOM=$(g3wf-strace-command $STRACE); then
+    if [ $TRACE = true ]; then
+      msgecho WARNING: Only one trace may be run on a process.
+      msgecho WARNING: Ignoring strace config: $STRACE
+      continue
+    fi
     msgecho "Adding $STRACE for process $COMPID"
     $STCOM -p $COMPID -o $LOGBASE.$STRACE >$LOGBASE.$STRACE.stdout 2>&1 &
   else
