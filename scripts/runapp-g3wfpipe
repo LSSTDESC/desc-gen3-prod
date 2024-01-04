@@ -66,8 +66,8 @@ if [[ -z $1 || $1 = -h ]]; then
 fi
 
 DBG=0
-SFIL=current-status.txt
-LFIL=debug-g3wfpipe.log
+SFIL=$(pwd)/current-status.txt
+LFIL=$(pwd)/debug-g3wfpipe.log
 
 err_echo() {
   MSG="$*"
