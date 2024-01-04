@@ -1,13 +1,18 @@
 #!/bin/bash
 
-LVER=$1
-TAG=${2:-16}
+LVER=${1:-$(cat lsst-version.txt)}
+TAG=${2:-$(cat image-version.txt)}
+DNAM=${3:-$(cat docker-username.txt)}
 NAME=$(basename $PWD)
-if [ -z "$TAG" -o "$TAG" = -h ]; then
-  echo Usage: $0 TAG
+if [ $LVER = -h ]; then
+  echo Usage: $0 LSST-VERSION [TAG] [DOCKER-USERNAME]
+  echo "  LSST-VERSION default is in lsst-version.txt"
+  echo "  TAG default is in image-version.txt"
+  echo "  DOCKER-USERNAME default is in docker-username.txt"
   exit 0
 fi
-cat dockerfile-$TAG | sed s"/%LSSTVERSION%/$LVER/g" > fix-dockerfile-$LVER-$TAG
+cp ../../scripts/build-iotrace .
+cat dockerfile-$TAG | sed s"/%LSSTVERSION%/$LVER/g" | sed s"/%DOCKERUSERNAME%/$DNAM/g" > fix-dockerfile-$LVER-$TAG
 echo Building $NAME
 FULLNAME=$NAME-$LVER:$TAG
 LOG=$FULLNAME.log

@@ -39,7 +39,7 @@ Replace dladams with the docker username of the installer.
 </pre>
 Test as above.
 
-On perlmutter or cori, install with shifter:
+At NERSC, e.g. on perlmutter, install with shifter:
 <pre>
 > shifterimg -v pull dladams/gen3workflow-LVER:XX
 </pre>
@@ -59,3 +59,6 @@ On perlmutter or cori, install with shifter:
 12 - Switch to Jim's RX to for w2332 via g3wf-install-parsl-w2332: fails with missing IPython
 13 - Try to fix 12 but the new parsl is not picked up?
 14 - Start from 09 and add workqueue
+
+
+17 - Start from 16 and add iotrace.

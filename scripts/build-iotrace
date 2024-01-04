@@ -1,0 +1,17 @@
+#!/bin/bash
+
+INSDIR=${1:-/usr/local/sbin}
+INSPFX=
+if [ "$(stat -c %U $INSDIR)" != "$(whoami)" ]; then
+  INSPFX="sudo "
+fi
+
+mkdir -p dev/iotrace
+cd dev/iotrace
+echo Cloning iotrace
+git clone https://github.com/avner-levy/iotrace.git
+cd iotrace
+echo Building iotrace
+make
+echo Installing iotrace
+${INSPFX}ln -s $(pwd)/build/apps/iotrace /usr/local/sbin

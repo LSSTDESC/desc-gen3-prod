@@ -1,0 +1,9 @@
+FROM %DOCKERUSERNAME%/gen3workflow-%LSSTVERSION%:16
+
+USER root
+
+WORKDIR /build
+RUN echo source /opt/lsst/software/stack/loadLSST.bash >setup.sh
+RUN echo setup lsst_distrib >>setup.sh
+COPY build-iotrace build-iotrace
+RUN source setup.sh && ./build-iotrace

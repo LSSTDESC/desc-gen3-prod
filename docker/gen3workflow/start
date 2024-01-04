@@ -36,9 +36,9 @@ if [ -n "$HELP" ]; then
   exit 0
 fi
 
-LVER=$1
+LVER=${1:-$(cat lsst-version.txt)}
 shift
-TAG=$1
+TAG=${1:-$(cat image-version.txt)}
 shift
 # Remaining arguments are passed to the container.
 COPTS="$*"

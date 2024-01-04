@@ -1,12 +1,12 @@
-LVER=$1
-VERS=${2:-16}
+LVER=${1:-$(cat lsst-version.txt)}
+VERS=${2:-$(cat image-version.txt)}
 if [ -z "$VERS" ]; then
   echo Usage: $0 VERSION
   exit 0
 fi
 NAME=$(basename $PWD)-$LVER
 LOCNAME=$NAME:$VERS
-TAGNAME=dladams/$NAME:$VERS
+TAGNAME=$(cat docker-username.txt)/$NAME:$VERS
 echo
 echo Tagging $TAGNAME
 docker image tag $LOCNAME $TAGNAME
