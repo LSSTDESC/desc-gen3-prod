@@ -126,7 +126,7 @@ show-help() {
   echo "  --straceXXX: Run strace with config straceXXX. See g3wf-strace-command for config values."
   echo "  --perfstat1: Prppend the task process with \"perf stat -d\"."
   echo "  --perfstat2: Run \"perf stat -d\" on the task process. Output in BASE.perfstat"
-  echo "   --perfstat: Same as perfstat2."
+  echo "   --perfstat: Same as perfstat1."
   echo "All monitoring commands are run every TSAM seconds with that period"
   echo "in seconds set to 10 or the preceding -t value."
   echo "All output lines for monitor flag --FFF begin with \"FFF[ TTT]: \""
@@ -194,9 +194,9 @@ while [ $# -gt 0 ]; do
     MCOMS+=("monloop cpunum $TSAM get-cpunum #PID#")
   elif [ $ARG = --iotrace ]; then
     DOIOTRACE=yes
-  elif [ $ARG = --perfstat1 ]; then
+  elif [ $ARG = --perfstat1 -o $ARG = --perfstat ]; then
     RUNPFX="time perf stat -d"
-  elif [ $ARG = --perfstat2 -o $ARG = --perfstat ]; then
+  elif [ $ARG = --perfstat2 ]; then
     DOPERFSTAT=yes
   elif [ ${ARG:0:8} = --strace ]; then
     STRACES=${STRACES}${STRACES:+ }${ARG:2}
