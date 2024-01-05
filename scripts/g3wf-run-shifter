@@ -2,39 +2,43 @@
 
 MYNAME=$(basename ${BASH_SOURCE[0]})
 LNAM=$1
-if [ "$LNAM" = "-v" ]; then
+HELP=
+if [ "$LNAM" = "-h" ]; then
+  HELP=true
+elif [ "$LNAM" = "-v" ]; then
   shift
   IVER=$1
   shift
   LNAM=$1
 else
-  IVER=11
+  IVER=17
 fi
+if [ -n "$HELP" ]; then
+  echo Usage: source $MYNAME [-v IMAGE-VERSION] LSST_VERSION
+  exit 0
+fi
+
 LVER=$(g3wf-convert-lsst-version $LNAM)
 if [ -z "$LVER" ]; then
   echo ERROR: $MYNAME: Invalid version nickname: $LNAM
   exit 3
 fi
+
 shift
 COM="$*"
 export PS1="Failed $MYNAME> "
 
-if [ -z "$LVER" ]; then
-  echo Usage: source $MYNAME LSST_VERSION
+IMG=$(whoami)/gen3workflow-$LVER:$IVER
+echo $MYNAME: Loading shifter image $IMG
+export PS1="shifter $LVER> "
+if [ -z "$COM" ]; then
+  COM=/bin/bash
 else
-  IMG=$(whoami)/gen3workflow-$LVER:$IVER
-  echo $MYNAME: Loading shifter image $IMG
-  export PS1="shifter $LVER> "
-  if [ -z "$COM" ]; then
-    COM=/bin/bash
-  else
-    echo $MYNAME: Running command $COM
-  fi
-  CFIL=$(pwd)/shifter-command
-  echo "#!/bin/bash" >$CFIL
-  echo source /opt/lsst/software/stack/setup.sh >>$CFIL
-  echo $COM >>$CFIL
-  chmod +x $CFIL
-  shifter --image=$IMG $CFIL
+  echo $MYNAME: Running command $COM
 fi
-
+CFIL=$(pwd)/shifter-command
+echo "#!/bin/bash" >$CFIL
+echo source /opt/lsst/software/stack/setup.sh >>$CFIL
+echo $COM >>$CFIL
+chmod +x $CFIL
+shifter --image=$IMG $CFIL
