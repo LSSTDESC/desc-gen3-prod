@@ -52,6 +52,9 @@ if [[ -z $1 || $1 = -h ]]; then
   echo "  bproc:BPO: Run pre,proc,post multistage with proc in pmbs-BPO"
   echo "    Options BPO are those for pmbs here colon separated."
   echo "  repo:RRR - Use repo at $HOME/scratch/repo-RRR."
+  echo "  pfs0: Do not run perf stat on each task."
+  echo "  pfs1: Run perf stat as a command wrapper on each task."
+  echo "  pfs2: Run perf stat on the process ID of each task."
   echo "  strace1: Run strace for file open and close"
   echo "  strace2: Run strace for file open, close, rename, link and unlink"
   echo "  strace3: Run strace for file open, close, rename, link, unlink, read and write"
@@ -256,7 +259,8 @@ TMAX=
 TMAX2=
 TMAX3=
 PGROUPS=
-PMONDT=${CON_PMONDT:-3}
+PMONDT=${CON_PMONDT:-3}  
+PFSOPT=${CON_PFSOPT:-1}
 WOPTS="$CON_WOPTS"
 REBUILD=false
 for OPT in ${HOPTS[@]}; do
@@ -317,6 +321,8 @@ for OPT in ${HOPTS[@]}; do
       err_echo Butler dir not found: $BUTLER_DIR
       exit 15
     fi
+  elif [ ${OPT:0:3} = "pfs" -a ${#OPT} -eq 4 ]; then
+    PFSOPT=${OPT:3}
   elif [ ${OPT:0:6} = "strace" -a ${#OPT} -gt 6 ]; then
     WOPTS=${WOPTS}${WOPTS:+ }$OPT
   elif [ $OPT = iotrace ]; then
@@ -333,7 +339,11 @@ if [ $PMONDT != false ] && [ $PMONDT != $PMONDT ]; then
 fi
 
 # Define the task command prepend.
-PREPEND="g3wf-run-task --perfstat --iotrace -t 5 --cpunum --procctxt"
+PREPEND="g3wf-run-task"
+if [ $PFSOPT -gt 0 ]; then
+  PREPEND="$PREPEND  --perfstat$PFSOPT"
+fi
+PREPEND="$PREPEND --iotrace -t 5 --cpunum --procctxt"
 for WOPT in $WOPTS; do
   FLAG=--$WOPT
   PREPEND="$PREPEND $FLAG"
@@ -349,6 +359,7 @@ echo "CON_PREPEND=\"$PREPEND\"" >>consetup.sh
 echo "CON_PIPE=$PIPE" >>consetup.sh
 echo "CON_PMONDT=$PMONDT" >>consetup.sh
 echo "CON_WOPTS=\"$WOPTS\"" >>consetup.sh
+echo "CON_PFSOPT=$PFSOPT" >>consetup.sh
 
 if [ $DOINIT = true ]; then
 PIPEVAL=
