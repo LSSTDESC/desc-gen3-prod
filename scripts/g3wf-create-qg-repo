@@ -144,7 +144,8 @@ repsize
 echo
 date
 echo $MYNAME: Creating skymap.
-wget https://raw.githubusercontent.com/lsst-dm/gen3_shared_repo_admin/main/python/lsst/gen3_shared_repo_admin/config/skymaps/DC2.py
+#wget https://raw.githubusercontent.com/lsst-dm/gen3_shared_repo_admin/main/python/lsst/gen3_shared_repo_admin/config/skymaps/DC2.py
+curl -O https://raw.githubusercontent.com/lsst-dm/gen3_shared_repo_admin/main/python/lsst/gen3_shared_repo_admin/config/skymaps/DC2.py
 butler --no-log-tty register-skymap --config-file DC2.py $REPO
 repsize
 
