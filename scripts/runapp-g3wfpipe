@@ -52,7 +52,7 @@ if [[ -z $1 || $1 = -h ]]; then
   echo "  bproc:BPO: Run pre,proc,post multistage with proc in pmbs-BPO"
   echo "    Options BPO are those for pmbs here colon separated."
   echo "  repo:RRR - Use repo at $HOME/scratch/repo-RRR."
-  echo "  pfs0: Do not run perf stat on each task."
+  echo "  pfs0: Do not run perf stat on each task (default)."
   echo "  pfs1: Run perf stat as a command wrapper on each task."
   echo "  pfs2: Run perf stat on the process ID of each task."
   echo "  strace1: Run strace for file open and close"
@@ -260,7 +260,7 @@ TMAX2=
 TMAX3=
 PGROUPS=
 PMONDT=${CON_PMONDT:-3}  
-PFSOPT=${CON_PFSOPT:-1}
+PFSOPT=${CON_PFSOPT:-0}
 WOPTS="$CON_WOPTS"
 REBUILD=false
 for OPT in ${HOPTS[@]}; do
