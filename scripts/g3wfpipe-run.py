@@ -129,6 +129,32 @@ def update_monexp():
         return False
     return True
 
+# Return the directory holding the output task dat for this job.
+_task_output_data_dir = None
+_task_log_dir = None
+_task_timestamp = None
+def task_output_data_dir():
+    myname = 'task_output_data_dir'
+    global _task_output_data_dir
+    global _task_timestamp
+    global _task_log_dir
+    if _task_output_data_dir is None:
+        import yaml
+        doc = yaml.load(open('job001523/config.yaml'), Loader=yaml.SafeLoader)
+        pnam = doc['payload']['payloadName']
+        onam = doc['operator']
+        tdir = f"{thisdir}/submit/u/{onam}/{pnam}"
+        ret = subprocess.run(['ls', tdir])
+        if ret.returncode:
+            print(f"{myname}: Error {ret.returncode}: {ret.stderr}")
+            return None
+        _task_timestamp = subprocess.run(['ls', ret.stdout]).stdout
+        _task_log_dir = f"{tdir}/{_task_timestamp}"
+        _task_output_data_dir = f"{doc['payload']['butlerConfig']}/u/{onam}/{pnam}/{_task_timestamp}"
+        print(f"{myname}: Task output data dir: {_task_output_output_data_dir}")
+        print(f"{myname}: Task log dir: {_task_log_dir}")
+    return _task_output_data_dir
+
 #################################################################################
 
 logmsg(f"Executing {__file__}")
@@ -257,10 +283,12 @@ if doProc2:
     logmsg(f"Total task count is {len(all_tasknames)}")
     logmsg(f"Endpoint task count is {len(end_tasknames)}")
     nend_start = 0
+    task_output_data_dir()
     for taskname in end_tasknames:
         task = pg[taskname]
         task.get_future()
         nend_start += 1
+    task_output_data_dir()
     logmsg(f"Endpoint start count is {len(end_tasknames)}")
     ndone = 0
     nsucc = 0
@@ -325,6 +353,7 @@ if doProc2:
         else:
             nsame_counts = 0
             last_counts = counts
+        task_output_data_dir()
         time.sleep(tsleep)
 
 if doProc1:
