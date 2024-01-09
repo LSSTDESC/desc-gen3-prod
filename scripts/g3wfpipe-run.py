@@ -155,7 +155,7 @@ def task_output_data_dir():
         _task_timestamp = ret.stdout.decode().strip()
         _task_log_dir = f"{tdir}/{_task_timestamp}"
         _task_output_data_dir = f"{doc['payload']['butlerConfig']}/u/{onam}/{pnam}/{_task_timestamp}"
-        logmsg(f"{myname}: Task output data dir: {_task_output_output_data_dir}")
+        logmsg(f"{myname}: Task output data dir: {_task_output_data_dir}")
         logmsg(f"{myname}: Task log dir: {_task_log_dir}")
     return _task_output_data_dir
 
