@@ -140,7 +140,7 @@ def task_output_data_dir():
     global _task_log_dir
     if _task_output_data_dir is None:
         import yaml
-        doc = yaml.load(open('job001523/config.yaml'), Loader=yaml.SafeLoader)
+        doc = yaml.load(open('config.yaml'), Loader=yaml.SafeLoader)
         pnam = doc['payload']['payloadName']
         onam = doc['operator']
         tdir = f"{thisdir}/submit/u/{onam}/{pnam}"
