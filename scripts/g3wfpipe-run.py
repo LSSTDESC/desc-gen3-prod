@@ -12,6 +12,7 @@ import pandas
 import signal
 from desc.wfmon import MonDbReader
 import traceback
+import subprocess
 
 statfilename = 'current-status.txt'
 doInit = False
