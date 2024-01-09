@@ -344,7 +344,6 @@ PREPEND="g3wf-run-task"
 if [ $PFSOPT -gt 0 ]; then
   PREPEND="$PREPEND  --perfstat$PFSOPT"
 fi
-PREPEND="$PREPEND --iotrace -t 5 --cpunum --procctxt"
 if [ -n "$STRACE" ]; then
   PREPEND="$PREPEND --$STRACE"
 fi
