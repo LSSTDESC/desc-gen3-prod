@@ -354,7 +354,7 @@ if doProc2:
                 msg += f" {counts[i]} {clabs[i]}."
         statlogmsg(msg)
         ntbyte = task_output_data_size()
-        logmsg(f"Task output size: {ntbyte/1024/1024:8} MiB"}
+        logmsg(f"Task output size: {ntbyte/1024/1024:8} MiB")
         update_monexp()
         if len(rem_tasknames) == 0: break
         if counts == last_counts:
