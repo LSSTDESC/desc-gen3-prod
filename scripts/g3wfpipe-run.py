@@ -159,6 +159,12 @@ def task_output_data_dir():
         logmsg(f"{myname}: Task log dir: {_task_log_dir}")
     return _task_output_data_dir
 
+def task_output_data_size():
+    tdir = task_output_data_dir()
+    ret = subprocess.run(['du', '-bs', tdir], capture_output=True)
+    nbyte = int(ret.stdout.decode().strip())
+    return nbyte
+
 #################################################################################
 
 logmsg(f"Executing {__file__}")
@@ -347,6 +353,8 @@ if doProc2:
             if counts[i]:
                 msg += f" {counts[i]} {clabs[i]}."
         statlogmsg(msg)
+        ntbyte = task_output_data_size()
+        logmsg(f"Task output size: {ntbyte/1024/1024:8} MiB"}
         update_monexp()
         if len(rem_tasknames) == 0: break
         if counts == last_counts:
