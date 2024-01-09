@@ -145,14 +145,14 @@ def task_output_data_dir():
         pnam = doc['payload']['payloadName']
         onam = doc['operator']
         tdir = f"{thisdir}/submit/u/{onam}/{pnam}"
-        ret = subprocess.run(['ls', tdir])
+        ret = subprocess.run(['ls', tdir], capture_output=True)
         if ret.returncode:
             logmsg(f"{myname}: Error {ret.returncode}: {ret.stderr}")
             return None
         if ret.stdout is None:
             logmsg(f"{myname}: Log base directory is empty: {tdir}")
             return None
-        _task_timestamp = subprocess.run(['ls', ret.stdout]).stdout
+        _task_timestamp = ret.stdout.decode().strip()
         _task_log_dir = f"{tdir}/{_task_timestamp}"
         _task_output_data_dir = f"{doc['payload']['butlerConfig']}/u/{onam}/{pnam}/{_task_timestamp}"
         logmsg(f"{myname}: Task output data dir: {_task_output_output_data_dir}")
