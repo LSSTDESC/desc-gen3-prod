@@ -157,7 +157,7 @@ def task_output_data_dir():
         pnam = doc['payload']['payloadName']
         onam = doc['operator']
         tldir = f"{thisdir}/submit/u/{onam}/{pnam}"
-        ret = subprocess.run(['ls', tdlir], capture_output=True)
+        ret = subprocess.run(['ls', tldir], capture_output=True)
         if ret.returncode:
             logmsg(f"{myname}: Error {ret.returncode}: {ret.stderr}")
             return None
