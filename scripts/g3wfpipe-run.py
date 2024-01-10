@@ -60,7 +60,7 @@ def statlogmsg(*msgs):
     logmsglist(list(msgs), update_status=True)
 
 # Update monitor log fnam.
-def logmon(fman, msg)
+def logmon(fman, msg):
     myname = 'logmon'
     try:
         with open(fmon, 'a') as fil:
@@ -156,16 +156,16 @@ def task_output_data_dir():
         doc = yaml.load(open('config.yaml'), Loader=yaml.SafeLoader)
         pnam = doc['payload']['payloadName']
         onam = doc['operator']
-        tdir = f"{thisdir}/submit/u/{onam}/{pnam}"
-        ret = subprocess.run(['ls', tdir], capture_output=True)
+        tldir = f"{thisdir}/submit/u/{onam}/{pnam}"
+        ret = subprocess.run(['ls', tdlir], capture_output=True)
         if ret.returncode:
             logmsg(f"{myname}: Error {ret.returncode}: {ret.stderr}")
             return None
         if ret.stdout is None:
-            logmsg(f"{myname}: Log base directory is empty: {tdir}")
+            logmsg(f"{myname}: Log base directory is empty: {tldir}")
             return None
         _task_timestamp = ret.stdout.decode().strip()
-        _task_log_dir = f"{tdir}/{_task_timestamp}"
+        _task_log_dir = f"{tldir}/{_task_timestamp}"
         _task_output_data_dir = f"{doc['payload']['butlerConfig']}/u/{onam}/{pnam}/{_task_timestamp}"
         logmsg(f"{myname}: Task output data dir: {_task_output_data_dir}")
         logmsg(f"{myname}: Task log dir: {_task_log_dir}")
