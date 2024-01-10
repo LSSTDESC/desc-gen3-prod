@@ -160,9 +160,14 @@ def task_output_data_dir():
     return _task_output_data_dir
 
 def task_output_data_size():
+    myname = 'task_output_data_size'
     tdir = task_output_data_dir()
-    ret = subprocess.run(['du', '-bs', tdir], capture_output=True)
-    nbyte = int(ret.stdout.decode().strip())
+    try:
+        ret = subprocess.run(['du', '-bs', tdir], capture_output=True)
+        nbyte = int(ret.stdout.decode().split()[0])
+    except Exception as e:
+        logmsg(f"{myname}: WARNING: {e}")
+        return 0
     return nbyte
 
 #################################################################################
@@ -425,9 +430,9 @@ if doProc0:
             statlogmsg(f"Try {count} task count: {ntskall}")
             #futures = [job.get_future() for job in pg.values() if not job.dependencies]
             futures = [job.get_future() for job in pg.values()]
+            #traceback.print(e.__traceback__)
         except Exception as e:
             logmsg(f"Try {count} raised exception: {e}")
-            #traceback.print(e.__traceback__)
             if count > 100:
                 statlogmsg("Unable to retrieve futures.")
                 sys.exit(1)
