@@ -425,7 +425,7 @@ if doProc2:
             except Exception as e:
                 logmsg(f"Error calculating outpur rate: {e}")
             dfmap_last = dfmap
-        ratemsg = f"rate: {rate:7.3f} GiB/sec)'")
+        ratemsg = f"rate: {rate:7.3f} GiB/sec)'"
         logmsg(f"Task output size: {ngib:10.3f} GiB, {ratemsg}, {freemsg}'")
         logmon('task-output-size.log', f"{ngib:13.6f} {ngibfree:15.6f}")
         update_monexp()
