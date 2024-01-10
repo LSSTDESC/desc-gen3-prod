@@ -419,13 +419,13 @@ if doProc2:
         rate = 0
         if dfmap_last is not None:
             try:
-                dngib = dfmap['task'] - dfmap['task']
-                dtime = dfmap['time'] - dfmap['time']
+                dngib = dfmap['task'] - dfmap_last['task']
+                dtime = dfmap['time'] - dfmap_last['time']
                 rate = dngib/dtime
             except Exception as e:
                 logmsg(f"Error calculating outpur rate: {e}")
-            dfmap_last = dfmap
-        ratemsg = f"rate: {rate:7.3f} GiB/sec)'"
+        dfmap_last = dfmap
+        ratemsg = f"rate: {rate:7.3f} GiB/sec"
         logmsg(f"Task output size: {ngib:10.3f} GiB, {ratemsg}, {freemsg}'")
         logmon('task-output-size.log', f"{ngib:13.6f} {ngibfree:15.6f}")
         update_monexp()
