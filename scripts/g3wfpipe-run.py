@@ -187,8 +187,8 @@ def task_output_data_size():
 def task_output_data_df(unitin='byte'):
     myname = 'task_output_data_free'
     tdir = task_output_data_dir()
-    if unitin in ['KiB', 'MiB', 'GiB', 'TiB']
-        unit = unit
+    if unitin in ['KiB', 'MiB', 'GiB', 'TiB']:
+        unit = unitin
     else:
         unit = 'byte'
     out = {'dir':tdir, 'unit':unit}
