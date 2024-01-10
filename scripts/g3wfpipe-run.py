@@ -214,7 +214,7 @@ def task_output_data_df(unitin='byte'):
                 out[nam] /= cfac
     except Exception as e:
         out['error'] = str(e)
-    return 0
+    return out
 
 #################################################################################
 
