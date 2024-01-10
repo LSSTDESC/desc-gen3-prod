@@ -36,6 +36,7 @@ pg_pickle_path = None     # Full path to the pg pickle file
 pg = None                 # ParlslGraph used for processing
 pgro = None               # ParslGraph for checking status
 
+# Send a list of messages to the job log and optionally to the status log.
 def logmsglist(msgs, update_status=False):
     out = open('runapp-g3wfpipe.log', 'a')
     dmsg = time.strftime('%Y-%m-%d %H:%M:%S:')
@@ -50,11 +51,22 @@ def logmsglist(msgs, update_status=False):
         fstat = open(statfilename, 'w')
         fstat.write(rmsg + '\n')
 
+# Send a message to the job log.
 def logmsg(*msgs, update_status=False):
     logmsglist(list(msgs), update_status)
 
+# Send a message to the job log and status log.
 def statlogmsg(*msgs):
     logmsglist(list(msgs), update_status=True)
+
+# Update monitor log fnam.
+def logmon(fman, msg)
+    myname = 'logmon'
+    try:
+        with open(fmon, 'a') as fil:
+            fil.write(f"{time.time():18.6f} {msg}\n")
+    except Exception as e:
+        logmsg(f"{myname}: ERROR: {e}")
 
 # Look for parsl graph pickle files.
 def get_pg_pickle_path():
@@ -358,8 +370,10 @@ if doProc2:
             if counts[i]:
                 msg += f" {counts[i]} {clabs[i]}."
         statlogmsg(msg)
-        ntbyte = task_output_data_size()
-        logmsg(f"Task output size: {ntbyte/(1024*1024*1024):10.3f} GiB")
+        nbyte = task_output_data_size()
+        ngib = nbyte/(1024*1024*1024)
+        logmsg(f"Task output size: {ngib:10.3f} GiB")
+        logmon('task-output-size.log', f"{ngib:13.6f}")
         update_monexp()
         if len(rem_tasknames) == 0: break
         if counts == last_counts:
