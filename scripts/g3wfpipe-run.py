@@ -60,10 +60,10 @@ def statlogmsg(*msgs):
     logmsglist(list(msgs), update_status=True)
 
 # Update monitor log fnam.
-def logmon(fman, msg):
+def logmon(fnam, msg):
     myname = 'logmon'
     try:
-        with open(fmon, 'a') as fil:
+        with open(fnam, 'a') as fil:
             fil.write(f"{time.time():18.6f} {msg}\n")
     except Exception as e:
         logmsg(f"{myname}: ERROR: {e}")
