@@ -203,6 +203,7 @@ def task_output_data_df(unitin='kiB'):
         cfac = 1024*1024*1024*1024
     try:
         ret = subprocess.run(['df', '-k', tdir], capture_output=True)
+        out['time'] = time.time()
         vals = ret.stdout.decode().split('\n')[1].split()
         out['filesystem'] = vals[0]
         out['total'] = int(vals[1])
@@ -360,6 +361,7 @@ if doProc2:
     tsleep = 10
     last_counts = []
     nsame_counts = 0
+    dfmap_last = None
     while True:
         newrems = []
         try:
@@ -407,13 +409,24 @@ if doProc2:
         nbyte = task_output_data_size()
         ngib = nbyte/(1024*1024*1024)
         dfmap = task_output_data_df('GiB')
+        dfmap['task'] = ngib
         ngibfree = -1
         if 'free' in dfmap:
             ngibfree = dfmap['free']
-            freemsg = f"{dfmap['free']:.0f} {dfmap['unit']} available on {dfmap['mount']})"
+            freemsg = f"available: {dfmap['free']:.0f} {dfmap['unit']} on {dfmap['mount']}"
         else:
             freemsg = dfmap['error']
-        logmsg(f"Task output size: {ngib:10.3f} GiB ({freemsg})'")
+        rate = 0
+        if dfmap_last is not None:
+            try:
+                dngib = dfmap['task'] - dfmap['task']
+                dtime = dfmap['time'] - dfmap['time']
+                rate = dngib/dtime
+            except Exception as e:
+                logmsg(f"Error calculating outpur rate: {e}")
+            dfmap_last = dfmap
+        ratemsg = f"rate: {rate:7.3f} GiB/sec)'")
+        logmsg(f"Task output size: {ngib:10.3f} GiB, {ratemsg}, {freemsg}'")
         logmon('task-output-size.log', f"{ngib:13.6f} {ngibfree:15.6f}")
         update_monexp()
         if len(rem_tasknames) == 0: break
