@@ -142,7 +142,7 @@ def update_monexp():
         return False
     return True
 
-# Return the directory holding the output task dat for this job.
+# Return the directory holding the output task data for this job.
 _task_output_data_dir = None
 _task_log_dir = None
 _task_timestamp = None
@@ -171,6 +171,7 @@ def task_output_data_dir():
         logmsg(f"{myname}: Task log dir: {_task_log_dir}")
     return _task_output_data_dir
 
+# Return the space used in the output data dir.
 def task_output_data_size():
     myname = 'task_output_data_size'
     tdir = task_output_data_dir()
@@ -179,8 +180,41 @@ def task_output_data_size():
         nbyte = int(ret.stdout.decode().split()[0])
     except Exception as e:
         logmsg(f"{myname}: WARNING: {e}")
-        return 0
+        nbyte = 0
     return nbyte
+
+# Return the space free in the output data dir.
+def task_output_data_df(unitin='byte'):
+    myname = 'task_output_data_free'
+    tdir = task_output_data_dir()
+    if unitin in ['KiB', 'MiB', 'GiB', 'TiB']
+        unit = unit
+    else:
+        unit = 'byte'
+    out = {'dir':tdir, 'unit':unit}
+    cfac = None
+    if unit == 'kiB':
+        cfac = 1024
+    elif unit == 'MiB':
+        cfac = 1024*1024
+    elif unit == 'GiB':
+        cfac = 1024*1024*1024
+    elif unit == 'TiB':
+        cfac = 1024*1024*1024*1024
+    try:
+        ret = subprocess.run(['df', '-k', tdir], capture_output=True)
+        vals = ret.stdout.decode().split('\n')[1].split()
+        out['filesystem'] = vals[0]
+        out['total'] = int(vals[1])
+        out['used'] = int(vals[2])
+        out['free'] = int(vals[3])
+        out['mount'] = vals[5]
+        if unit != 'byte':
+            for nam in ['total', 'used', 'free']:
+                out[nam] /= cfac
+    except Exception as e:
+        out['error'] = str(e)
+    return 0
 
 #################################################################################
 
@@ -372,8 +406,15 @@ if doProc2:
         statlogmsg(msg)
         nbyte = task_output_data_size()
         ngib = nbyte/(1024*1024*1024)
-        logmsg(f"Task output size: {ngib:10.3f} GiB")
-        logmon('task-output-size.log', f"{ngib:13.6f}")
+        dfmap = task_output_data_df('GiB')
+        ngibfree = -1
+        if 'free' in dfmap:
+            ngibfree = dfmap['free']
+            freemsg = f"{dfmap['free']:.0f} {dfmap['unit']} available)"
+        else:
+            freemsg = dfmap['error']
+        logmsg(f"Task output size: {ngib:10.3f} GiB ({freemsg})'")
+        logmon('task-output-size.log', f"{ngib:13.6f} {ngibfree:15.6f}")
         update_monexp()
         if len(rem_tasknames) == 0: break
         if counts == last_counts:
