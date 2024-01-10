@@ -410,7 +410,7 @@ if doProc2:
         ngibfree = -1
         if 'free' in dfmap:
             ngibfree = dfmap['free']
-            freemsg = f"{dfmap['free']:.0f} {dfmap['unit']:.0f} {dfmap['unit']} available on {dfmap['mount']})"
+            freemsg = f"{dfmap['free']:.0f} {dfmap['unit']} available on {dfmap['mount']})"
         else:
             freemsg = dfmap['error']
         logmsg(f"Task output size: {ngib:10.3f} GiB ({freemsg})'")
