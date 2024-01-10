@@ -184,22 +184,22 @@ def task_output_data_size():
     return nbyte
 
 # Return the space free in the output data dir.
-def task_output_data_df(unitin='byte'):
+def task_output_data_df(unitin='kiB'):
     myname = 'task_output_data_free'
     tdir = task_output_data_dir()
-    if unitin in ['KiB', 'MiB', 'GiB', 'TiB']:
+    if unitin in ['MiB', 'GiB', 'TiB']:
         unit = unitin
     else:
-        unit = 'byte'
+        unit = 'kiB'
     out = {'dir':tdir, 'unit':unit}
     cfac = None
-    if unit == 'kiB':
+    if unit == 'MiB':
         cfac = 1024
-    elif unit == 'MiB':
-        cfac = 1024*1024
     elif unit == 'GiB':
-        cfac = 1024*1024*1024
+        cfac = 1024*1024
     elif unit == 'TiB':
+        cfac = 1024*1024*1024
+    elif unit == 'PiB':
         cfac = 1024*1024*1024*1024
     try:
         ret = subprocess.run(['df', '-k', tdir], capture_output=True)
@@ -410,7 +410,7 @@ if doProc2:
         ngibfree = -1
         if 'free' in dfmap:
             ngibfree = dfmap['free']
-            freemsg = f"{dfmap['free']:.0f} {dfmap['unit']} available)"
+            freemsg = f"{dfmap['free']:.0f} {dfmap['unit']:.0f} {dfmap['unit']} available on {dfmap['mount'})"
         else:
             freemsg = dfmap['error']
         logmsg(f"Task output size: {ngib:10.3f} GiB ({freemsg})'")
