@@ -119,6 +119,10 @@ HOPTS=(${HFG//-/ })
 # We use extended globbing below.
 shopt -s extglob
 
+# Create a plot title.
+JOBID=$(grep '"id"' config.json | sed 's/.*: //' | sed 's/,.*//')
+PLOT_TITLE="Job $JOBID: g3wfpipe  $CFG  $HFG"
+
 # Parse the config.
 PIPE=
 QUERY=
@@ -194,7 +198,7 @@ NNOD=1
 EXEC=none
 if [[ -n $CJOB ]]; then
   if [[ -n $QUERY ]]; then
-    err_echo "uery may not be specified for a continuation job."
+    err_echo "Query may not be specified for a continuation job."
     exit 1
   fi
   if [[ -n $PIPE ]]; then
@@ -246,7 +250,13 @@ if [[ -n $CJOB ]]; then
   if [[ -z $CSRC ]]; then
     CSRC=$CON_CSRC
   fi
+  # Replace the plot title with that from the parent.
+  if [ -r $PDIR/plot-title.txt ]; then
+     PLOT_TITLE="Job $JOBID from $(cat $PDIR/plot-title.txt)"
+  fi
 fi
+
+echo $PLOT_TITLE >plot-title.txt
 
 # Extract the list of processing steps.
 WFARGS="${WFARGS_ARR[*]}"
