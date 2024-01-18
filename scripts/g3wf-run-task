@@ -135,7 +135,7 @@ show-help() {
 }
 
 ########## End functions. #########
-PATH=$(dirname $0):$PATH
+#PATH=$(dirname $0):$PATH
 
 TSTART=$(date +%s.%N)
 TASKLOG=$(g3wf-get-stderr)

@@ -550,6 +550,7 @@ if [[ -n $WFARGS ]]; then
   COM="${TMAX:+timeout $TMAX }$COM $CSRCARG $LVEROPTS ./run"
   # Create the run script and setup for the run script..
   # It installs desc-gen3-prod and then runs the pipeline.
+  JOBDIR=$(pwd)
   RFIL=./setup.sh
   rm -f $RFIL
   echo "# This script was generated $(date) on $(hostname)" >>$RFIL
@@ -558,24 +559,24 @@ if [[ -n $WFARGS ]]; then
     echo "source /opt/lsst/software/stack/setup.sh" >>$RFIL
     echo "setup lsst_distrib" >>$RFIL
   fi
-  echo "if [ ! -r ./local/desc-wfmon ]; then" >>$RFIL
+  echo "if [ ! -r $JOBDIR/local/desc-wfmon ]; then" >>$RFIL
   echo "  echo setup: Installing desc-wfmon." >>$RFIL
   echo '  (mkdir repos && cd repos && git clone https://github.com/LSSTDESC/desc-wfmon && cd ..)' >>$RFIL
-  echo "  pip install -t local/desc-wfmon repos/desc-wfmon" >>$RFIL
+  echo "  pip install -t $JOBDIR/local/desc-wfmon $JOBDIR/repos/desc-wfmon" >>$RFIL
   echo "fi" >>$RFIL
-  echo 'PATH=./local/desc-wfmon/bin:$PATH' >>$RFIL
-  echo 'PYTHONPATH=./local/desc-wfmon:$PYTHONPATH' >>$RFIL
-  echo 'IPYDIR=./repos/desc-wfmon/ipynb' >>$RFIL
+  echo 'PATH=$JOBDIR/local/desc-wfmon/bin:$PATH' >>$RFIL
+  echo 'PYTHONPATH=$JOBDIR/local/desc-wfmon:$PYTHONPATH' >>$RFIL
+  echo 'IPYDIR=$JOBDIR/repos/desc-wfmon/ipynb' >>$RFIL
   echo 'cp $IPYDIR/monexp.ipynb .' >>$RFIL
   echo 'cp $IPYDIR/perfstat.ipynb .' >>$RFIL
   echo 'cp $IPYDIR/monexp.py .' >>$RFIL
   echo 'basename $(pwd) | sed "s/job0*/Job /g" > README.txt' >>$RFIL
-  echo "if [ ! -r ./local/desc-gen3-prod ]; then" >>$RFIL
+  echo "if [ ! -r $JOBDIR/local/desc-gen3-prod ]; then" >>$RFIL
   echo "  echo setup: Installing desc-gen3-prod." >>$RFIL
-  echo "  pip install -t local/desc-gen3-prod git+https://github.com/LSSTDESC/desc-gen3-prod" >>$RFIL
+  echo "  pip install -t $JOBDIR/local/desc-gen3-prod git+https://github.com/LSSTDESC/desc-gen3-prod" >>$RFIL
   echo "fi" >>$RFIL
-  echo 'PATH=./local/desc-gen3-prod/bin:$PATH' >>$RFIL
-  echo 'PYTHONPATH=./local/desc-gen3-prod:$PYTHONPATH' >>$RFIL
+  echo 'PATH=$JOBDIR/local/desc-gen3-prod/bin:$PATH' >>$RFIL
+  echo 'PYTHONPATH=$JOBDIR/local/desc-gen3-prod:$PYTHONPATH' >>$RFIL
   echo 'echo setup: Running with desc-gen3-prod version $(desc-gen3-prod-version)' >>$RFIL
   echo 'echo setup: Location for g3wf-run-task: $(which g3wf-run-task)' >>$RFIL
   echo 'echo setup: Running with desc-wfmon version $(desc-wfmon-parsltest -v)' >>$RFIL
@@ -608,21 +609,21 @@ if [[ -n $WFARGS ]]; then
   echo "g3wfpipe-run $WFARGS" >>$RFIL
   chmod +x ./run
   # Create setup for the task for the WorkQueue worker. Not needed or used??
-  RFIL=./task-setup.sh
-  rm -f $RFIL
-  echo "# This script was generated $(date) on $(hostname)" >>$RFIL
-  echo "----- Begin task setup -----" >>$RFIL
-  echo "echo Starting PATH=:\$PATH | sed 's/:/\n  /g'" >>$RFIL
-  echo 'export PYTHONPATH' >>$RFIL
-  if [ $CSRC = shifter ]; then
-    echo "source /opt/lsst/software/stack/setup.sh" >>$RFIL
-    echo "setup lsst_distrib" >>$RFIL
-  fi
-  echo 'PATH=./local/desc-gen3-prod/bin:$PATH' >>$RFIL
-  echo 'PYTHONPATH=./local/desc-gen3-prod:$PYTHONPATH' >>$RFIL
-  echo "echo Final PATH=:\$PATH | sed 's/:/\n  /g'" >>$RFIL
-  echo 'echo task-setup: Location for g3wf-run-task: $(which g3wf-run-task)' >>$RFIL
-  echo "------ End task setup ------"
+  #RFIL=./task-setup.sh
+  #rm -f $RFIL
+  #echo "# This script was generated $(date) on $(hostname)" >>$RFIL
+  #echo "----- Begin task setup -----" >>$RFIL
+  #echo "echo Starting PATH=:\$PATH | sed 's/:/\n  /g'" >>$RFIL
+  #echo 'export PYTHONPATH' >>$RFIL
+  #if [ $CSRC = shifter ]; then
+  #  echo "source /opt/lsst/software/stack/setup.sh" >>$RFIL
+  #  echo "setup lsst_distrib" >>$RFIL
+  #fi
+  #echo 'PATH=$JOBDIR/local/desc-gen3-prod/bin:$PATH' >>$RFIL
+  #echo 'PYTHONPATH=$JOBDIR/local/desc-gen3-prod:$PYTHONPATH' >>$RFIL
+  #echo "echo Final PATH=:\$PATH | sed 's/:/\n  /g'" >>$RFIL
+  #echo 'echo task-setup: Location for g3wf-run-task: $(which g3wf-run-task)' >>$RFIL
+  #echo "------ End task setup ------"
   # Start the run script.
   info_echo Starting run script with steps $WFARGS.
   $COM
