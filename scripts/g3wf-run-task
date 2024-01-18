@@ -135,6 +135,7 @@ show-help() {
 }
 
 ########## End functions. #########
+PATH=$(dirname $0):$PATH
 
 if [ -r task-setup.sh ]; then
   msgecho Sourcing task-setup.sh
