@@ -248,7 +248,7 @@ for opt in sys.argv[1:]:
     elif opt == 'test': doTest = True
     elif opt == 'path':
         for dir in os.getenv('PYTHONPATH').split(':'): print(dir)
-        exit(0)
+        sys.exit(0)
     elif opt == 'butler':
         doButlerTest = True
     else:
@@ -435,13 +435,13 @@ if doProc2:
         update_monexp()
         if nfail >= maxfail:
             logmsg(f"Aborting job for too many task failures: {nfail} >= {maxfail}.")
-            exit(101)
+            sys.exit(101)
         if len(rem_tasknames) == 0: break
         if counts == last_counts:
             nsame_counts += 1
             if  nsame_counts > 5 and nlaun == 0 and nrunn == 0:
                 logmsg(f"Aborting job because state is not changing and no tasks are active.")
-                exit(102)
+                sys.exit(102)
         else:
             nsame_counts = 0
             last_counts = counts
