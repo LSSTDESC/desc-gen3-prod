@@ -137,12 +137,6 @@ show-help() {
 ########## End functions. #########
 PATH=$(dirname $0):$PATH
 
-if [ -r task-setup.sh ]; then
-  msgecho Sourcing task-setup.sh
-  source task-setup.sh
-else
-  msgecho "task-setup.sh not found in $(pwd)"
-fi
 TSTART=$(date +%s.%N)
 TASKLOG=$(g3wf-get-stderr)
 LOGBASE=$(echo $TASKLOG | sed 's/\.stderr$//g')
@@ -154,6 +148,14 @@ msgecho Begin task wrapper
 msgecho Log base is $LOGBASE
 msgecho Task log is $TASKLOG
 msgecho Task wrapper log is $TWRAPLOG
+
+if [ -r task-setup.sh ]; then
+  msgecho Sourcing task-setup.sh
+  source task-setup.sh
+  msgecho Done sourcing task-setup.sh
+else
+  msgecho "task-setup.sh not found in $(pwd)"
+fi
 
 # Read the command line.
 TSAM=10
