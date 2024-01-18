@@ -362,6 +362,7 @@ if doProc2:
     last_counts = []
     nsame_counts = 0
     dfmap_last = None
+    maxfail = 100
     while True:
         newrems = []
         try:
@@ -432,12 +433,15 @@ if doProc2:
         logmsg(f"Task output size: {ngib:10.3f} GiB, {ratemsg}, {freemsg}")
         logmon('task-output-size.log', f"{ngib:13.6f} {ngibfree:15.6f}")
         update_monexp()
+        if nfail >= maxfail:
+            logmsg(f"Aborting job for too many task failures: {nfail} >= {maxfail}.")
+            exit(101)
         if len(rem_tasknames) == 0: break
         if counts == last_counts:
             nsame_counts += 1
             if  nsame_counts > 5 and nlaun == 0 and nrunn == 0:
                 logmsg(f"Aborting job because state is not changing and no tasks are active.")
-                break
+                exit(102)
         else:
             nsame_counts = 0
             last_counts = counts

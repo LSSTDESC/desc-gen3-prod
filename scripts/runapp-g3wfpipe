@@ -472,7 +472,7 @@ PIPEVAL=
     echo "  port: 0" >>config.yaml
     echo "  nodes_per_block: 1" >>config.yaml
     echo "  worker_options: \"--memory=${MEGB}000\"" >>config.yaml
-    echo "  init_command: source task-setup"
+    echo "  init_command: source task-setup.sh" >>config.yaml
   elif [ ${EXEC:0:3} = tp: ]; then
     NTHR=${EXEC:3}
     if [ -z "$NTHR" ]; then NTHR=1; fi
@@ -612,7 +612,7 @@ if [[ -n $WFARGS ]]; then
   rm -f $RFIL
   echo "# This script was generated $(date) on $(hostname)" >>$RFIL
   echo "----- Begin task setup -----" >>$RFIL
-  echo "echo Starting PATH=:$PATH | sed 's/:/\n  /g'" >>$RFIL
+  echo "echo Starting PATH=:\$PATH | sed 's/:/\n  /g'" >>$RFIL
   echo 'export PYTHONPATH' >>$RFIL
   if [ $CSRC = shifter ]; then
     echo "source /opt/lsst/software/stack/setup.sh" >>$RFIL
@@ -620,7 +620,7 @@ if [[ -n $WFARGS ]]; then
   fi
   echo 'PATH=./local/desc-gen3-prod/bin:$PATH' >>$RFIL
   echo 'PYTHONPATH=./local/desc-gen3-prod:$PYTHONPATH' >>$RFIL
-  echo "echo Final PATH=:$PATH | sed 's/:/\n  /g'" >>$RFIL
+  echo "echo Final PATH=:\$PATH | sed 's/:/\n  /g'" >>$RFIL
   echo 'echo task-setup: Location for g3wf-run-task: $(which g3wf-run-task)' >>$RFIL
   echo "------ End task setup ------"
   # Start the run script.
