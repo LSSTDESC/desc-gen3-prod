@@ -395,6 +395,9 @@ if doProc2:
                     nlaun += 1
                 elif tstat == 'running':
                     nrunn += 1
+                elif tstat == 'failed' or tstat == 'dep_fail':
+                    logmsg(f"WARNING: Task failed with status: {tstat}")
+                    nfail += 1
                 else:
                     logmsg(f"WARNING: Unexpected task status: {tstat}")
                 newrems.append(tnam)
@@ -426,7 +429,7 @@ if doProc2:
                 logmsg(f"Error calculating outpur rate: {e}")
         dfmap_last = dfmap
         ratemsg = f"rate: {rate:7.3f} GiB/sec"
-        logmsg(f"Task output size: {ngib:10.3f} GiB, {ratemsg}, {freemsg}'")
+        logmsg(f"Task output size: {ngib:10.3f} GiB, {ratemsg}, {freemsg}")
         logmon('task-output-size.log', f"{ngib:13.6f} {ngibfree:15.6f}")
         update_monexp()
         if len(rem_tasknames) == 0: break
