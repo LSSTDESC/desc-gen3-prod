@@ -350,8 +350,7 @@ if [ $PMONDT != false ] && [ $PMONDT != $PMONDT ]; then
 fi
 
 # Define the task command prepend.
-PREPEND="g3wf-run-task"
-PREPEND="./local/desc-gen3-prod/bin/g3wf-run-task/g3wf-run-task"
+PREPEND="./local/desc-gen3-prod/bin/g3wf-run-task"
 if [ $PFSOPT -gt 0 ]; then
   PREPEND="$PREPEND  --perfstat$PFSOPT"
 fi
@@ -608,7 +607,7 @@ if [[ -n $WFARGS ]]; then
   echo 'echo run: Location for g3wf-run-task: $(which g3wf-run-task)' >>$RFIL
   echo "g3wfpipe-run $WFARGS" >>$RFIL
   chmod +x ./run
-  # Create setup for the task for the WorkQueue worker.
+  # Create setup for the task for the WorkQueue worker. Not needed or used??
   RFIL=./task-setup.sh
   rm -f $RFIL
   echo "# This script was generated $(date) on $(hostname)" >>$RFIL
