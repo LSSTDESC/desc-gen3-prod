@@ -350,7 +350,8 @@ if [ $PMONDT != false ] && [ $PMONDT != $PMONDT ]; then
 fi
 
 # Define the task command prepend.
-PREPEND="$(pwd)/local/desc-gen3-prod/bin/g3wf-run-task"
+#PREPEND="$(pwd)/local/desc-gen3-prod/bin/g3wf-run-task"
+PREPEND="g3wf-run-task"
 if [ $PFSOPT -gt 0 ]; then
   PREPEND="$PREPEND  --perfstat$PFSOPT"
 fi
