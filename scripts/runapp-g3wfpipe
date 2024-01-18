@@ -423,7 +423,7 @@ PIPEVAL=
     | sed s/%RMIENABLE%/$RMIE/g \
     | sed s/%RMIINTERVAL%/$RMII/g \
     | sed s/%USER%/$UOUT/g \
-    | sed s/%PREPEND%/"$PREPEND"/g \
+    | sed s#%PREPEND%#"$PREPEND"#g \
     >config.yaml
   if [ ! -s config.yaml ]; then
     err_echo Unable to build config.yaml
