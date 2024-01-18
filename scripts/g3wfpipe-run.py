@@ -435,7 +435,7 @@ if doProc2:
         update_monexp()
         if nfail >= maxfail:
             logmsg(f"Aborting job for too many task failures: {nfail} >= {maxfail}.")
-            sys.exit(101)
+            os._exit(101)
         if len(rem_tasknames) == 0: break
         if counts == last_counts:
             nsame_counts += 1
