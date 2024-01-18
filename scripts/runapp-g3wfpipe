@@ -564,8 +564,8 @@ if [[ -n $WFARGS ]]; then
   echo '  (mkdir repos && cd repos && git clone https://github.com/LSSTDESC/desc-wfmon && cd ..)' >>$RFIL
   echo "  pip install -t $JOBDIR/local/desc-wfmon $JOBDIR/repos/desc-wfmon" >>$RFIL
   echo "fi" >>$RFIL
-  echo 'PATH=$JOBDIR/local/desc-wfmon/bin:$PATH' >>$RFIL
-  echo 'PYTHONPATH=$JOBDIR/local/desc-wfmon:$PYTHONPATH' >>$RFIL
+  echo "PATH=$JOBDIR/local/desc-wfmon/bin:\$PATH" >>$RFIL
+  echo "PYTHONPATH=$JOBDIR/local/desc-wfmon:\$PYTHONPATH" >>$RFIL
   echo 'IPYDIR=$JOBDIR/repos/desc-wfmon/ipynb' >>$RFIL
   echo 'cp $IPYDIR/monexp.ipynb .' >>$RFIL
   echo 'cp $IPYDIR/perfstat.ipynb .' >>$RFIL
@@ -575,8 +575,8 @@ if [[ -n $WFARGS ]]; then
   echo "  echo setup: Installing desc-gen3-prod." >>$RFIL
   echo "  pip install -t $JOBDIR/local/desc-gen3-prod git+https://github.com/LSSTDESC/desc-gen3-prod" >>$RFIL
   echo "fi" >>$RFIL
-  echo 'PATH=$JOBDIR/local/desc-gen3-prod/bin:$PATH' >>$RFIL
-  echo 'PYTHONPATH=$JOBDIR/local/desc-gen3-prod:$PYTHONPATH' >>$RFIL
+  echo "PATH=$JOBDIR/local/desc-gen3-prod/bin:\$PATH" >>$RFIL
+  echo "PYTHONPATH=$JOBDIR/local/desc-gen3-prod:\$PYTHONPATH" >>$RFIL
   echo 'echo setup: Running with desc-gen3-prod version $(desc-gen3-prod-version)' >>$RFIL
   echo 'echo setup: Location for g3wf-run-task: $(which g3wf-run-task)' >>$RFIL
   echo 'echo setup: Running with desc-wfmon version $(desc-wfmon-parsltest -v)' >>$RFIL
