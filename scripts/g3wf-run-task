@@ -136,6 +136,12 @@ show-help() {
 
 ########## End functions. #########
 
+if [ -r task-setup.sh ]; then
+  msgecho Sourcing task-setup.sh
+  source task-setup.sh
+else
+  msgecho "task-setup.sh not found in $(pwd)"
+fi
 TSTART=$(date +%s.%N)
 TASKLOG=$(g3wf-get-stderr)
 LOGBASE=$(echo $TASKLOG | sed 's/\.stderr$//g')
