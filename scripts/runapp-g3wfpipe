@@ -567,7 +567,7 @@ if [[ -n $WFARGS ]]; then
   echo "fi" >>$RFIL
   echo "PATH=$JOBDIR/local/desc-wfmon/bin:\$PATH" >>$RFIL
   echo "PYTHONPATH=$JOBDIR/local/desc-wfmon:\$PYTHONPATH" >>$RFIL
-  echo 'IPYDIR=$JOBDIR/repos/desc-wfmon/ipynb' >>$RFIL
+  echo "IPYDIR=$JOBDIR/repos/desc-wfmon/ipynb" >>$RFIL
   echo 'cp $IPYDIR/monexp.ipynb .' >>$RFIL
   echo 'cp $IPYDIR/perfstat.ipynb .' >>$RFIL
   echo 'cp $IPYDIR/monexp.py .' >>$RFIL
