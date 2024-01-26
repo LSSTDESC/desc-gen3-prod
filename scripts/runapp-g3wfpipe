@@ -38,7 +38,8 @@ if [[ -z $1 || $1 = -h ]]; then
   echo "  cfsXXX: Append -cfsXXX to the user name for data output."
   echo HFG = HF1-HF2-... where HFi is any of
   echo "  exec:XX where XX = wq (XX is GB memory) or tp (XX is process count)"
-  echo "  cpr: Use coprocesses with WQ. Ignored if not WQ"
+  echo "  cpr: Use coprocesses with WQ (default). Ignored if not WQ"
+  echo "  nocpr: Do not use coprocesses with WQ. Ignored if not WQ"
   echo "  rebuild: Rebuild the SW cache (cvmfs only)."
   echo "  cvmfs: Code taken from default env using LSST cvmfs"
   echo "  cvmfs:BBB: Code taken from env option BBB using LSST cvmfs code"
@@ -274,7 +275,8 @@ PGROUPS=
 PMONDT=${CON_PMONDT:-3}  
 PFSOPT=${CON_PFSOPT:-0}
 STRACE=$CON_STRACE
-COPROCESS=
+COPROCESS=$CON_COPROCESS
+COPROCESS=true
 REBUILD=false
 for OPT in ${HOPTS[@]}; do
   info_echo Processing howfig opt $OPT
@@ -291,7 +293,9 @@ for OPT in ${HOPTS[@]}; do
   elif [ ${OPT:0:5} = pmon: ]; then
     PMONDT=${OPT:5}
   elif [ ${OPT} = cpr ]; then
-    COPROCESS=True
+    COPROCESS=true
+  elif [ ${OPT} = 'nocpr']; then
+    COPROCESS=false
   elif [ ${OPT:0:5} = tmax: ]; then
     IFS=':' read -ra TMAXS <<< "${OPT:5}"
     NTMAX=${#TMAXS}
@@ -374,6 +378,7 @@ echo "CON_PREPEND=\"$PREPEND\"" >>consetup.sh
 echo "CON_PIPE=$PIPE" >>consetup.sh
 echo "CON_PMONDT=$PMONDT" >>consetup.sh
 echo "CON_STRACE=$STRACE" >>consetup.sh
+echo "CON_COPROCESS=$COPROCESS" >>consetup.sh
 echo "CON_PFSOPT=$PFSOPT" >>consetup.sh
 
 if [ $DOINIT = true ]; then
@@ -455,8 +460,8 @@ PIPEVAL=
   else
     echo "  monitoring_interval: $PMONDT" >>config.yaml
   fi
-  if [ -n "$COPROCESS" ]; then
-    echo "  coprocess: $COPROCESS" >>config.yaml
+  if [ $COPROCESS = true ]; then
+    echo "  coprocess: True" >>config.yaml
   fi
 
   #  monitoring: parsl.monitoring.monitoring.MonitoringHub(
