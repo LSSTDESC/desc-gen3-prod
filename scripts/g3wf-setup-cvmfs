@@ -134,7 +134,7 @@ else
           fi
           PRODS="$PRODS typeguard<3"
           echo $MYNAME: Installing ndcctools
-          conda install -y -c conda-forge ndcctools=7.3.0=py38h4630a5e_0 --no-deps
+          conda install -y -c conda-forge ndcctools=7.7.3=py38h514f0f6_0 --no-deps
           echo $MYNAME: Installing parsl without dependencies
           pip install -I --prefix ${wq_env} --no-deps 'parsl[monitoring,workqueue] @ git+https://github.com/parsl/parsl@desc'
           echo $MYNAME: Installing $PRODS
