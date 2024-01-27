@@ -50,7 +50,8 @@ if [[ -z $1 || $1 = -h ]]; then
   echo "  group:GNAM: Group jobs where GNAM is one of the following group names:"
   echo "    ccd: isr, characterizeImage, calibrate "
   echo "  pmon:DT Sampling time for the parsl process monitor is DT sec."
-  echo "          DT = false or 0 disables monitoring. Default is 3."
+  echo "          DT = false disables monitoring. 0 disables periodic monitoring."
+  echo "          Default is 3."
   echo "  bproc:BPO: Run pre,proc,post multistage with proc in pmbs-BPO"
   echo "    Options BPO are those for pmbs here colon separated."
   echo "  repo:RRR - Use repo at $HOME/scratch/repo-RRR."
@@ -455,7 +456,7 @@ PIPEVAL=
   echo "" >>config.yaml
   echo "parsl_config:" >>config.yaml
   echo "  retries: 1" >>config.yaml
-  if [ $PMONDT = false -o $PMONDT -le 0 ]; then
+  if [ $PMONDT = false ]; then
     echo "  monitoring: false" >>config.yaml
   else
     echo "  monitoring_interval: $PMONDT" >>config.yaml
