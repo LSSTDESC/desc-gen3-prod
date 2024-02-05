@@ -30,6 +30,7 @@ class Entry:
     dirmap['HOM'] = f"/global/homes/{user[0]}/{user}/txtfile"
     dirmap['SCR'] = f"/pscratch/sd/{user[0]}/{user}/txtfile"
     dirmap['CFS'] = f"/global/cfs/cdirs/{proj}/{user}/txtfile"
+    dirmap['REP'] = f"/global/cfs/cdirs/lsst/production/gen3/DC2/Run2.2i/repo/u/{user}/txtfile"
     values = []  # All created entries
     write_data = ''    # Data used for writes.
     read_data = ''     # Data from the last read
@@ -224,11 +225,11 @@ tsam = 10
 
 if len(sys.argv) < 2 or sys.argv[1] == '-h':
     print(f"Usage: {os.path.basename(sys.argv[0])} CONFIG OUTFIL")
-    print(f"  E.g. CONFIG = MB:1000-SEC:10-SCR:R-CFS:RW-HOM:W")
+    print(f"  E.g. CONFIG = MB:1000-SEC:10-SCR:r-CFS:rw-HOM:w")
     print(f"      MB:sss - Use file size sss MiB (default {nmb})")
     print(f"     SEC:ttt - Use sampling time ttt sec (default {tsam})")
-    print(f"           R - Read from the directory")
-    print(f"           W - Write to the directory")
+    print(f"           r - Read from the directory")
+    print(f"           w - Write to the directory")
     for key, value in Entry.dirmap.items():
         print(f"{key:>12} - {value}")
     exit(0)
