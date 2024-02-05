@@ -1,5 +1,12 @@
 #!/usr/bin/env python3
 
+# g3wf-fsmonitor
+# David Adams
+# February 2024
+#
+# Output may be read into a dataframe with:
+#   df = pandas.read_csv(f, sep="\s+", comment='#', header=None)
+
 import sys
 import os
 import time
@@ -16,11 +23,21 @@ def err_print(msg):
     print(f"# ERROR: {msg}")
 
 print_tim0 = 0
-def mon_print(tim1, key, rw ='X', sizmb=0.0, dtim=0.0):
+mon_file = None
+def mon_print(tim, key, rw ='x', sizmb=0.0, dtim=0.0):
     global print_tim0
     rate = int(sizmb/dtim) if dtim > 0 else 0
-    print(f"{tim1-print_tim0:12.3f} {key:>4} {rw} {sizmb:5.0f} {dtim:6.3f} {rate:4}")
-    if key == 'TIM': print_tim0 = tim1
+    line = f"{tim-print_tim0:12.3f} {key:>4} {rw} {sizmb:5.0f} {dtim:6.3f} {rate:4}"
+    mode = 'a'
+    if key == 'TIM':
+         print_tim0 = tim
+         mode = 'w'
+    if mon_file is None:
+        print(line)
+    else:
+        fout = open(mon_file, mode)
+        fout.write(line + '\n')
+        fout.close()
 
 class Entry:
     dirmap = {}
@@ -244,8 +261,6 @@ if len(sys.argv) < 2 or sys.argv[1] == '-h':
         print(f"{key:>12} - {value}")
     exit(0)
 
-mon_print(tim0, 'TIM')
-
 # Parse the config string, sequence of directory-rw keys DIRRW
 # file sizes [MiB] MB:iii, and sampling rates SEC:12.5
 # E.g. MB:1000-SEC:10-SCR:R-CFS:RW-HOM:W
@@ -264,7 +279,12 @@ for entry in sys.argv[1].split('-'):
             assert(False)
     except Exception:
         raise Exception(f"Invalid config entry: {entry}")
-        
+
+if len(sys.argv) > 2:
+    mon_file = sys.argv[2]
+    msg_print(f"Data are written to {mon_file}")
+
+mon_print(tim0, 'TIM')
 
 for ent in Entry.values:
     msg_print(ent)

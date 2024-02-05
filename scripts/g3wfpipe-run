@@ -47,10 +47,11 @@ if echo $ARGS | grep proc >/dev/null; then
     PID=$!
     echo $PID>sysmon.pid
   fi
-  FSMFIL='./fsmon.txt'
+  FSMLOG='./fsmon.log'
+  FSMFIL='./fsmon.csv'
   FSMARG='SEC:60-SCR:rw-CFS:rw'
   echo $THISBAS: Starting fsmon
-  g3wf-fsmonitor $FSMARG >$FSMFIL 2>&1 &
+  g3wf-fsmonitor $FSMARG $FSMFIL >$FSMLOG 2>&1 &
   PID=$!
   echo $!>./fsmon.pid
 fi
