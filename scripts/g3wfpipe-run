@@ -67,6 +67,7 @@ fi
 if [ -r fsmon.pid ]; then
   echo $THISBAS: Terminating fsmon.
   kill $(cat fsmon.pid)
+  wait $(cat fsmon.pid)
 else
   echo $THISBAS: It appears fsmon is not running.
 fi
