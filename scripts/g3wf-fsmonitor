@@ -101,7 +101,7 @@ class Entry:
             assert(False)
         # Convert to string.
         msg_print(f"{myname}: ... String conversion.")
-        cls.write_data = ichars.tostring().decode()
+        cls.write_data = ichars.tobytes().decode()
         msg_print(f"{myname}: Write data buffer size: {len(cls.write_data)/cls.mib} MiB")
     def generate_data_from_file(cls):
         """
@@ -210,7 +210,7 @@ class Entry:
                 tim2 = time.time()
                 isiz = len(self.read_data)
                 if isiz != asksize:
-                    rsg_print(f"Read size mismatch: {isiz} != {asksize} for {ifnam}")
+                    msg_print(f"Read size mismatch: {isiz} != {asksize} for {ifnam}")
                     return 3
                 timi = tim2 - tim1
                 isizmb = isiz/self.mib
