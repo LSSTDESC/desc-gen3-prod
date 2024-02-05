@@ -1,0 +1,281 @@
+#!/usr/bin/env python3
+
+import sys
+import os
+import time
+import numpy
+
+######## Helpers #########
+
+def msg_print(msg):
+    print(f"# {msg}")
+
+def err_print(msg):
+    print(f"# ERROR: {msg}")
+
+print_tim0 = 0
+def mon_print(tim1, key, rw ='X', sizmb=0.0, dtim=0.0):
+    global print_tim0
+    rate = int(sizmb/dtim) if dtim > 0 else 0
+    print(f"{tim1-print_tim0:12.3f} {key:>4} {rw} {sizmb:5.0f} {dtim:6.3f} {rate:4}")
+    if key == 'TIM': print_tim0 = tim1
+
+class Entry:
+    dirmap = {}
+    proj = 'm1727'
+    user = 'dladams'
+    mib = 1024*1024
+    linelen = 128    # Generated line length including eol.
+    blockmb = 10000  # Maximum size for generated data.
+    dirmap['HOM'] = f"/global/homes/{user[0]}/{user}/txtfile"
+    dirmap['SCR'] = f"/pscratch/sd/{user[0]}/{user}/txtfile"
+    dirmap['CFS'] = f"/global/cfs/cdirs/{proj}/{user}/txtfile"
+    values = []  # All created entries
+    write_data = ''    # Data used for writes.
+    read_data = ''     # Data from the last read
+    show_except = True
+    @classmethod
+    def next_time(cls):
+        """
+        Return the next sampling time.
+        """
+        tnext = None
+        for ent in cls.values:
+            if tnext is None or ent.tnext < tnext: tnext = ent.tnext
+        return tnext
+    @classmethod
+    def sleep_time(cls):
+        """
+        Return the time we can safely sleep before sampling any entries.
+        """
+        tim1 = time.time()
+        tsleep = None
+        for ent in cls.values:
+            twait = ent.tnext - tim1
+            if twait <= 0: return 0
+            if tsleep is None or twait < tsleep: tsleep = twait
+        tim2 = time.time()
+        return tsleep - tim2 + tim
+    @classmethod
+    def max_nmb(cls, key=None, rw=None):
+        """
+        Return the maximum read size with the given key and rw.
+        """
+        nmb = 0
+        for ent in cls.values:
+            if ( rw is None or  ent.rw ==  rw) and \
+               (key is None or ent.key == key) and \
+               ent.nmb > nmb: nmb = ent.nmb
+        return nmb
+    @classmethod
+    def generate_data(cls, nmbin=None):
+        """
+        Generate the data needed for writes.
+        Data is a string with eols so that the line length is linelen.
+        """
+        myname = 'generate_data'
+        # Size of the generated array.
+        nmb = cls.max_nmb(rw='w') if nmbin is None else nmbin
+        nbyte = nmb*cls.mib
+        nline = nbyte//cls.linelen
+        assert( nbyte%cls.linelen == 0 )  # Make sure last line has linelen chars
+        # Randomly generate printable (and visible) ascii codes for the first blockmax lines.
+        block_nline = cls.blockmb*cls.mib//cls.linelen
+        nline_ran = min(nline, block_nline)
+        nchar_ran = nline_ran*cls.linelen
+        nmb_ran = nchar_ran//cls.mib
+        msg_print(f"{myname}: Generating output data: {nline_ran} lines, {nmb_ran} MiB")
+        msg_print(f"{myname}: ... Random numbers.")
+        rng = numpy.random.default_rng()
+        ichars = rng.integers(33, 127, size=nchar_ran, dtype='B')
+        # Convert to lines.
+        msg_print(f"{myname}: ... Line convserion.")
+        for iline in range(nline_ran):
+            ichars[(iline+1)*cls.linelen-1] = ord('\n')
+        # Add lines if needed.
+        if nline > nline_ran:
+            assert(False)
+        # Convert to string.
+        msg_print(f"{myname}: ... String convesrion.")
+        cls.write_data = ichars.tostring().decode()
+        msg_print(f"{myname}: Write data buffer size: {len(cls.write_data)/cls.mib} MiB")
+    def generate_data_from_file(cls):
+        """
+        Generate the data needed for writes.
+        """
+        nmb = 0
+        for ent in cls.values:
+            if ent.read() and ent.nmb > nmb: nmb = ent.nmb
+        samrets = []
+        ents = []
+        ok = False
+        msg_print(f"Filling write buffer with {nmb} MiB")
+        for loc in ['SCR', 'CFS']:
+            tmpent = Entry('SCR', 'r', nmb, -1)
+            ents.append(ent)
+            samret = tmpent.sample()
+            if samret == 0:
+                cls.write_data = cls.read_data
+                ok = True
+                break
+            samrets.append(samret)
+        if ok:
+            msg_print(f"Write data buffer size: {len(cls.write_data)/cls.mib} MiB")
+        else:
+            msg_print(f"Unable to find write data. Sample returns: {samrets}")
+            for ent in ents:
+                msg_print(ent)
+            assert(False)
+            
+    def __init__(self, keyin, rwin, nmbin, tsamin):
+        self.key = keyin
+        self.rw = rwin
+        self.nmb = int(nmbin)
+        self.tsam = float(tsamin)  # Interval between samples. Negative suppresses sample logging.
+        self.dir = Entry.dirmap[key]
+        self.tnext = 0    # Next time a sample should be taken (tsam after the last)
+        assert( self.rw in ['r', 'w'])
+        assert(os.path.isdir(self.dir))
+        if self.tsam >=0: self.values.append(self)
+    def __str__(self):
+        return f"{self.key:>4} {self.rw} {self.nmb:6} MiB  {self.tsam:7.1f} sec  {self.filename(True)}"
+    def label(self):
+        return f"{self.key}-{self.rw}-{self.nmb}-{self.tsam}"
+    def read(self):
+        return self.rw == 'r'
+    def write(self):
+        return self.rw == 'w'
+    def filename(self, show_missing=False):
+        if self.write():
+            return f"{self.dir}/text-{self.nmb}.tmp"
+        fnam = f"{self.dir}/text-{self.nmb}.txt--<FILE-NOT-FOUND>" if show_missing else None
+        fnmb = None
+        for fnam_ in os.listdir(self.dir):
+            if fnam_[0:5] == 'text-' and fnam_[-4:] in ['.dat', '.txt', '.tmp']:
+                snmb = fnam_[5:-4]
+                if snmb.isdigit():
+                    fnmb_ = int(snmb)
+                    # Pick the smallest file that has self.nmb MiB
+                    if fnmb_ >= self.nmb and (fnmb is None or fnmb_ <= fnmb):
+                        fnam = f"{self.dir}/{fnam_}"
+                        fnmb = fnmb_
+        return fnam
+    def sample(self):
+        """
+        Read or write one file and wite an entry to the monitor log.
+        Return: 0 - sample taken
+                1 - Too early to sample
+                2 - File not found.
+                3 - Size mismatch.
+                4 - Write data buffer is to small
+                5 - Other error.
+        """
+        asksize = self.mib*self.nmb
+        if self.tnext > time.time(): return 1
+        if self.write():
+            if len(self.write_data) < asksize: self.generate_data()
+            if len(self.write_data) < asksize: return 4
+            try:
+                ofnam = self.filename()
+                if ofnam == '': return 2
+                tim1 = time.time()
+                self.tnext = tim1 + self.tsam
+                ofil = open(ofnam, 'w')
+                osiz = ofil.write(self.write_data[0:asksize])
+                ofil.close()
+                tim2 = time.time()
+                if osiz != asksize: return 3
+                timo = tim2 - tim1
+                osizmb = osiz/self.mib
+                if self.tsam >= 0: mon_print(tim1, self.key, 'w', osizmb, timo)
+                return 0
+            except Exception as e:
+                if self.show_except: msg_print(e)
+                return 5
+        elif self.read():
+            try:
+                ifnam = self.filename()
+                if ifnam == '': return 2
+                tim1 = time.time()
+                self.tnext = tim1 + self.tsam
+                ifil = open(ifnam, 'r')
+                Entry.read_data = ifil.read(asksize)
+                ifil.close()
+                tim2 = time.time()
+                isiz = len(self.read_data)
+                if isiz != asksize:
+                    rsg_print(f"Read size mismatch: {isiz} != {asksize} for {ifnam}")
+                    return 3
+                timi = tim2 - tim1
+                isizmb = isiz/self.mib
+                if self.tsam >= 0: mon_print(tim1, self.key, 'r', isizmb, timi)
+                self.tnext = tim1 + self.tsam
+                return 0
+            except Exception as e:
+                if self.show_except: err_print(e)
+                return 5
+        return 3
+
+######### Begin main ########
+
+tim0 = time.time()
+nmb = 1000
+tsam = 10
+
+if len(sys.argv) < 2 or sys.argv[1] == '-h':
+    print(f"Usage: {os.path.basename(sys.argv[0])} CONFIG OUTFIL")
+    print(f"  E.g. CONFIG = MB:1000-SEC:10-SCR:R-CFS:RW-HOM:W")
+    print(f"      MB:sss - Use file size sss MiB (default {nmb})")
+    print(f"     SEC:ttt - Use sampling time ttt sec (default {tsam})")
+    print(f"           R - Read from the directory")
+    print(f"           W - Write to the directory")
+    for key, value in Entry.dirmap.items():
+        print(f"{key:>12} - {value}")
+    exit(0)
+
+print(tim0)
+mon_print(tim0, 'TIM')
+
+# Parse the config string, sequence of directory-rw keys DIRRW
+# file sizes [MiB] MB:iii, and sampling rates SEC:12.5
+# E.g. MB:1000-SEC:10-SCR:R-CFS:RW-HOM:W
+
+for entry in sys.argv[1].split('-'):
+    try:
+        key, val = entry.split(':')
+        if key == 'MB':
+            nmb = int(val)
+        elif key == 'SEC':
+            tsam = float(val)
+        elif key in Entry.dirmap:
+            for rw in val:
+                Entry(key, rw, nmb, tsam)
+        else:
+            assert(False)
+    except Exception:
+        raise Exception(f"Invalid config entry: {entry}")
+        
+
+for ent in Entry.values:
+    msg_print(ent)
+
+keep_going = True
+tnext = None   # Time at which we should next loop over samples.
+iloop = 0
+maxloop = 10
+mon_print(tim0, 'GEN')
+Entry.generate_data()
+mon_print(time.time(), 'BEG')
+while keep_going:
+    tnext = Entry.next_time()
+    tsleep = tnext - time.time()
+    #print(f"tsleep = {tsleep}")
+    if tsleep > 0: time.sleep(tsleep)
+    for ent in Entry.values:
+        samret = ent.sample() 
+        if tnext is None or ent.tnext < tnext: tnext = ent.tnext
+        if samret > 1: print(f"Loop {iloop}: Sampling {ent.label()} returned {samret}", file=sys.stderr)
+    iloop += 1
+    if iloop > maxloop: break
+
+mon_print(time.time(), 'END')
