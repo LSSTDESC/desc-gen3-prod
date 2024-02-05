@@ -244,7 +244,6 @@ if len(sys.argv) < 2 or sys.argv[1] == '-h':
         print(f"{key:>12} - {value}")
     exit(0)
 
-print(tim0)
 mon_print(tim0, 'TIM')
 
 # Parse the config string, sequence of directory-rw keys DIRRW
