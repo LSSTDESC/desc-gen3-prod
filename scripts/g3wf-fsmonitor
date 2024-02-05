@@ -4,6 +4,8 @@ import sys
 import os
 import time
 import numpy
+import errno
+import signal
 
 ######## Helpers #########
 
@@ -27,10 +29,11 @@ class Entry:
     mib = 1024*1024
     linelen = 128    # Generated line length including eol.
     blockmb = 10000  # Maximum size for generated data.
-    dirmap['HOM'] = f"/global/homes/{user[0]}/{user}/txtfile"
-    dirmap['SCR'] = f"/pscratch/sd/{user[0]}/{user}/txtfile"
-    dirmap['CFS'] = f"/global/cfs/cdirs/{proj}/{user}/txtfile"
-    dirmap['REP'] = f"/global/cfs/cdirs/lsst/production/gen3/DC2/Run2.2i/repo/u/{user}/txtfile"
+    fsbase = 'fsmonitor'
+    dirmap['HOM'] = f"/global/homes/{user[0]}/{user}/{fsbase}"
+    dirmap['SCR'] = f"/pscratch/sd/{user[0]}/{user}/{fsbase}"
+    dirmap['CFS'] = f"/global/cfs/cdirs/{proj}/{user}/{fsbase}"
+    dirmap['REP'] = f"/global/cfs/cdirs/lsst/production/gen3/DC2/Run2.2i/repo/u/{user}/{fsbase}"
     values = []  # All created entries
     write_data = ''    # Data used for writes.
     read_data = ''     # Data from the last read
@@ -97,7 +100,7 @@ class Entry:
         if nline > nline_ran:
             assert(False)
         # Convert to string.
-        msg_print(f"{myname}: ... String convesrion.")
+        msg_print(f"{myname}: ... String conversion.")
         cls.write_data = ichars.tostring().decode()
         msg_print(f"{myname}: Write data buffer size: {len(cls.write_data)/cls.mib} MiB")
     def generate_data_from_file(cls):
@@ -198,6 +201,7 @@ class Entry:
             try:
                 ifnam = self.filename()
                 if ifnam == '': return 2
+                if ifnam is None: return 4
                 tim1 = time.time()
                 self.tnext = tim1 + self.tsam
                 ifil = open(ifnam, 'r')
@@ -217,6 +221,11 @@ class Entry:
                 if self.show_except: err_print(e)
                 return 5
         return 3
+
+keep_going = True
+def stoploop(signam, frame):
+     global keep_going
+     keep_going = False
 
 ######### Begin main ########
 
@@ -261,13 +270,14 @@ for entry in sys.argv[1].split('-'):
 for ent in Entry.values:
     msg_print(ent)
 
-keep_going = True
 tnext = None   # Time at which we should next loop over samples.
 iloop = 0
-maxloop = 10
+maxloop = 0
 mon_print(tim0, 'GEN')
 Entry.generate_data()
 mon_print(time.time(), 'BEG')
+signal.signal(signal.SIGINT, stoploop)
+signal.signal(signal.SIGTERM, stoploop)
 while keep_going:
     tnext = Entry.next_time()
     tsleep = tnext - time.time()
@@ -278,6 +288,6 @@ while keep_going:
         if tnext is None or ent.tnext < tnext: tnext = ent.tnext
         if samret > 1: print(f"Loop {iloop}: Sampling {ent.label()} returned {samret}", file=sys.stderr)
     iloop += 1
-    if iloop > maxloop: break
+    if maxloop > 0 and iloop > maxloop: break
 
 mon_print(time.time(), 'END')

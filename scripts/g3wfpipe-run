@@ -47,6 +47,12 @@ if echo $ARGS | grep proc >/dev/null; then
     PID=$!
     echo $PID>sysmon.pid
   fi
+  FSMFIL='./fsmon.txt'
+  FSMARG='SCR:rw-CFS:rw'
+  echo $THISBAS: Starting fsmon
+  g3wf-fsmonitor $FSMARG >$FSMFIL 2>&1 &
+  PID=$!
+  echo $!>./fsmon.pid
 fi
 echo $THISBAS: Starting workflow script with args $ARGS
 echo $THISBAS: Location for g3wf-run-task: $(which g3wf-run-task)
@@ -57,6 +63,12 @@ if [ -r sysmon.pid ]; then
   kill $(cat sysmon.pid)
 else
   echo $THISBAS: It appears sysmon is not running.
+fi
+if [ -r fsmon.pid ]; then
+  echo $THISBAS: Terminating fsmon.
+  kill $(cat fsmon.pid)
+else
+  echo $THISBAS: It appears fsmon is not running.
 fi
 echo $THISBAS: Exiting with status $RSTAT.
 exit $RSTAT
