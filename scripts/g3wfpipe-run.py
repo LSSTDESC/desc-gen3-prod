@@ -268,7 +268,7 @@ logmsg(f"parsl location is {parsl.__file__}")
 try:
     ret = subprocess.run(['work_queue_worker', '-v'], capture_output=True)
     assert(ret.returncode == 0)
-    logmsg(sout.stdout.decode().split('\n')[0])
+    logmsg(ret.stdout.decode().split('\n')[0])
 except:
     logmsg("Unable to determine work_queue version")
 
