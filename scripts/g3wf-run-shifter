@@ -11,7 +11,7 @@ elif [ "$LNAM" = "-v" ]; then
   shift
   LNAM=$1
 else
-  IVER=17
+  IVER=18
 fi
 if [ -n "$HELP" ]; then
   echo Usage: source $MYNAME [-v IMAGE-VERSION] LSST_VERSION
