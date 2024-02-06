@@ -28,7 +28,29 @@ shift
 COM="$*"
 export PS1="Failed $MYNAME> "
 
-IMG=$(whoami)/gen3workflow-$LVER:$IVER
+USERS=$(whoami)
+if [ $USERS != dladams ]; then
+  USERS="$USERS dladams"
+fi
+
+for USER in $USERS; do
+  IMG=$USER/gen3workflow-$LVER:$IVER
+  if shifterimg images | grep $IMG 2>&1 1>/dev/null; then
+    BADIMGS=
+    break
+  else
+    BADIMGS="$BADIMGS $IMG"
+  fi
+done
+
+if [ -n "$BADIMGS" ]; then
+  echo Unable to find a matching shifter image:
+  for IMG in $BADIMGS; do
+    echo "  $IMG"
+  done
+  exit 4
+fi
+
 echo $MYNAME: Loading shifter image $IMG
 export PS1="shifter $LVER> "
 if [ -z "$COM" ]; then
