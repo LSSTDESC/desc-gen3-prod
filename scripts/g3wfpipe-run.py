@@ -329,9 +329,11 @@ if doQgReport:
 
 from parsl import python_app
 @python_app
+prereq_index = 20
 def prereq_starter(x):
+    global prereq_index
     import time
-    while x > 20:
+    while x >= prereq_index:
         time.sleep(10)
     print(f"Starting prereq {x}")
     return x
@@ -381,7 +383,6 @@ if doProc2:
         elif 1:
             prq = ParslJob(gwj, pg)
             prq.future = prereq_starter(ist)
-            #prq.get_future()
             task.add_prereq(prq)
         ist += 1
 
@@ -489,6 +490,9 @@ if doProc2:
             nsame_counts = 0
             last_counts = counts
         task_output_data_dir()
+        if nrunn < 10:
+            prereq_index += 10
+            logmsg("Reset prereq index to {prereq_index}")
         time.sleep(tsleep)
 
 if doProc1:
