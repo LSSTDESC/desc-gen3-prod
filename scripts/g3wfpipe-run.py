@@ -328,9 +328,13 @@ if doQgReport:
     ofil.write(f" Output node count: {len(pg.qgraph.oputputQuanta)}\n")
 
 from parsl import python_app
+prereq_max = 20
 @python_app
 def prqstarter(x):
-    print('Starting prereq {x}')
+    while x < prereq_max:
+        print(f"Waiting prereq {x}/{prereq_max}")
+        time.sleep(10)
+    print(f"Starting prereq {x}/{prereq_max}")
     return x
 
 if doProc2:
