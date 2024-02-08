@@ -384,6 +384,7 @@ if doProc2:
             print(f"Assigning prereq {prqnam} with status {future.done()} to task {taskname}")
             prq.future = future
             task.add_prereq(prq)
+        all_tasknames.append(prqnam)
         ist += 1
 
 
