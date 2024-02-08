@@ -367,15 +367,17 @@ if doProc2:
     logmsg(f"Starting task count is {len(start_tasknames)}")
     logmsg(f"Endpoint task count is {len(end_tasknames)}")
     from lsst.ctrl.bps import GenericWorkflowJob
+    from lsst.ctrl.bps import GenericWorkflowExec
     from desc.gen3_workflow import ParslJob
     ist = 0
     for taskname in start_tasknames:
         task = pg[taskname]
         prqnam = f"prereq{ist}"
         print(f"Creating prereq {prqnam}")
+        src_uri = "sleep"
         gwj = GenericWorkflowJob(prqnam)
-        gwj.executable.src_uri = f"sleep"
-        gwj.arguments = [f"ist"]
+        gwj.executable = GenericWorkflowExec(prqnam, "sleep")
+        gwj.arguments = [f"{ist}"]
         prq = ParslJob(gwj, pg)
         if 0:
             future = prereq_starter(ist)
