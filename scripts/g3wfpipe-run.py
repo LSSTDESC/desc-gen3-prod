@@ -382,7 +382,7 @@ if doProc2:
             prq = ParslJob(gwj, pg)
             prq.future = prereq_starter(ist)
             prq.get_future()
-            task.add_prereq(prq)
+            #task.add_prereq(prq)
         ist += 1
 
 
