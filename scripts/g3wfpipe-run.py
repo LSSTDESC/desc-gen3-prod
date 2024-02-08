@@ -383,6 +383,7 @@ if doProc2:
             prq = ParslJob(gwj, pg)
             prq.future = future
         task.add_prereq(prq)
+        task.get_future()
         ist += 1
 
 
