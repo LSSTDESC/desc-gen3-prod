@@ -343,12 +343,16 @@ if doProc2:
         type_tasknames[typename] = pg.get_jobs(typename)
         all_tasknames += type_tasknames[typename]
     ntask = len(all_tasknames)
+    start_tasknames = []
     end_tasknames = []
     for taskname in all_tasknames:
         task = pg[taskname]
         if not task.dependencies:
             end_tasknames.append(taskname)
+        if not task.prereqs:
+            start_tasknames.append(taskname)
     logmsg(f"Total task count is {len(all_tasknames)}")
+    logmsg(f"Starting task count is {len(start_tasknames)}")
     logmsg(f"Endpoint task count is {len(end_tasknames)}")
     nend_start = 0
     task_output_data_dir()
