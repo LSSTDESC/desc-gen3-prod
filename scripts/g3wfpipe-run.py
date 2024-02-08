@@ -333,7 +333,7 @@ prereq_max = 20
 def prereq_starter(x):
     import time
     time.sleep(2)
-    while x > prereq_max:
+    while x > 20:
         print(f"Waiting prereq {x}/{prereq_max}")
         time.sleep(10)
     print(f"Starting prereq {x}/{prereq_max}")
@@ -375,7 +375,7 @@ if doProc2:
         prqnam = f"prereq{str(ist).zfill(6)}{taskname[36:]}"
         print(f"Assigning prereq {prqnam} to task {taskname}")
         gwj = GenericWorkflowJob(prqnam)
-        if 1:
+        if 0:
             command = "sleep"
             gwj.executable = GenericWorkflowExec(prqnam, command)
             gwj.arguments = f"{10*ist}"
