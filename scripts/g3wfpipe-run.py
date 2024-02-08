@@ -378,11 +378,11 @@ if doProc2:
             gwj.arguments = f"{10*ist}"
             prq = ParslJob(gwj, pg)
             task.add_prereq(prq)
-        elif 0:
+        elif 1:
             prq = ParslJob(gwj, pg)
             prq.future = prereq_starter(ist)
-            prq.get_future()
-            #task.add_prereq(prq)
+            #prq.get_future()
+            task.add_prereq(prq)
         ist += 1
 
 
