@@ -371,8 +371,8 @@ if doProc2:
     ist = 0
     for taskname in start_tasknames:
         task = pg[taskname]
-        print(f"Creating prereq {prqnam}")
         prqnam = f"prereq{ist}"
+        print(f"Creating prereq {prqnam}")
         gwj = GenericWorkflowJob(prqnam)
         gwj.executable.src_uri = f"sleep"
         gwj.arguments = [f"ist"]
