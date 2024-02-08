@@ -330,7 +330,7 @@ if doQgReport:
 from parsl import python_app
 prereq_max = 20
 @python_app
-def prqstarter(x):
+def prereq_starter(x):
     import time
     while x > prereq_max:
         print(f"Waiting prereq {x}/{prereq_max}")
@@ -373,8 +373,10 @@ if doProc2:
         prqnam = f"prereq{ist}"
         gwj = GenericWorkflowJob(prqnam)
         prq = ParslJob(gwj, pg)
-        print(f"Assigning prereq {prqnam} to task {taskname}")
-        prq.future = prqstarter(ist)
+        print(f"Creating prereq {prqnam}")
+        future = prereq_starter(ist)
+        print(f"Assigning prereq {prqnam} with status {future.done()} to task {taskname}")
+        prq.future = future
         task.add_prereq(prq)
         ist += 1
 
