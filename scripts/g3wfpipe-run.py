@@ -354,6 +354,15 @@ if doProc2:
     logmsg(f"Total task count is {len(all_tasknames)}")
     logmsg(f"Starting task count is {len(start_tasknames)}")
     logmsg(f"Endpoint task count is {len(end_tasknames)}")
+    from lsst.ctrl.bps import GenericWorkflowJob
+    from desc.gen3_workflow import ParslJob
+    for taskname in start_tasknames:
+        task = pg[taskname]
+        gwj = GenericWorkflowJob("prereq")
+        prq = ParslJob(gwj, pg)
+        task.add_prereq(prq)
+
+
     nend_start = 0
     task_output_data_dir()
     for taskname in end_tasknames:
