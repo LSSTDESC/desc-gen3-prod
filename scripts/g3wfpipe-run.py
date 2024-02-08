@@ -327,6 +327,12 @@ if doQgReport:
     ofil.write(f"  Input node count: {len(pg.qgraph.inputQuanta)}\n")
     ofil.write(f" Output node count: {len(pg.qgraph.oputputQuanta)}\n")
 
+from parsl import python_app
+@python_app
+def prqstarter(x):
+    print('Starting prereq {x}')
+    return x
+
 if doProc2:
     logmsg()
     monexpUpdate = False
@@ -356,11 +362,14 @@ if doProc2:
     logmsg(f"Endpoint task count is {len(end_tasknames)}")
     from lsst.ctrl.bps import GenericWorkflowJob
     from desc.gen3_workflow import ParslJob
+    ist = 0
     for taskname in start_tasknames:
         task = pg[taskname]
-        gwj = GenericWorkflowJob("prereq")
+        gwj = GenericWorkflowJob(f"prereq{ist}")
         prq = ParslJob(gwj, pg)
+        prq.future = prqstarter(ist)
         task.add_prereq(prq)
+        ist += 1
 
 
     nend_start = 0
