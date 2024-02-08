@@ -376,9 +376,9 @@ if doProc2:
         print(f"Assigning prereq {prqnam} to task {taskname}")
         gwj = GenericWorkflowJob(prqnam)
         if 1:
-            src_uri = "sleep"
-            gwj.executable = GenericWorkflowExec(prqnam, "sleep")
-            gwj.arguments = [f"{10*ist}"]
+            command = "sleep"
+            gwj.executable = GenericWorkflowExec(prqnam, command)
+            gwj.arguments = f"{10*ist}"
             prq = ParslJob(gwj, pg)
         else:
             future = prereq_starter(ist)
