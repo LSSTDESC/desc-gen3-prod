@@ -331,6 +331,7 @@ from parsl import python_app
 prereq_max = 20
 @python_app
 def prqstarter(x):
+    import time
     while x > prereq_max:
         print(f"Waiting prereq {x}/{prereq_max}")
         time.sleep(10)
@@ -412,7 +413,7 @@ if doProc2:
         for tnam in rem_tasknames:
             tstat = tstats[tnam]
             if tstat in ('exec_done'):
-                print(f"Finished task {tnam}")
+                logmsg(f"Finished task {tnam}")
                 ndone += 1
                 if getStatusFromLog:
                     task = pg[tnam]
@@ -432,10 +433,10 @@ if doProc2:
                 elif tstat == 'running':
                     nrunn += 1
                 elif tstat == 'failed' or tstat == 'dep_fail':
-                    logmsg(f"WARNING: Task failed with status: {tstat}")
+                    logmsg(f"WARNING: Task {tnam} failed with status: {tstat}")
                     nfail += 1
                 else:
-                    logmsg(f"WARNING: Unexpected task status: {tstat}")
+                    logmsg(f"WARNING: Task {tnam} has unexpected status: {tstat}")
                 newrems.append(tnam)
         rem_tasknames = newrems
         msg = f"Finished {ndone} of {ntask} tasks."
