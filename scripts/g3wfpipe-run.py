@@ -1,5 +1,16 @@
 #!/usr/bin/env python3
 
+prereq_index = 20
+from parsl import python_app
+@python_app
+def prereq_starter(x):
+    global prereq_index
+    import time
+    while x >= prereq_index:
+        time.sleep(10)
+    print(f"Starting prereq {x}")
+    return x
+
 # Start the clock for timing out.
 import time
 time0 = time.time()
@@ -326,17 +337,6 @@ if doQgReport:
     ofil.write(f"          Graph ID: {pg.qgraph.graphID}\n")
     ofil.write(f"  Input node count: {len(pg.qgraph.inputQuanta)}\n")
     ofil.write(f" Output node count: {len(pg.qgraph.oputputQuanta)}\n")
-
-from parsl import python_app
-@python_app
-prereq_index = 20
-def prereq_starter(x):
-    global prereq_index
-    import time
-    while x >= prereq_index:
-        time.sleep(10)
-    print(f"Starting prereq {x}")
-    return x
 
 if doProc2:
     logmsg()
