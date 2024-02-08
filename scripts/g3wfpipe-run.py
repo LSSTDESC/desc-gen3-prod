@@ -331,7 +331,6 @@ from parsl import python_app
 @python_app
 def prereq_starter(x):
     import time
-    time.sleep(2)
     while x > 20:
         time.sleep(10)
     print(f"Starting prereq {x}")
