@@ -377,11 +377,12 @@ if doProc2:
             gwj.executable = GenericWorkflowExec(prqnam, command)
             gwj.arguments = f"{10*ist}"
             prq = ParslJob(gwj, pg)
-        elif 1:
+            task.add_prereq(prq)
+        elif 0:
             prq = ParslJob(gwj, pg)
             prq.future = prereq_starter(ist)
             prq.get_future()
-        task.add_prereq(prq)
+            task.add_prereq(prq)
         ist += 1
 
 
