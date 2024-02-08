@@ -334,7 +334,7 @@ def prereq_starter(x):
     time.sleep(2)
     while x > 20:
         time.sleep(10)
-    print(f"Starting prereq {x}}")
+    print(f"Starting prereq {x}")
     return x
 
 if doProc2:
