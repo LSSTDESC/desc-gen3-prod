@@ -372,19 +372,19 @@ if doProc2:
     ist = 0
     for taskname in start_tasknames:
         task = pg[taskname]
-        prqnam = f"prereq{ist}"
-        print(f"Creating prereq {prqnam}")
-        src_uri = "sleep"
+        prqnam = f"prereq{str(ist).zfill(6)}taskname[36:]"
+        print(f"Assigning prereq {prqnam} to task {taskname}")
         gwj = GenericWorkflowJob(prqnam)
-        gwj.executable = GenericWorkflowExec(prqnam, "sleep")
-        gwj.arguments = [f"{ist}"]
-        prq = ParslJob(gwj, pg)
-        if 0:
+        if 1:
+            src_uri = "sleep"
+            gwj.executable = GenericWorkflowExec(prqnam, "sleep")
+            gwj.arguments = [f"{10*ist}"]
+            prq = ParslJob(gwj, pg)
+        else:
             future = prereq_starter(ist)
-            print(f"Assigning prereq {prqnam} with status {future.done()} to task {taskname}")
+            prq = ParslJob(gwj, pg)
             prq.future = future
             task.add_prereq(prq)
-        all_tasknames.append(prqnam)
         ist += 1
 
 
