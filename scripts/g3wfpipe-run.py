@@ -369,8 +369,10 @@ if doProc2:
     ist = 0
     for taskname in start_tasknames:
         task = pg[taskname]
-        gwj = GenericWorkflowJob(f"prereq{ist}")
+        prqnam = f"prereq{ist}"
+        gwj = GenericWorkflowJob(prqnam)
         prq = ParslJob(gwj, pg)
+        print(f"Assigning prereq {prqnam} to task {taskname}")
         prq.future = prqstarter(ist)
         task.add_prereq(prq)
         ist += 1
@@ -410,6 +412,7 @@ if doProc2:
         for tnam in rem_tasknames:
             tstat = tstats[tnam]
             if tstat in ('exec_done'):
+                print(f"Finished task {tnam}")
                 ndone += 1
                 if getStatusFromLog:
                     task = pg[tnam]
