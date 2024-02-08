@@ -372,7 +372,7 @@ if doProc2:
     ist = 0
     for taskname in start_tasknames:
         task = pg[taskname]
-        prqnam = f"prereq{str(ist).zfill(6)}taskname[36:]"
+        prqnam = f"prereq{str(ist).zfill(6)}{taskname[36:]}"
         print(f"Assigning prereq {prqnam} to task {taskname}")
         gwj = GenericWorkflowJob(prqnam)
         if 1:
@@ -384,7 +384,7 @@ if doProc2:
             future = prereq_starter(ist)
             prq = ParslJob(gwj, pg)
             prq.future = future
-            task.add_prereq(prq)
+        task.add_prereq(prq)
         ist += 1
 
 
