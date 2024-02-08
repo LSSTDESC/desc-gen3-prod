@@ -332,6 +332,7 @@ prereq_max = 20
 @python_app
 def prereq_starter(x):
     import time
+    time.sleep(2)
     while x > prereq_max:
         print(f"Waiting prereq {x}/{prereq_max}")
         time.sleep(10)
@@ -370,14 +371,17 @@ if doProc2:
     ist = 0
     for taskname in start_tasknames:
         task = pg[taskname]
+        print(f"Creating prereq {prqnam}")
         prqnam = f"prereq{ist}"
         gwj = GenericWorkflowJob(prqnam)
+        gwj.executable.src_uri = f"sleep"
+        gwj.arguments = [f"ist"]
         prq = ParslJob(gwj, pg)
-        print(f"Creating prereq {prqnam}")
-        future = prereq_starter(ist)
-        print(f"Assigning prereq {prqnam} with status {future.done()} to task {taskname}")
-        prq.future = future
-        task.add_prereq(prq)
+        if 0:
+            future = prereq_starter(ist)
+            print(f"Assigning prereq {prqnam} with status {future.done()} to task {taskname}")
+            prq.future = future
+            task.add_prereq(prq)
         ist += 1
 
 
