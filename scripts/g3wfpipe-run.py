@@ -6,7 +6,7 @@ time0 = time.time()
 
 # Define parameters for the prerequisite tasks used to control
 # the number of starting (i.e. no prerequisite) tasks.
-maxcst = 100  # Max # of concurrent starting tasks. We should take this from the howfig.
+maxcst = 0  # Max # of concurrent starting tasks. We should take this from the howfig.
 prereq_index = maxcst  # Starting tasks up to this index are released for processing
 # Parsl app used to hold the starting tasks.
 from parsl import python_app
