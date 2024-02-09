@@ -1,6 +1,14 @@
 #!/usr/bin/env python3
 
-prereq_index = 20
+# Start the clock for timing out.
+import time
+time0 = time.time()
+
+# Define parameters for the prerequisite tasks used to control
+# the number of starting (i.e. no prerequisite) tasks.
+maxcst = 100  # Max # of concurrent starting tasks. We should take this from the howfig.
+prereq_index = maxcst  # Starting tasks up to this index are released for processing
+# Parsl app used to hold the starting tasks.
 from parsl import python_app
 @python_app
 def prereq_starter(x):
@@ -10,10 +18,6 @@ def prereq_starter(x):
         time.sleep(10)
     print(f"Starting prereq {x}")
     return x
-
-# Start the clock for timing out.
-import time
-time0 = time.time()
 
 import os
 import sys
@@ -362,31 +366,26 @@ if doProc2:
             end_tasknames.append(taskname)
         if not task.prereqs:
             start_tasknames.append(taskname)
+    ntask_st = len(start_tasknames)
     logmsg(f"Total task count is {len(all_tasknames)}")
-    logmsg(f"Starting task count is {len(start_tasknames)}")
+    logmsg(f"Starting task count is {ntask_st}")
     logmsg(f"Endpoint task count is {len(end_tasknames)}")
     from lsst.ctrl.bps import GenericWorkflowJob
     from lsst.ctrl.bps import GenericWorkflowExec
     from desc.gen3_workflow import ParslJob
     ist = 0
-    for taskname in start_tasknames:
-        task = pg[taskname]
-        prqnam = f"prereq{str(ist).zfill(6)}{taskname[36:]}"
-        print(f"Assigning prereq {prqnam} to task {taskname}")
-        gwj = GenericWorkflowJob(prqnam)
-        if 0:
-            command = "sleep"
-            gwj.executable = GenericWorkflowExec(prqnam, command)
-            gwj.arguments = f"{10*ist}"
-            prq = ParslJob(gwj, pg)
-            task.add_prereq(prq)
-        elif 1:
+    # If we have limit on the # concurrent strting tasks, then
+    # create a prerequisite for each of those tasks.
+    if maxcst > 0:
+        for taskname in start_tasknames:
+            task = pg[taskname]
+            prqnam = f"prereq{str(ist).zfill(6)}{taskname[36:]}"
+            print(f"Assigning prereq {prqnam} to task {taskname}")
+            gwj = GenericWorkflowJob(prqnam)
             prq = ParslJob(gwj, pg)
             prq.future = prereq_starter(ist)
             task.add_prereq(prq)
-        ist += 1
-
-
+            ist += 1
     nend_start = 0
     task_output_data_dir()
     for taskname in end_tasknames:
@@ -420,9 +419,10 @@ if doProc2:
         nrunn = 0
         for tnam in rem_tasknames:
             tstat = tstats[tnam]
+            bool isst = tnam in start_tasknames  # Is this a starting task
             if tstat in ('exec_done'):
                 logmsg(f"Finished task {tnam}")
-                ndone += 1
+                if isst: ndone_st += 1
                 if getStatusFromLog:
                     task = pg[tnam]
                     log_tstat = task.status
@@ -438,8 +438,10 @@ if doProc2:
                     npend += 1
                 elif tstat == 'launched':
                     nlaun += 1
+                    nlaun_st += 1
                 elif tstat == 'running':
                     nrunn += 1
+                    nrunn_st += 1
                 elif tstat == 'failed' or tstat == 'dep_fail':
                     logmsg(f"WARNING: Task {tnam} failed with status: {tstat}")
                     nfail += 1
@@ -490,9 +492,11 @@ if doProc2:
             nsame_counts = 0
             last_counts = counts
         task_output_data_dir()
-        if nrunn < 10:
-            prereq_index += 10
-            logmsg("Reset prereq index to {prereq_index}")
+        if maxcst > 0 and ndone_st > 0:
+            new_preq_index = ndone_st + maxcst
+            if new_prereq_index > prereq_index:
+                logmsg(f"Increasing prereq index to {prereq_index}")
+                prereq_index = new_prereq_index
         time.sleep(tsleep)
 
 if doProc1:
