@@ -426,6 +426,7 @@ if doProc2:
             isst = tnam in start_tasknames  # Is this a starting task?
             if tstat in ('exec_done'):
                 logmsg(f"Finished task {tnam}")
+                ndone += 1
                 if isst: ndone_st += 1
                 if getStatusFromLog:
                     task = pg[tnam]
