@@ -398,6 +398,7 @@ if doProc2:
     nsucc = 0
     nfail = 0
     nlbad = 0
+    ndone_st = 0
     rem_tasknames = all_tasknames
     logmsg(f"Monitoring DB: {pg.monitoring_db}")
     tsleep = 10
