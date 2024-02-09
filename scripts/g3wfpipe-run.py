@@ -419,7 +419,7 @@ if doProc2:
         nrunn = 0
         for tnam in rem_tasknames:
             tstat = tstats[tnam]
-            bool isst = tnam in start_tasknames  # Is this a starting task
+            isst = tnam in start_tasknames  # Is this a starting task?
             if tstat in ('exec_done'):
                 logmsg(f"Finished task {tnam}")
                 if isst: ndone_st += 1
