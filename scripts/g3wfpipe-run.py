@@ -417,6 +417,9 @@ if doProc2:
         npend = 0
         nlaun = 0
         nrunn = 0
+        npend_st = 0
+        nlaun_st = 0
+        nrunn_st = 0
         for tnam in rem_tasknames:
             tstat = tstats[tnam]
             isst = tnam in start_tasknames  # Is this a starting task?
@@ -435,7 +438,7 @@ if doProc2:
                         logmsg(f"WARNING: Unexpected log task status: {log_tstat}")
             else:
                 if tstat == 'pending':
-                    npend += 1
+                    npend_st += 1
                 elif tstat == 'launched':
                     nlaun += 1
                     nlaun_st += 1
