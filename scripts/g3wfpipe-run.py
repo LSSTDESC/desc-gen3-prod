@@ -411,7 +411,9 @@ if doProc2:
     nsame_counts = 0
     dfmap_last = None
     maxfail = 100
+    nchain_rem = len(end_tasknames)
     nactive_chain = 0
+    nactivated_chain = 0
     while True:
         # Fetch the current processing status for all tasks.
         try:
@@ -513,15 +515,18 @@ if doProc2:
             nsame_counts = 0
             last_counts = counts
         # Activate new chains.
-        nactivate = ntask_end - nactive_chain
-        if maxact > 0 and maxact < nactivate: nactivate = maxact
-        for iend in range(nactive_chain, nactivate):
+        nactivate = nend_task - nactivated_chain
+        if maxact > 0:
+            max_activate = maxact - nactive_chain
+            if max_activate < nactivate: nactivate = max_activate
+        for iend in range(nactivated_chain, nactivate):
+            if iend >= ntask_end: break
             taskname = end_tasknames[iend]
             dbglogmsg(f"Activating chain {iend:4}: {taskname}")
             task = pg[taskname]
             task.get_future()
             nactive_chain += 1
-        logmsg(f"Endpoint start count is {len(end_tasknames)}")
+            nactivated_chain += 1
         # Update the prereq index.
         if maxcst > 0 and ndone_start > 0:
             new_preq_index = ndone_start + maxcst
