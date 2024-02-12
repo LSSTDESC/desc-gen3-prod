@@ -26,19 +26,25 @@ def prereq_starter(x):
     return x
 
 # Fetch the starting tasks for the subgraph of pg including task tnam.
-get_starting_tasks(tnam, pg):
+def get_starting_tasks(tnam, pg):
     tnams1 = {tnam}
+    outnams = set()
     while True:
         tnams2 = set()
         done = True
-        for nam in tnams1:
-            task = pg[nam]
-            for ptnam in task.prereqs:
-                tnams2.add(ptnam)
+        for tnam1 in tnams1:
+            ptnams = pg[tnam1].prereqs
+            if len(ptnams):
                 done = False
-        if done:
-            return tnams2
-        tnams1 = tnams2
+                for ptnam in ptnams:
+                    tnams2.add(tnam2)
+            else:
+                outnams.add(tnam1)
+        if len(tnams2):
+            tnams1 = tnams2
+        else:
+            break
+    return outnams
 
 import os
 import sys
