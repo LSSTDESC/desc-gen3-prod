@@ -6,11 +6,12 @@ time0 = time.time()
 
 # Define parameters to optimize scheduling during task processing.
 maxcst = 0  # Max # of concurrent starting tasks. We should take this from the howfig.
-maxact = 0  # Max # of active task chains. We should take this from the howfig.
+maxact = 20  # Max # of active task chains. We should take this from the howfig.
 # We initiate processing by requesting the futures for end tasks (those with no
-# dependencies) and limit this to maxact.
+# dependencies) and limit this to maxact. No limit if 0.
 # We place an additional limit on the number of concurrently running starting tasks
 # (those with no prereqs) by adding artificial prereqs and releasing those here.
+# Disabled if 0.
 prereq_index = maxcst  # Starting tasks up to this index are released for processing
 # Parsl app used to hold the starting tasks.
 from parsl import python_app
@@ -56,7 +57,9 @@ pg = None                 # ParlslGraph used for processing
 pgro = None               # ParslGraph for checking status
 
 # Send a list of messages to the job log and optionally to the status log.
-def logmsglist(msgs, update_status=False):
+loglev = 2
+def logmsglist(msgs, lev=1, update_status=False):
+    if lev > loglev: return
     out = open('runapp-g3wfpipe.log', 'a')
     dmsg = time.strftime('%Y-%m-%d %H:%M:%S:')
     rmsg = msgs[0] if len(msgs) else ''
@@ -71,12 +74,16 @@ def logmsglist(msgs, update_status=False):
         fstat.write(rmsg + '\n')
 
 # Send a message to the job log.
-def logmsg(*msgs, update_status=False):
-    logmsglist(list(msgs), update_status)
+def logmsg(*msgs):
+    logmsglist(list(msgs), 1, False)
+
+# Send a debug message to the job log.
+def dbglogmsg(*msgs):
+    logmsglist(list(msgs), 2, False)
 
 # Send a message to the job log and status log.
 def statlogmsg(*msgs):
-    logmsglist(list(msgs), update_status=True)
+    logmsglist(list(msgs), 0, True)
 
 # Update monitor log fnam.
 def logmon(fnam, msg):
@@ -241,7 +248,7 @@ def task_output_data_df(unitin='kiB'):
 logmsg(f"Executing {__file__}")
 statlogmsg(f"Running g3wfpipe version: {dg3prod.version()}")
 for opt in sys.argv[1:]:
-    logmsg("Processing argument", opt)
+    logmsg("Processing argument {opt}")
     if opt in ["-h", "help"]:
         print('Usage:', sys.argv[0], '[OPTS]')
         print('  Supported valuse for OPTS:')
@@ -508,7 +515,7 @@ if doProc2:
         if maxact > 0 and maxact < nactivate: nactivate = maxact
         for iend in range(nactive_chain, nactivate):
             taskname = end_tasknames[iend]
-            logmsg(f"Activating chain {iend:4} {taskname}")
+            dbglogmsg(f"Activating chain {iend:4}: {taskname}")
             task = pg[taskname]
             task.get_future()
             nactive_chain += 1
