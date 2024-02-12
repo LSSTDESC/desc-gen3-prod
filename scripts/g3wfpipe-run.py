@@ -4,9 +4,13 @@
 import time
 time0 = time.time()
 
-# Define parameters for the prerequisite tasks used to control
-# the number of starting (i.e. no prerequisite) tasks.
+# Define parameters to optimize scheduling during task processing.
 maxcst = 0  # Max # of concurrent starting tasks. We should take this from the howfig.
+maxatc = 0  # Max # of active task chainss. We should take this from the howfig.
+# We initiate processing by requesting the futures for end tasks (those with no
+# dependencies) and limit this to maxatc.
+# We place an additional limit on the number of concurrently running starting tasks
+# (those with no prereqs) by adding artificial prereqs and releasing those here.
 prereq_index = maxcst  # Starting tasks up to this index are released for processing
 # Parsl app used to hold the starting tasks.
 from parsl import python_app
@@ -374,7 +378,7 @@ if doProc2:
     from lsst.ctrl.bps import GenericWorkflowExec
     from desc.gen3_workflow import ParslJob
     ist = 0
-    # If we have limit on the # concurrent strting tasks, then
+    # If we have limit on the # concurrent starting tasks, then
     # create a prerequisite for each of those tasks.
     if maxcst > 0:
         for taskname in start_tasknames:
