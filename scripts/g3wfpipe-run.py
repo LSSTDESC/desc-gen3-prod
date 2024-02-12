@@ -12,7 +12,8 @@ maxact = 75  # Max # of active task chains. We should take this from the howfig.
 # We place an additional limit on the number of concurrently running starting tasks
 # (those with no prereqs) by adding artificial prereqs and releasing those here.
 # Disabled if 0.
-prereq_index = maxcst  # Starting tasks up to this index are released for processing
+
+prereq_index = 0  # Starting tasks up to this index are released for processing
 prereq_tnams = []
 # Parsl app used to hold the starting tasks.
 from parsl import python_app
@@ -551,7 +552,7 @@ if doProc2:
                 nactivated_chain += 1
         # Update the prereq index.
         if maxcst > 0:
-            new_preq_index = ndone_start + maxcst
+            new_prereq_index = ndone_start + maxcst
             if new_prereq_index > prereq_index:
                 logmsg(f"Increasing prereq index to {prereq_index}")
                 prereq_index = new_prereq_index
