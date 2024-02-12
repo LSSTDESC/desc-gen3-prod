@@ -432,11 +432,13 @@ if doProc2:
         nrunn_start = 0
         for tnam in rem_tasknames:
             tstat = tstats[tnam]
-            isst = tnam in start_tasknames  # Is this a starting task?
+            is_start = tnam in start_tasknames  # Is this a starting task?
+            is_end = tnam in end_tasknames  # Is this a ending task?
             if tstat in ('exec_done'):
                 logmsg(f"Finished task {tnam}")
                 ndone += 1
-                if isst: ndone_start += 1
+                if is_start: ndone_start += 1
+                if is_end: nactive_chain -= 1
                 if getStatusFromLog:
                     task = pg[tnam]
                     log_tstat = task.status
@@ -450,13 +452,13 @@ if doProc2:
             else:
                 if tstat == 'pending':
                     npend += 1
-                    if isst: npend_start += 1
+                    if is_start: npend_start += 1
                 elif tstat == 'launched':
                     nlaun += 1
-                    if isst: nlaun_start += 1
+                    if is_start: nlaun_start += 1
                 elif tstat == 'running':
                     nrunn += 1
-                    if isst: nrunn_start += 1
+                    if is_start: nrunn_start += 1
                 elif tstat == 'failed' or tstat == 'dep_fail':
                     logmsg(f"WARNING: Task {tnam} failed with status: {tstat}")
                     nfail += 1
