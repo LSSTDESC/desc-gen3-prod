@@ -519,7 +519,7 @@ if doProc2:
         if maxact > 0:
             max_activate = maxact - nactive_chain
             if max_activate < nactivate: nactivate = max_activate
-            logmsg({max_activate} {nactivate} {nactivated_chain})
+            logmsg(f"XXXXXXXXX: {max_activate} {nactivate} {nactivated_chain}")
         for iend in range(nactivated_chain, nactivate):
             taskname = end_tasknames[iend]
             dbglogmsg(f"Activating chain {iend:4}: {taskname}")
