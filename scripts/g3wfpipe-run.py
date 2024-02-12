@@ -6,9 +6,9 @@ time0 = time.time()
 
 # Define parameters to optimize scheduling during task processing.
 maxcst = 0  # Max # of concurrent starting tasks. We should take this from the howfig.
-maxatc = 0  # Max # of active task chainss. We should take this from the howfig.
+maxact = 0  # Max # of active task chains. We should take this from the howfig.
 # We initiate processing by requesting the futures for end tasks (those with no
-# dependencies) and limit this to maxatc.
+# dependencies) and limit this to maxact.
 # We place an additional limit on the number of concurrently running starting tasks
 # (those with no prereqs) by adding artificial prereqs and releasing those here.
 prereq_index = maxcst  # Starting tasks up to this index are released for processing
@@ -370,10 +370,11 @@ if doProc2:
             end_tasknames.append(taskname)
         if not task.prereqs:
             start_tasknames.append(taskname)
-    ntask_st = len(start_tasknames)
+    ntask_start = len(start_tasknames)
+    ntask_end = len(end_tasknames)
     logmsg(f"Total task count is {len(all_tasknames)}")
-    logmsg(f"Starting task count is {ntask_st}")
-    logmsg(f"Endpoint task count is {len(end_tasknames)}")
+    logmsg(f"Starting task count is {ntask_start}")
+    logmsg(f"Endpoint task count is {ntask_end}")
     from lsst.ctrl.bps import GenericWorkflowJob
     from lsst.ctrl.bps import GenericWorkflowExec
     from desc.gen3_workflow import ParslJob
@@ -390,19 +391,12 @@ if doProc2:
             prq.future = prereq_starter(ist)
             task.add_prereq(prq)
             ist += 1
-    nend_start = 0
-    task_output_data_dir()
-    for taskname in end_tasknames:
-        task = pg[taskname]
-        task.get_future()
-        nend_start += 1
-    task_output_data_dir()
-    logmsg(f"Endpoint start count is {len(end_tasknames)}")
+    # Loop until all tasks are complete or a problem arises.
     ndone = 0
     nsucc = 0
     nfail = 0
     nlbad = 0
-    ndone_st = 0
+    ndone_start = 0
     rem_tasknames = all_tasknames
     logmsg(f"Monitoring DB: {pg.monitoring_db}")
     tsleep = 10
@@ -410,8 +404,9 @@ if doProc2:
     nsame_counts = 0
     dfmap_last = None
     maxfail = 100
+    nactive_chain = 0
     while True:
-        newrems = []
+        # Fetch the current processing status for all tasks.
         try:
             pg._update_status()
         except:
@@ -419,19 +414,22 @@ if doProc2:
             time.sleep(tsleep)
             continue
         tstats = pg.df.set_index('job_name').status.to_dict()
+        # Use this to fetch the number of tasks in each state and update
+        # the remaining list of tasks to be processed.
+        newrems = []
         npend = 0
         nlaun = 0
         nrunn = 0
-        npend_st = 0
-        nlaun_st = 0
-        nrunn_st = 0
+        npend_start = 0
+        nlaun_start = 0
+        nrunn_start = 0
         for tnam in rem_tasknames:
             tstat = tstats[tnam]
             isst = tnam in start_tasknames  # Is this a starting task?
             if tstat in ('exec_done'):
                 logmsg(f"Finished task {tnam}")
                 ndone += 1
-                if isst: ndone_st += 1
+                if isst: ndone_start += 1
                 if getStatusFromLog:
                     task = pg[tnam]
                     log_tstat = task.status
@@ -444,13 +442,14 @@ if doProc2:
                         logmsg(f"WARNING: Unexpected log task status: {log_tstat}")
             else:
                 if tstat == 'pending':
-                    npend_st += 1
+                    npend += 1
+                    if isst: npend_start += 1
                 elif tstat == 'launched':
                     nlaun += 1
-                    nlaun_st += 1
+                    if isst: nlaun_start += 1
                 elif tstat == 'running':
                     nrunn += 1
-                    nrunn_st += 1
+                    if isst: nrunn_start += 1
                 elif tstat == 'failed' or tstat == 'dep_fail':
                     logmsg(f"WARNING: Task {tnam} failed with status: {tstat}")
                     nfail += 1
@@ -458,6 +457,7 @@ if doProc2:
                     logmsg(f"WARNING: Task {tnam} has unexpected status: {tstat}")
                 newrems.append(tnam)
         rem_tasknames = newrems
+        # Display the processing status.
         msg = f"Finished {ndone} of {ntask} tasks."
         counts = [nfail,    nlbad,     npend,     nlaun,      nrunn]
         clabs =  ['failed', 'bad log', 'pending', 'launched', 'running']
@@ -488,10 +488,13 @@ if doProc2:
         logmsg(f"Task output size: {ngib:10.3f} GiB, {ratemsg}, {freemsg}")
         logmon('task-output-size.log', f"{ngib:13.6f} {ngibfree:15.6f}")
         update_monexp()
+        # Exit if there are too many failures.
         if nfail >= maxfail:
             logmsg(f"Aborting job for too many task failures: {nfail} >= {maxfail}.")
             os._exit(101)
+        # Exit loop if processing is done.
         if len(rem_tasknames) == 0: break
+        # Exit if we are not making progress.
         if counts == last_counts:
             nsame_counts += 1
             if  nsame_counts > 5 and nlaun == 0 and nrunn == 0:
@@ -500,12 +503,23 @@ if doProc2:
         else:
             nsame_counts = 0
             last_counts = counts
-        task_output_data_dir()
-        if maxcst > 0 and ndone_st > 0:
-            new_preq_index = ndone_st + maxcst
+        # Activate new chains.
+        nactivate = ntask_end - nactive_chain
+        if maxact > 0 and maxact < nactivate: nactivate = maxact
+        for iend in range(nactive_chain, nactivate):
+            taskname = end_tasknames[iend]
+            logmsg(f"Activating chain {iend:4} {taskname}")
+            task = pg[taskname]
+            task.get_future()
+            nactive_chain += 1
+        logmsg(f"Endpoint start count is {len(end_tasknames)}")
+        # Update the prereq index.
+        if maxcst > 0 and ndone_start > 0:
+            new_preq_index = ndone_start + maxcst
             if new_prereq_index > prereq_index:
                 logmsg(f"Increasing prereq index to {prereq_index}")
                 prereq_index = new_prereq_index
+        # Sleep.
         time.sleep(tsleep)
 
 if doProc1:
