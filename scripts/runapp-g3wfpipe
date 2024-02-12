@@ -295,7 +295,7 @@ for OPT in ${HOPTS[@]}; do
     PMONDT=${OPT:5}
   elif [ ${OPT} = cpr ]; then
     COPROCESS=true
-  elif [ ${OPT} = 'nocpr']; then
+  elif [ ${OPT} = nocpr ]; then
     COPROCESS=false
   elif [ ${OPT:0:5} = tmax: ]; then
     IFS=':' read -ra TMAXS <<< "${OPT:5}"
