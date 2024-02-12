@@ -25,6 +25,21 @@ def prereq_starter(x):
     print(f"Starting prereq {x}")
     return x
 
+# Fetch the starting tasks for the subgraph of pg including task tnam.
+get_starting_tasks(tnam, pg):
+    tnams1 = {tnam}
+    while True:
+        tnams2 = set()
+        done = True
+        for nam in tnams1:
+            task = pg[nam]
+            for ptnam in task.prereqs:
+                tnams2.add(ptnam)
+                done = False
+        if done:
+            return tnams2
+        tnams1 = tnams2
+
 import os
 import sys
 import shutil
@@ -353,22 +368,6 @@ if doQgReport:
     ofil.write(f"          Graph ID: {pg.qgraph.graphID}\n")
     ofil.write(f"  Input node count: {len(pg.qgraph.inputQuanta)}\n")
     ofil.write(f" Output node count: {len(pg.qgraph.oputputQuanta)}\n")
-
-# Fetch the starting tasks for the subgraph of pg including task tnam.
-get_starting_tasks(tnam, pg):
-    tnams1 = {tnam}
-    while True:
-        tnams2 = set()
-        done = True
-        for nam in tnams1:
-            task = pg[nam]
-            for ptnam in task.prereqs:
-                tnams2.add(ptnam)
-                done = False
-        if done:
-            return tnams2
-        tnams1 = tnams2
-        
 
 if doProc2:
     logmsg()
