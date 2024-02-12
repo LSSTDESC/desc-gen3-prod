@@ -13,6 +13,7 @@ maxact = 75  # Max # of active task chains. We should take this from the howfig.
 # (those with no prereqs) by adding artificial prereqs and releasing those here.
 # Disabled if 0.
 prereq_index = maxcst  # Starting tasks up to this index are released for processing
+prereq_tnams = []
 # Parsl app used to hold the starting tasks.
 from parsl import python_app
 @python_app
@@ -353,6 +354,22 @@ if doQgReport:
     ofil.write(f"  Input node count: {len(pg.qgraph.inputQuanta)}\n")
     ofil.write(f" Output node count: {len(pg.qgraph.oputputQuanta)}\n")
 
+# Fetch the starting tasks for the subgraph of pg including task tnam.
+get_starting_tasks(tnam, pg):
+    tnams1 = {tnam}
+    while True:
+        tnams2 = set()
+        done = True
+        for nam in tnams1:
+            task = pg[nam]
+            for ptnam in task.prereqs:
+                tnams2.add(ptnam)
+                done = False
+        if done:
+            return tnams2
+        tnams1 = tnams2
+        
+
 if doProc2:
     logmsg()
     monexpUpdate = False
@@ -386,18 +403,6 @@ if doProc2:
     from lsst.ctrl.bps import GenericWorkflowExec
     from desc.gen3_workflow import ParslJob
     ist = 0
-    # If we have limit on the # concurrent starting tasks, then
-    # create a prerequisite for each of those tasks.
-    if maxcst > 0:
-        for taskname in start_tasknames:
-            task = pg[taskname]
-            prqnam = f"prereq{str(ist).zfill(6)}{taskname[36:]}"
-            print(f"Assigning prereq {prqnam} to task {taskname}")
-            gwj = GenericWorkflowJob(prqnam)
-            prq = ParslJob(gwj, pg)
-            prq.future = prereq_starter(ist)
-            task.add_prereq(prq)
-            ist += 1
     # Loop until all tasks are complete or a problem arises.
     ndone = 0
     nsucc = 0
@@ -519,98 +524,35 @@ if doProc2:
         if maxact > 0:
             max_activate = maxact - nactive_chain
             if max_activate < nactivate: nactivate = max_activate
-        for iend in range(nactivated_chain, nactivated_chain + nactivate):
-            taskname = end_tasknames[iend]
-            dbglogmsg(f"Activating chain {iend:4}: {taskname}")
-            task = pg[taskname]
-            task.get_future()
-            nactive_chain += 1
-            nactivated_chain += 1
+            for iend in range(nactivated_chain, nactivated_chain + nactivate):
+                taskname = end_tasknames[iend]
+                # If we have limit on the # concurrent starting tasks, then
+                # find the starting tasks for task and add prereqs to them.
+                if maxcst > 0:
+                    start_tnams = get_starting_tasks(taskname, pg)
+                    assert(len(start_tnams) == 1)
+                    for stnam in start_tnams:
+                    stask = start_tnams[0]
+                    prqnam = f"prereq{str(ist).zfill(6)}{taskname[36:]}"
+                    dbglogmsg(f"Assigning prereq {prqnam} to task {taskname}")
+                    gwj = GenericWorkflowJob(prqnam)
+                    prq = ParslJob(gwj, pg)
+                    prq.future = prereq_starter(ist)
+                    task.add_prereq(prq)
+                # Now activate the task.
+                dbglogmsg(f"Activating chain {iend:4}: {taskname}")
+                task = pg[taskname]
+                task.get_future()
+                nactive_chain += 1
+                nactivated_chain += 1
         # Update the prereq index.
-        if maxcst > 0 and ndone_start > 0:
+        if maxcst > 0:
             new_preq_index = ndone_start + maxcst
             if new_prereq_index > prereq_index:
                 logmsg(f"Increasing prereq index to {prereq_index}")
                 prereq_index = new_prereq_index
         # Sleep.
         time.sleep(tsleep)
-
-if doProc1:
-    logmsg()
-    monexpUpdate = False
-    statlogmsg('Fetching workflow QG.')
-    get_pg()
-    if not haveQG:
-        statlogmsg("ERROR: Quantum graph not found.")
-        sys.exit(1)
-    statlogmsg('Starting new workflow')
-    tasks = pg.values()
-    ntask = len(tasks)
-    endpoints = [task for task in tasks if not task.dependencies]
-    for task in endpoints:
-        task.get_future()
-    ndone = 0
-    nfail = 0
-    remtasks = tasks
-    while True:
-        newrems = []
-        for task in remtasks:
-            tstat = task.status
-            if tstat in ('succeeded', 'failed'):
-                if tstat == 'failed': nfail += 1
-                ndone += 1
-            else:
-                if tstat not in ('pending', 'scheduled', 'running'):
-                    logmsg(f"WARNING: Unexpected task status: {tstat}")
-                newrems += [task]
-        remtasks = newrems
-        msg = f"Finished {ndone} of {ntask} tasks."
-        if nfail:
-            msg += f" {nfail} failed."
-        statlogmsg(msg)
-        update_monexp()
-        if len(remtasks) == 0: break
-        time.sleep(10)
-
-if doProc0:
-    logmsg()
-    monexpUpdate = False
-    statlogmsg('Fetching workflow QG.')
-    get_pg()
-    if not haveQG:
-        statlogmsg("ERROR: Quantum graph not found.")
-        sys.exit(1)
-    statlogmsg('Starting old workflow')
-    pg.run()
-    count = 0
-    futures = None
-    statlogmsg('Retrieving futures.')
-    while futures is None:
-        count += 1
-        try:
-            ntskall = len(pg.values())
-            statlogmsg(f"Try {count} task count: {ntskall}")
-            #futures = [job.get_future() for job in pg.values() if not job.dependencies]
-            futures = [job.get_future() for job in pg.values()]
-            #traceback.print(e.__traceback__)
-        except Exception as e:
-            logmsg(f"Try {count} raised exception: {e}")
-            if count > 100:
-                statlogmsg("Unable to retrieve futures.")
-                sys.exit(1)
-            futures = None
-    ntsk = len(futures)
-    statlogmsg(f"Ready/total task count: {ntsk}/{ntskall}")
-    ndone = 0
-    while ndone < ntsk:
-        update_monexp()
-        ndone = 0
-        for fut in futures:
-            if fut.done(): ndone += 1
-        statlogmsg(f"Finished {ndone} of {ntsk} tasks.")
-        time.sleep(10)
-    statlogmsg(f"Workflow complete: {ndone}/{ntsk} tasks.")
-    update_monexp()
 
 if doFina:
     statlogmsg()
