@@ -37,7 +37,7 @@ def get_starting_tasks(tnam, pg):
             if len(ptnams):
                 done = False
                 for ptnam in ptnams:
-                    tnams2.add(tnam2)
+                    tnams2.add(ptnam)
             else:
                 outnams.add(tnam1)
         if len(tnams2):
