@@ -435,7 +435,7 @@ if doProc2:
         for tnam in rem_tasknames:
             tstat = tstats[tnam]
             is_start = tnam in start_tasknames  # Is this a starting task?
-            is_end = tnam in end_tasknames  # Is this a ending task?
+            is_end = tnam in end_tasknames  # Is this an ending task?
             if tstat in ('exec_done'):
                 logmsg(f"Finished task {tnam}")
                 ndone += 1
@@ -519,6 +519,7 @@ if doProc2:
         if maxact > 0:
             max_activate = maxact - nactive_chain
             if max_activate < nactivate: nactivate = max_activate
+            logmsg({max_activate} {nactivate} {nactivated_chain})
         for iend in range(nactivated_chain, nactivate):
             taskname = end_tasknames[iend]
             dbglogmsg(f"Activating chain {iend:4}: {taskname}")
