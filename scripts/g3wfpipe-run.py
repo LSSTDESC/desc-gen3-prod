@@ -6,7 +6,7 @@ time0 = time.time()
 
 # Define parameters to optimize scheduling during task processing.
 maxcst = 0  # Max # of concurrent starting tasks. We should take this from the howfig.
-maxact = 20  # Max # of active task chains. We should take this from the howfig.
+maxact = 75  # Max # of active task chains. We should take this from the howfig.
 # We initiate processing by requesting the futures for end tasks (those with no
 # dependencies) and limit this to maxact. No limit if 0.
 # We place an additional limit on the number of concurrently running starting tasks
