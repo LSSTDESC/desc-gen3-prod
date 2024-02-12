@@ -536,7 +536,7 @@ if doProc2:
                 if maxcst > 0:
                     start_tnams = get_starting_tasks(taskname, pg)
                     assert(len(start_tnams) == 1)
-                    stask = start_tnams[0]
+                    stask = start_tnams.pop()
                     prqnam = f"prereq{str(ist).zfill(6)}{taskname[36:]}"
                     dbglogmsg(f"Assigning prereq {prqnam} to task {taskname}")
                     gwj = GenericWorkflowJob(prqnam)
