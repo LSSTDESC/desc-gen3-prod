@@ -515,12 +515,11 @@ if doProc2:
             nsame_counts = 0
             last_counts = counts
         # Activate new chains.
-        nactivate = nend_task - nactivated_chain
+        nactivate = ntask_end - nactivated_chain
         if maxact > 0:
             max_activate = maxact - nactive_chain
             if max_activate < nactivate: nactivate = max_activate
         for iend in range(nactivated_chain, nactivate):
-            if iend >= ntask_end: break
             taskname = end_tasknames[iend]
             dbglogmsg(f"Activating chain {iend:4}: {taskname}")
             task = pg[taskname]
