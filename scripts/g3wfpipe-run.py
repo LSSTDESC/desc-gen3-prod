@@ -425,8 +425,8 @@ if doProc:
         # Fetch the current processing status for all tasks.
         try:
             pg._update_status()
-        except:
-            logmsg(f"WARNING: Unable to update status for ParlsGraph.")
+        except Exception as e:
+            logmsg(f"WARNING: Unable to update status for ParlsGraph: {str{e}}")
             time.sleep(tsleep)
             continue
         tstats = pg.df.set_index('job_name').status.to_dict()
