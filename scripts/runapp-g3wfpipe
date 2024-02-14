@@ -590,7 +590,6 @@ if [[ -n $WFARGS ]]; then
   echo 'cp $IPYDIR/monexp.py .' >>$RFIL
   echo 'basename $(pwd) | sed "s/job0*/Job /g" > README.txt' >>$RFIL
   echo "if [ ! -r $JOBDIR/local/desc-gen3-prod ]; then" >>$RFIL
-  echo "  PKGBRA=desc-gen3-prod
   echo "  echo setup: Installing desc-gen3-prod." >>$RFIL
   echo "  pip install -t $JOBDIR/local/desc-gen3-prod git+https://github.com/LSSTDESC/desc-gen3-prod" >>$RFIL
   if [ -n "$DESCPROD_GEN3_PROD_BRANCH" ]; then
