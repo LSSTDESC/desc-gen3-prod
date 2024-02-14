@@ -81,17 +81,22 @@ pgro = None               # ParslGraph for checking status
 
 # Send a list of messages to the job log and optionally to the status log.
 loglev = 2
-def logmsglist(msgs, lev=1, update_status=False):
+def logmsglist(amsgs, lev=1, update_status=False):
     if lev > loglev: return
+    msgs = amsgs if type(amsgs) is list else [amsgs]
     out = open('runapp-g3wfpipe.log', 'a')
     dmsg = time.strftime('%Y-%m-%d %H:%M:%S:')
-    rmsg = msgs[0] if len(msgs) else ''
-    for msg in msgs[1:]:
-        rmsg += ' ' + str(msg)
-    dmsg += ' ' + rmsg
-    out.write(dmsg + '\n')
+    for msg in msgs:
+        lines = []
+        if type(msg) is str:
+            if msg.find('\n'):
+                lines.append(:x
+        else:
+
+        line = f"{dmsg} {str(msg)}"
+        out.write(line + '\n')
+        print(line, flush=True)
     out.close()
-    print(dmsg, flush=True)
     if update_status:
         fstat = open(statfilename, 'w')
         fstat.write(rmsg + '\n')
@@ -102,7 +107,10 @@ def logmsg(*msgs):
 
 # Send a debug message to the job log.
 def dbglogmsg(*msgs):
-    logmsglist(msgs.split('\n'), 2, False)
+    msglist = []
+    for msg in msgs:
+        msglist.append(msg
+        logmsglist(msg.split('\n'), 2, False)
 
 # Send a message to the job log and status log.
 def statlogmsg(*msgs):
