@@ -7,4 +7,5 @@ Click on the name for more information.
 
 | Application name | Meaning |
 |---|---|
-| [g3wfquery](doc/app-g3wfquery.md) | Query for DC2 raw datasets. |
+| [g3wfquery](doc/app-g3wfquery.md) | Query for DC2 raw datasets. This is BROKEN. |
+| [g3wfpipe](doc/app-g3wfpipe.md) | LSST pipeline processing of gen3 data. |
