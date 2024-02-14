@@ -102,7 +102,7 @@ def logmsg(*msgs):
 
 # Send a debug message to the job log.
 def dbglogmsg(*msgs):
-    logmsglist(list(msgs), 2, False)
+    logmsglist(msgs.split('\n'), 2, False)
 
 # Send a message to the job log and status log.
 def statlogmsg(*msgs):
@@ -427,6 +427,7 @@ if doProc:
             pg._update_status()
         except Exception as e:
             logmsg(f"WARNING: Unable to update status for ParlsGraph: {str(e)}")
+            dbglogmsg(traceback.format_exc())
             time.sleep(tsleep)
             continue
         tstats = pg.df.set_index('job_name').status.to_dict()
