@@ -304,10 +304,6 @@ for opt in sys.argv[1:]:
         statlogmsg(f"Invalid option: '{opt}'")
         sys.exit(1)
 
-doProc0 = False
-doProc1 = False
-doProc2 = doProc
-
 import parsl
 from desc.wfmon import MonDbReader
 import desc.sysmon
@@ -376,7 +372,7 @@ if doQgReport:
     ofil.write(f"  Input node count: {len(pg.qgraph.inputQuanta)}\n")
     ofil.write(f" Output node count: {len(pg.qgraph.oputputQuanta)}\n")
 
-if doProc2:
+if doProc:
     logmsg()
     monexpUpdate = False
     statlogmsg('Fetching workflow QG.')
@@ -408,7 +404,7 @@ if doProc2:
     from lsst.ctrl.bps import GenericWorkflowJob
     from lsst.ctrl.bps import GenericWorkflowExec
     from desc.gen3_workflow import ParslJob
-    ist = 0
+    ipst = 0
     # Loop until all tasks are complete or a problem arises.
     ndone = 0
     nsucc = 0
@@ -538,19 +534,20 @@ if doProc2:
                     start_tnams = get_starting_tasks(taskname, pg)
                     assert(len(start_tnams) == 1)
                     stask = start_tnams.pop()
-                    prqnam = f"prereq{str(ist).zfill(6)}{taskname[36:]}"
+                    prqnam = f"prereq{str(ipst).zfill(6)}{taskname[36:]}"
                     dbglogmsg(f"Assigning prereq {prqnam} to task {taskname}")
                     gwj = GenericWorkflowJob(prqnam)
                     prq = ParslJob(gwj, pg)
-                    prq.future = prereq_starter(ist)
+                    prq.future = prereq_starter(ipst)
                     task.add_prereq(prq)
+                    ipst += 1
                 # Now activate the task.
                 dbglogmsg(f"Activating chain {iend:4}: {taskname}")
                 task = pg[taskname]
                 task.get_future()
                 nactive_chain += 1
                 nactivated_chain += 1
-        # Update the prereq index.
+        # Update the index used to hold prereqs.
         if maxcst > 0:
             new_prereq_index = ndone_start + maxcst
             if new_prereq_index > prereq_index:
