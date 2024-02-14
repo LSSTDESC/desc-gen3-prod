@@ -65,6 +65,7 @@ if [[ -z $1 || $1 = -h ]]; then
   echo "  strace:V1:V2:...: Run strace with trace=V1,V2,... for each task."
   echo "  stracet: Create an strace system time summary."
   echo "  iotrace: Run iotrace on each task."
+  echo "  dev: Use the dev branch of desc-gen3-prod."
   echo "DC2 data is processed and output data is written to"
   echo "  /global/cfs/cdirs/lsst/production/gen3/DC2/Run2.2i/repo/u/UOUT"
   echo "where UOUT is USER where USER is user name"
@@ -279,6 +280,7 @@ STRACE=$CON_STRACE
 COPROCESS=$CON_COPROCESS
 COPROCESS=true
 REBUILD=false
+DESCPROD_GEN3_PROD_BRANCH=
 for OPT in ${HOPTS[@]}; do
   info_echo Processing howfig opt $OPT
   if [ ${OPT:0:7} = shifter ]; then
@@ -347,6 +349,8 @@ for OPT in ${HOPTS[@]}; do
     STRACE=$OPT
   elif [ $OPT = iotrace ]; then
     STRACE=$OPT
+  elif [ $OPT = dev ]; then
+    DESCPROD_GEN3_PROD_BRANCH=dev
   else
     err_echo Invalid howfig field: $OPT
     exit 13
@@ -586,8 +590,13 @@ if [[ -n $WFARGS ]]; then
   echo 'cp $IPYDIR/monexp.py .' >>$RFIL
   echo 'basename $(pwd) | sed "s/job0*/Job /g" > README.txt' >>$RFIL
   echo "if [ ! -r $JOBDIR/local/desc-gen3-prod ]; then" >>$RFIL
+  echo "  PKGBRA=desc-gen3-prod
   echo "  echo setup: Installing desc-gen3-prod." >>$RFIL
   echo "  pip install -t $JOBDIR/local/desc-gen3-prod git+https://github.com/LSSTDESC/desc-gen3-prod" >>$RFIL
+  if [ -n "$DESCPROD_GEN3_PROD_BRANCH" ]; then
+    echo 'echo setup: Using gen3_workflow branch '$DESCPROD_GEN3_PROD_BRANCH >>$RFIL
+    echo '(cd gen3_workflow; git checkout '$DESCPROD_GEN3_PROD_BRANCH')' >>$RFIL
+  fi
   echo "fi" >>$RFIL
   echo "PATH=$JOBDIR/local/desc-gen3-prod/bin:\$PATH" >>$RFIL
   echo "PYTHONPATH=$JOBDIR/local/desc-gen3-prod:\$PYTHONPATH" >>$RFIL
