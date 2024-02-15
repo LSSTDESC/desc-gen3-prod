@@ -18,12 +18,20 @@ prereq_tnams = []
 # Parsl app used to hold the starting tasks.
 from parsl import python_app
 @python_app
-def prereq_starter(x):
+def prereq_starter(x, lognam):
     global prereq_index
     import time
+    mytime = time.time()
+    fil = open(lognam, 'w')
+    fil.write('Waiting for the start of chain {x}\n')
+    fil.close()
     while x >= prereq_index:
         time.sleep(10)
     print(f"Starting prereq {x}")
+    fil = open(lognam, 'a')
+    fil.write('Elapsed time is {time.time() - mytime0:.3f} sec\n')
+    fil.write('success\n')
+    fil.close()
     return x
 
 # Fetch the starting tasks for the subgraph of pg including task tnam.
@@ -564,8 +572,11 @@ if doProc:
                     prqnam = f"prereq{str(ipst).zfill(6)}{taskname[36:]}"
                     dbglogmsg(f"Assigning prereq {prqnam} to task {taskname}")
                     gwj = GenericWorkflowJob(prqnam)
-                    prq = ParslJob(gwj, pg)
-                    prq.future = prereq_starter(ipst)
+                    pg[prqnam] = ParslJob(gwj, pg)
+                    prq = pg[prqnam]
+                    prq_log = prq.log_files()['stderr']
+                    prq.future = prereq_starter(ipst, prq_log)
+                    task.add_prereq(prqnam)
                     task.add_prereq(prqnam)
                     ipst += 1
                 # Now activate the task.
