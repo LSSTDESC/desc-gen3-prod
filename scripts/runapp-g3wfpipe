@@ -65,7 +65,11 @@ if [[ -z $1 || $1 = -h ]]; then
   echo "  strace:V1:V2:...: Run strace with trace=V1,V2,... for each task."
   echo "  stracet: Create an strace system time summary."
   echo "  iotrace: Run iotrace on each task."
-  echo "  dev: Use the dev branch of desc-gen3-prod."
+  echo "  dgp:OPT1:OPT2:...: Instructions for installing desc-gen3-prod. OPTi:"
+  echo "    dev: Use the dev branch (default is main)."
+  echo "    vVVV: Use tag VVV (not yet implemented)."
+  echo "    local: Use clone at $HOME/descprod/repos/descprod-gen3-prod."
+  echo "    localLLL: Use clone at $HOME/descprod/repos/descprod-gen3-prod-LLL."
   echo "DC2 data is processed and output data is written to"
   echo "  /global/cfs/cdirs/lsst/production/gen3/DC2/Run2.2i/repo/u/UOUT"
   echo "where UOUT is USER where USER is user name"
@@ -267,6 +271,7 @@ WFARGS="${WFARGS_ARR[*]}"
 
 
 # Parse the howfig.
+BADOPT=
 BUTLER_DIR=/global/cfs/cdirs/lsst/production/gen3/DC2/Run2.2i/repo
 TMAXS=()
 NTMAX=0
@@ -280,7 +285,7 @@ STRACE=$CON_STRACE
 COPROCESS=$CON_COPROCESS
 COPROCESS=true
 REBUILD=false
-DESCPROD_GEN3_PROD_BRANCH=
+DESC_GEN3_PROD_LOC="git+https://github.com/LSSTDESC/desc-gen3-prod"
 for OPT in ${HOPTS[@]}; do
   info_echo Processing howfig opt $OPT
   if [ ${OPT:0:7} = shifter ]; then
@@ -349,13 +354,27 @@ for OPT in ${HOPTS[@]}; do
     STRACE=$OPT
   elif [ $OPT = iotrace ]; then
     STRACE=$OPT
-  elif [ $OPT = dev ]; then
-    DESCPROD_GEN3_PROD_BRANCH=dev
+  elif [ ${#OPT} -gt 4 -a ${OPT:0:4} = dgp: ]; then
+    DGPOPT=${OPT:4}
+    if [ $DGPOPT = dev ]; then
+      DESC_GEN3_PROD_LOC="${DESC_GEN3_PROD_LOC}@dev"
+    elif [ ${DGPOPT:0:5} = local ]; then
+      DESC_GEN3_PROD_LOC="$HOME/descprod/repos/desc-gen3-prod"
+      DGPSUF=${DGPOPT:5}
+      if [ -n "$DGPSUF" ]; then
+        DESC_GEN3_PROD_LOC="${DESC_GEN3_PROD_LOC}-$DGPSUF"
+      fi
+  fi
   else
-    err_echo Invalid howfig field: $OPT
-    exit 13
+    BADOPT=$OPT
+    break
   fi
 done
+
+if [ -n "$BADOPT" ]; then
+  err_echo Invalid howfig field: $OPT
+  exit 13
+fi
 
 if [ $PMONDT != false ] && [ $PMONDT != $PMONDT ]; then
   err_echo Invalid parsl monitoring interval: $PMONDT
@@ -590,13 +609,9 @@ if [[ -n $WFARGS ]]; then
   echo 'cp $IPYDIR/monexp.py .' >>$RFIL
   echo 'basename $(pwd) | sed "s/job0*/Job /g" > README.txt' >>$RFIL
   echo "if [ ! -r $JOBDIR/local/desc-gen3-prod ]; then" >>$RFIL
-  echo "  echo setup: Installing desc-gen3-prod." >>$RFIL
-  echo "  pip install -t $JOBDIR/local/desc-gen3-prod git+https://github.com/LSSTDESC/desc-gen3-prod" >>$RFIL
-  if [ -n "$DESCPROD_GEN3_PROD_BRANCH" ]; then
-    echo 'echo setup: Using gen3_workflow branch '$DESCPROD_GEN3_PROD_BRANCH >>$RFIL
-    echo '(cd gen3_workflow; git checkout '$DESCPROD_GEN3_PROD_BRANCH')' >>$RFIL
-  fi
-  echo "fi" >>$RFIL
+  echo "  echo setup: Installing $DESC_GEN3_PROD_LOC." >>$RFIL
+  echo "  pip install -t $JOBDIR/local/desc-gen3-prod $DESC_GEN3_PROD_LOC" >>$RFIL
+  echo 'fi' >>$RFIL
   echo "PATH=$JOBDIR/local/desc-gen3-prod/bin:\$PATH" >>$RFIL
   echo "PYTHONPATH=$JOBDIR/local/desc-gen3-prod:\$PYTHONPATH" >>$RFIL
   echo 'echo setup: Running with desc-gen3-prod version $(desc-gen3-prod-version)' >>$RFIL
