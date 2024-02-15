@@ -8,8 +8,8 @@ DEFISS=5
 ISS=${1}
 
 if [ "$ISS" = "-h" ]; then
-  echo "Usage: ./build-this: ISSUE [MESSAGE]
-  echo "   or: ./build-this: [MESSAGE]
+  echo "Usage: ./build-this: ISSUE [MESSAGE]"
+  echo "   or: ./build-this: [MESSAGE]"
   echo "    ISSUE: The desc-gen3-prod issue number [$DEFISSUE]."
   echo "  MESSAGE: Brief message for the git log."
   exit 0

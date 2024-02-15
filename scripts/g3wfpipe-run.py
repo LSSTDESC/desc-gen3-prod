@@ -93,7 +93,7 @@ def logmsglist(amsgs, lev=1, update_status=False):
         if type(msg) is str:
             if msg.find('\n'):
                 lines += msg.split('\n')
-                if lines[-1] = '':
+                if lines[-1] == '':
                     lines = lines[0:-1]
             else:
                 lines.append(msg.rstrip())
