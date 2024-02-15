@@ -422,6 +422,8 @@ if doProc:
     nsucc = 0
     nfail = 0
     nlbad = 0
+    nfail_update = 0
+    maxfail_update = 10
     ndone_start = 0
     rem_tasknames = all_tasknames
     logmsg(f"Monitoring DB: {pg.monitoring_db}")
@@ -441,6 +443,10 @@ if doProc:
             logmsg(f"WARNING: Unable to update status for ParlsGraph: {str(e)}")
             dbglogmsg(traceback.format_exc())
             time.sleep(tsleep)
+            nfail_update += 1
+            if nfail_update >= maxfail_update:
+                logmsg(f"Aborting job for too many parsl graph update failures: {nfail_update} >= {maxfail_update}.")
+                os._exit(102)
             continue
         tstats = pg.df.set_index('job_name').status.to_dict()
         # Use this to fetch the number of tasks in each state and update
@@ -552,7 +558,7 @@ if doProc:
                     gwj = GenericWorkflowJob(prqnam)
                     prq = ParslJob(gwj, pg)
                     prq.future = prereq_starter(ipst)
-                    task.add_prereq(prq)
+                    task.add_prereq(prqnam)
                     ipst += 1
                 # Now activate the task.
                 dbglogmsg(f"Activating chain {iend:4}: {taskname}")
