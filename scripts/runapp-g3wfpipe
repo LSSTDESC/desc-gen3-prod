@@ -590,6 +590,7 @@ if [[ -n $WFARGS ]]; then
   JOBDIR=$(pwd)
   RFIL=./setup.sh
   rm -f $RFIL
+  SEPLINE="--------------------------------------------------------------------------"
   echo "# This script was generated $(date) on $(hostname)" >>$RFIL
   echo 'export PYTHONPATH' >>$RFIL
   if [ $CSRC = shifter ]; then
@@ -597,9 +598,10 @@ if [[ -n $WFARGS ]]; then
     echo "setup lsst_distrib" >>$RFIL
   fi
   echo "if [ ! -r $JOBDIR/local/desc-wfmon ]; then" >>$RFIL
-  echo "  echo setup: Installing desc-wfmon." >>$RFIL
+  echo "  echo $SEPLINE" >>$RFIL
   echo '  (mkdir repos && cd repos && git clone https://github.com/LSSTDESC/desc-wfmon && cd ..)' >>$RFIL
   echo "  pip install -t $JOBDIR/local/desc-wfmon $JOBDIR/repos/desc-wfmon" >>$RFIL
+  echo "  echo $SEPLINE" >>$RFIL
   echo "fi" >>$RFIL
   echo "PATH=$JOBDIR/local/desc-wfmon/bin:\$PATH" >>$RFIL
   echo "PYTHONPATH=$JOBDIR/local/desc-wfmon:\$PYTHONPATH" >>$RFIL
@@ -609,8 +611,10 @@ if [[ -n $WFARGS ]]; then
   echo 'cp $IPYDIR/monexp.py .' >>$RFIL
   echo 'basename $(pwd) | sed "s/job0*/Job /g" > README.txt' >>$RFIL
   echo "if [ ! -r $JOBDIR/local/desc-gen3-prod ]; then" >>$RFIL
+  echo "  echo $SEPLINE" >>$RFIL
   echo "  echo setup: Installing $DESC_GEN3_PROD_LOC." >>$RFIL
   echo "  pip install -t $JOBDIR/local/desc-gen3-prod $DESC_GEN3_PROD_LOC" >>$RFIL
+  echo "  echo $SEPLINE" >>$RFIL
   echo 'fi' >>$RFIL
   echo "PATH=$JOBDIR/local/desc-gen3-prod/bin:\$PATH" >>$RFIL
   echo "PYTHONPATH=$JOBDIR/local/desc-gen3-prod:\$PYTHONPATH" >>$RFIL
