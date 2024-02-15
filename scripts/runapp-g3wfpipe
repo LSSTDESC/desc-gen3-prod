@@ -114,7 +114,7 @@ decode_query() {
   fi
 }
 
-info_echo Running app g3wfpipe
+info_echo Running app g3wfpipe $(desc-gen3-prod-version)
 CFG=$1
 HFG=$2
 COPTS=(${CFG//-/ })
