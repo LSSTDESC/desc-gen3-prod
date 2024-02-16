@@ -50,7 +50,7 @@ def get_starting_tasks(tnam, pg):
                 done = False
                 for prq in prqs:
                     prqnam = prq.gwf_job.name
-                    assert(prqnam is str)
+                    assert(type(prqnam) is str)
                     tnams2.add(prqnam)
             else:
                 outnams.add(tnam1)
