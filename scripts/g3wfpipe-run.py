@@ -4,59 +4,6 @@
 import time
 time0 = time.time()
 
-# Define parameters to optimize scheduling during task processing.
-maxcst = 20  # Max # of concurrent starting tasks. We should take this from the howfig.
-maxact = 75  # Max # of active task chains. We should take this from the howfig.
-# We initiate processing by requesting the futures for end tasks (those with no
-# dependencies) and limit this to maxact. No limit if 0.
-# We place an additional limit on the number of concurrently running starting tasks
-# (those with no prereqs) by adding artificial prereqs and releasing those here.
-# Disabled if 0.
-
-prereq_index = 0  # Starting tasks up to this index are released for processing
-prereq_tnams = []
-# Parsl app used to hold the starting tasks.
-from parsl import python_app
-@python_app
-def prereq_starter(x, lognam):
-    global prereq_index
-    import time
-    mytime = time.time()
-    fil = open(lognam, 'w')
-    fil.write('Waiting for the start of chain {x}\n')
-    fil.close()
-    while x >= prereq_index:
-        time.sleep(10)
-    print(f"Starting prereq {x}")
-    fil = open(lognam, 'a')
-    fil.write('Elapsed time is {time.time() - mytime0:.3f} sec\n')
-    fil.write('success\n')
-    fil.close()
-    return x
-
-# Fetch the starting tasks for the subgraph of pg including task tnam.
-def get_starting_tasks(tnam, pg):
-    tnams1 = {tnam}
-    outnams = set()
-    while True:
-        tnams2 = set()
-        done = True
-        for tnam1 in tnams1:
-            prqs = pg[tnam1].prereqs
-            if len(prqs):
-                done = False
-                for prq in prqs:
-                    prqnam = prq.gwf_job.name
-                    assert(type(prqnam) is str)
-                    tnams2.add(prqnam)
-            else:
-                outnams.add(tnam1)
-        if len(tnams2):
-            tnams1 = tnams2
-        else:
-            break
-    return outnams
-
 import os
 import sys
 import shutil
@@ -67,27 +14,7 @@ from desc.wfmon import MonDbReader
 import traceback
 import subprocess
 
-statfilename = 'current-status.txt'
-doInit = False
-doProc = False
-doFina = False
-doQgReport = False
-blockJob=True      # Set false for interactive running.
-showStatus = False
-showParslTables = False
-doWorkflow = True
-doTest = False
-doButlerTest = False
-getStatusFromLog = True  # If true, task status is retrieved from the task log file
-
-thisdir = os.getcwd()
-haveQG = False
-monexpUpdated = False
-
-pickname = 'parsl_graph_config.pickle'
-pg_pickle_path = None     # Full path to the pg pickle file
-pg = None                 # ParlslGraph used for processing
-pgro = None               # ParslGraph for checking status
+######## Logging helpers ########
 
 # Send a list of messages to the job log and optionally to the status log.
 # ff any messge has line separators, each of those sub-lines is printed
@@ -139,7 +66,90 @@ def logmon(fnam, msg):
     except Exception as e:
         logmsg(f"{myname}: ERROR: {e}")
 
+######## Prereq code ########
+
 # Look for parsl graph pickle files.
+# Define parameters to optimize scheduling during task processing.
+maxcst = 20  # Max # of concurrent starting tasks. We should take this from the howfig.
+maxact = 75  # Max # of active task chains. We should take this from the howfig.
+# We initiate processing by requesting the futures for end tasks (those with no
+# dependencies) and limit this to maxact. No limit if 0.
+# We place an additional limit on the number of concurrently running starting tasks
+# (those with no prereqs) by adding artificial prereqs and releasing those here.
+# Disabled if 0.
+
+prereq_index = 0  # Starting tasks up to this index are released for processing
+prereq_tnams = []
+# Parsl app used to hold the starting tasks.
+from parsl import python_app
+@python_app
+def prereq_starter(x, lognam):
+    global prereq_index
+    import time
+    mytime = time.time()
+    fil = open(lognam, 'w')
+    fil.write('Waiting for the start of chain {x}\n')
+    fil.close()
+    while x >= prereq_index:
+        time.sleep(10)
+    logmsg(f"*** Starting prereq {x}")
+    fil = open(lognam, 'a')
+    fil.write('Elapsed time is {time.time() - mytime0:.3f} sec\n')
+    fil.write('success\n')
+    fil.close()
+    return x
+
+######## Starting task code ########
+
+# Fetch the starting tasks for the subgraph of pg including task tnam.
+def get_starting_tasks(tnam, pg):
+    tnams1 = {tnam}
+    outnams = set()
+    while True:
+        tnams2 = set()
+        done = True
+        for tnam1 in tnams1:
+            prqs = pg[tnam1].prereqs
+            if len(prqs):
+                done = False
+                for prq in prqs:
+                    prqnam = prq.gwf_job.name
+                    assert(type(prqnam) is str)
+                    tnams2.add(prqnam)
+            else:
+                outnams.add(tnam1)
+        if len(tnams2):
+            tnams1 = tnams2
+        else:
+            break
+    return outnams
+
+######## Config and globals ########
+
+statfilename = 'current-status.txt'
+doInit = False
+doProc = False
+doFina = False
+doQgReport = False
+blockJob=True      # Set false for interactive running.
+showStatus = False
+showParslTables = False
+doWorkflow = True
+doTest = False
+doButlerTest = False
+getStatusFromLog = True  # If true, task status is retrieved from the task log file
+
+thisdir = os.getcwd()
+haveQG = False
+monexpUpdated = False
+
+pickname = 'parsl_graph_config.pickle'
+pg_pickle_path = None     # Full path to the pg pickle file
+pg = None                 # ParlslGraph used for processing
+pgro = None               # ParslGraph for checking status
+
+######## Parsl graph helpers ########
+
 def get_pg_pickle_path():
     global pg_pickle_path
     pg_pickle_paths = []
@@ -212,6 +222,8 @@ def update_monexp():
         traceback.print_tb(e.__traceback__)
         return False
     return True
+
+######## Task directory helpers ########
 
 # Return the directory holding the output task data for this job.
 _task_output_data_dir = None
@@ -288,7 +300,7 @@ def task_output_data_df(unitin='kiB'):
         out['error'] = str(e)
     return out
 
-#################################################################################
+######## Main code ########
 
 logmsg(f"Executing {__file__}")
 statlogmsg(f"Running g3wfpipe version: {dg3prod.version()}")
@@ -481,7 +493,7 @@ if doProc:
             is_start = tnam in start_tasknames  # Is this a starting task?
             is_end = tnam in end_tasknames  # Is this an ending task?
             if tstat in ('exec_done'):
-                logmsg(f"Finished task {tnam}")
+                dbglogmsg(f"Finished task {tnam}")
                 ndone += 1
                 if is_start: ndone_start += 1
                 if is_end: nactive_chain -= 1
