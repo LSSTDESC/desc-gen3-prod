@@ -36,16 +36,13 @@ def prereq_starter(x, lognam):
 
 # Fetch the starting tasks for the subgraph of pg including task tnam.
 def get_starting_tasks(tnam, pg):
-    dbglogmsg(f"XXX 11: Graph size: {len(pg)}. tnam: {tnam}")
     tnams1 = {tnam}
     outnams = set()
     while True:
         tnams2 = set()
         done = True
         for tnam1 in tnams1:
-            dbglogmsg(f"XXX 12: Graph size: {len(pg)}. tnam: {tnam}")
             prqs = pg[tnam1].prereqs
-            dbglogmsg(f"XXX 13: Graph size: {len(pg)}. tnam: {tnam}")
             if len(prqs):
                 done = False
                 for prq in prqs:
@@ -58,7 +55,6 @@ def get_starting_tasks(tnam, pg):
             tnams1 = tnams2
         else:
             break
-    dbglogmsg(f"XXX 19: Graph size: {len(pg)}. tnam: {tnam}")
     return outnams
 
 import os
@@ -96,7 +92,7 @@ pgro = None               # ParslGraph for checking status
 # Send a list of messages to the job log and optionally to the status log.
 # ff any messge has line separators, each of those sub-lines is printed
 # on a separate line.
-loglev = 2
+loglev = 1   # Use 2 to get debugging messages
 def logmsglist(amsgs, lev=1, update_status=False):
     if lev > loglev: return
     msgs = amsgs if type(amsgs) is list else [amsgs]
@@ -572,20 +568,14 @@ if doProc:
                 task = pg[taskname]
                 # If we have limit on the # concurrent starting tasks, then
                 # find the starting tasks for task and add prereqs to them.
-                dbglogmsg(f"XXX 00: Graph size: {len(pg)}")
                 if maxcst > 0:
-                    dbglogmsg(f"XXX 10: Graph size: {len(pg)}")
                     start_tnams = get_starting_tasks(taskname, pg)
-                    dbglogmsg(f"XXX 20: Graph size: {len(pg)}")
                     assert(len(start_tnams) == 1)
                     stask = start_tnams.pop()
-                    dbglogmsg(f"XXX 30: Graph size: {len(pg)}")
                     prqnam = f"prereq{str(ipst).zfill(6)}{taskname[36:]}"
                     dbglogmsg(f"Assigning prereq {prqnam} to task {taskname}")
                     gwj = GenericWorkflowJob(prqnam)
-                    dbglogmsg(f"XXX 40: Graph size: {len(pg)}")
                     pg[prqnam] = ParslJob(gwj, pg)
-                    dbglogmsg(f"XXX 50: Graph size: {len(pg)}")
                     prq = pg[prqnam]
                     prq_log = prq.log_files()['stderr']
                     prq.future = prereq_starter(ipst, prq_log)
