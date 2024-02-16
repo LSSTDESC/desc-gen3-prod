@@ -577,7 +577,7 @@ if doProc:
                     prq_log = prq.log_files()['stderr']
                     prq.future = prereq_starter(ipst, prq_log)
                     task.add_prereq(prqnam)
-                    task.add_prereq(prqnam)
+                    prg.add_dependency(taskname)
                     ipst += 1
                 # Now activate the task.
                 dbglogmsg(f"Activating chain {iend:4}: {taskname}")
