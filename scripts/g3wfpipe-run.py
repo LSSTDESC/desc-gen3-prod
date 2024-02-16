@@ -36,14 +36,16 @@ def prereq_starter(x, lognam):
 
 # Fetch the starting tasks for the subgraph of pg including task tnam.
 def get_starting_tasks(tnam, pg):
-    dbglogmsg(f"XXX 11: Graph size: {len(pg)}")
+    dbglogmsg(f"XXX 11: Graph size: {len(pg)}. tnam: {tnam}")
     tnams1 = {tnam}
     outnams = set()
     while True:
         tnams2 = set()
         done = True
         for tnam1 in tnams1:
+            dbglogmsg(f"XXX 12: Graph size: {len(pg)}. tnam: {tnam}")
             ptnams = pg[tnam1].prereqs
+            dbglogmsg(f"XXX 13: Graph size: {len(pg)}. tnam: {tnam}")
             if len(ptnams):
                 done = False
                 for ptnam in ptnams:
@@ -54,7 +56,7 @@ def get_starting_tasks(tnam, pg):
             tnams1 = tnams2
         else:
             break
-    dbglogmsg(f"XXX 19: Graph size: {len(pg)}")
+    dbglogmsg(f"XXX 19: Graph size: {len(pg)}. tnam: {tnam}")
     return outnams
 
 import os
