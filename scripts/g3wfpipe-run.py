@@ -44,12 +44,14 @@ def get_starting_tasks(tnam, pg):
         done = True
         for tnam1 in tnams1:
             dbglogmsg(f"XXX 12: Graph size: {len(pg)}. tnam: {tnam}")
-            ptnams = pg[tnam1].prereqs
+            prqs = pg[tnam1].prereqs
             dbglogmsg(f"XXX 13: Graph size: {len(pg)}. tnam: {tnam}")
-            if len(ptnams):
+            if len(prqs):
                 done = False
-                for ptnam in ptnams:
-                    tnams2.add(ptnam)
+                for prq in prqs:
+                    prqnam = prq.gwf_job.name
+                    assert(prqnam is str)
+                    tnams2.add(prqnam)
             else:
                 outnams.add(tnam1)
         if len(tnams2):
