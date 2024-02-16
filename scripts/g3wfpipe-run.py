@@ -92,7 +92,7 @@ def prereq_starter(x, lognam):
     fil.close()
     while x >= prereq_index:
         time.sleep(10)
-    logmsg(f"*** Starting prereq {x}")
+    dbglogmsg(f"*** Starting prereq {x}")
     fil = open(lognam, 'a')
     fil.write('Elapsed time is {time.time() - mytime0:.3f} sec\n')
     fil.write('success\n')
