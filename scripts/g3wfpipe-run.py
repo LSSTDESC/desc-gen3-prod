@@ -563,6 +563,7 @@ if doProc:
             if max_activate < nactivate: nactivate = max_activate
             for iend in range(nactivated_chain, nactivated_chain + nactivate):
                 taskname = end_tasknames[iend]
+                task = pg[taskname]
                 # If we have limit on the # concurrent starting tasks, then
                 # find the starting tasks for task and add prereqs to them.
                 if maxcst > 0:
@@ -576,12 +577,11 @@ if doProc:
                     prq = pg[prqnam]
                     prq_log = prq.log_files()['stderr']
                     prq.future = prereq_starter(ipst, prq_log)
-                    task.add_prereq(prqnam)
-                    prq.add_dependency(taskname)
+                    task.add_prereq(prq)
+                    prq.add_dependency(task)
                     ipst += 1
                 # Now activate the task.
                 dbglogmsg(f"Activating chain {iend:4}: {taskname}")
-                task = pg[taskname]
                 task.get_future()
                 nactive_chain += 1
                 nactivated_chain += 1
