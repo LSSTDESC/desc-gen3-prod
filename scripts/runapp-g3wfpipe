@@ -37,7 +37,7 @@ if [[ -z $1 || $1 = -h ]]; then
   echo "  pmsXXX: Append -pmsXXX to the user name for data output."
   echo "  cfsXXX: Append -cfsXXX to the user name for data output."
   echo HFG = HF1-HF2-... where HFi is any of
-  echo "  exec:XX where XX = wq (XX is GB memory) or tp (XX is process count)"
+  echo "  exec:XX where XX = tp or wq (XX is GB memory) or tp (XX is process count)"
   echo "  cpr: Use coprocesses with WQ (default). Ignored if not WQ"
   echo "  nocpr: Do not use coprocesses with WQ. Ignored if not WQ"
   echo "  rebuild: Rebuild the SW cache (cvmfs only)."
@@ -266,9 +266,8 @@ fi
 
 echo $PLOT_TITLE >plot-title.txt
 
-# Extract the list of processing steps.
+# Extract the list of processing steps and options.
 WFARGS="${WFARGS_ARR[*]}"
-
 
 # Parse the howfig.
 BADOPT=
@@ -497,6 +496,11 @@ PIPEVAL=
   #       ),
   #  initialize_logging:
   
+  EXECOPTS=(${EXEC//:/ })
+  EXECOPT0=${EXECOPTS[0]}
+  EXECOPT1=${EXECOPTS[1]}
+  EXECOPT2=${EXECOPTS[2]}
+  EXECOPT3=${EXECOPTS[3]}
   if [ ${EXEC:0:3} = wq: ]; then
     MEGB=${EXEC:3}
     # Make sure the memory limit is not blank and is numeric.
@@ -510,9 +514,15 @@ PIPEVAL=
     echo "  nodes_per_block: 1" >>config.yaml
     echo "  worker_options: \"--memory=${MEGB}000\"" >>config.yaml
     echo "  init_command: source task-setup.sh" >>config.yaml
-  elif [ ${EXEC:0:3} = tp: ]; then
-    NTHR=${EXEC:3}
+  elif [ $EXECOPTS0 = tp ]; then
+    NTHR=$EXECOPTS1
     if [ -z "$NTHR" ]; then NTHR=1; fi
+    if [ -n "$EXECOPTS2" ]; then
+      WFARGS="$WFARGS maxcst=$EXECOPTS2"
+    fi
+    if [ -n "$EXECOPTS3" ]; then
+      WFARGS="$WFARGS maxact=$EXECOPTS3"
+    fi
     echo "  executor: ThreadPool" >>config.yaml
     echo "  max_threads: $NTHR" >>config.yaml
   else

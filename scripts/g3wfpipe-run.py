@@ -70,8 +70,8 @@ def logmon(fnam, msg):
 
 # Look for parsl graph pickle files.
 # Define parameters to optimize scheduling during task processing.
-maxcst =  50  # Max # of concurrent starting tasks. We should take this from the howfig.
-maxact = 150  # Max # of active task chains. We should take this from the howfig.
+maxcst = 0  # Max # of concurrent starting tasks. We should take this from the howfig.
+maxact = 0  # Max # of active task chains. We should take this from the howfig.
 # We initiate processing by requesting the futures for end tasks (those with no
 # dependencies) and limit this to maxact. No limit if 0.
 # We place an additional limit on the number of concurrently running starting tasks
@@ -315,6 +315,8 @@ for opt in sys.argv[1:]:
         print('    qgre - Prepare report describing the existing QG.')
         print('    tables - Prepare report describing the parsl tables.')
         print('    finalize - Register output datasets for existing QG.')
+        print('    maxcst=VAL - Set maxcst to VAL.')
+        print('    maxact=VAL - Set maxact to VAL.')
         sys.exit()
     elif opt == 'init':
         doInit = True
@@ -334,6 +336,8 @@ for opt in sys.argv[1:]:
         sys.exit(0)
     elif opt == 'butler':
         doButlerTest = True
+    elif opt[0:7] == 'maxcst='
+        maxcst = int(opt[8:])
     else:
         statlogmsg(f"Invalid option: '{opt}'")
         sys.exit(1)
