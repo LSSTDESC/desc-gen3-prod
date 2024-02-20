@@ -371,6 +371,7 @@ if doTest:
     logmsg('test')
 
 if doButlerTest:
+    logmsg()
     statlogmsg("Setting up to test the butler.")
     import lsst.daf.butler as daf_butler
     repo = '/global/cfs/cdirs/lsst/production/gen3/DC2/Run2.2i/repo'
@@ -380,6 +381,8 @@ if doButlerTest:
     statlogmsg(f"Butler has {len(collections)} collections.")
 
 if doInit:
+    logmsg()
+    statlogmsg("Initializing pipeline.")
     get_pg(require=False)
     if len(pg_pickle_path):
         statlogmsg("Remove existing job before starting a new one.")
@@ -403,6 +406,8 @@ if doInit:
         update_monexp()
 
 if doQgReport:
+    logmsg()
+    statlogmsg("Creating pipeline QG report.")
     if not haveQG:
         statlogmsg("ERROR: Quantum graph not found.")
         sys.exit(1)
@@ -413,6 +418,8 @@ if doQgReport:
     ofil.write(f" Output node count: {len(pg.qgraph.oputputQuanta)}\n")
 
 if doProc:
+    logmsg()
+    statlogmsg("Processing pipeline: maxact={maxact}, maxcst={maxcst}.")
     logmsg()
     monexpUpdate = False
     statlogmsg('Fetching workflow QG.')
@@ -463,6 +470,7 @@ if doProc:
     nchain_rem = len(end_tasknames)
     nactive_chain = 0
     nactivated_chain = 0
+    # Loop until processing completes.
     while True:
         # Fetch the current processing status for all tasks.
         try:
@@ -581,30 +589,30 @@ if doProc:
         if maxact > 0:
             max_activate = maxact - nactive_chain
             if max_activate < nactivate: nactivate = max_activate
-            for iend in range(nactivated_chain, nactivated_chain + nactivate):
-                taskname = end_tasknames[iend]
-                task = pg[taskname]
-                # If we have limit on the # concurrent starting tasks, then
-                # find the starting tasks for task and add prereqs to them.
-                if maxcst > 0:
-                    start_tnams = get_starting_tasks(taskname, pg)
-                    assert(len(start_tnams) == 1)
-                    stask = start_tnams.pop()
-                    prqnam = f"prereq{str(ipst).zfill(6)}{taskname[36:]}"
-                    dbglogmsg(f"Assigning prereq {prqnam} to task {taskname}")
-                    gwj = GenericWorkflowJob(prqnam)
-                    pg[prqnam] = ParslJob(gwj, pg)
-                    prq = pg[prqnam]
-                    prq_log = prq.log_files()['stderr']
-                    prq.future = prereq_starter(ipst, prq_log)
-                    task.add_prereq(prq)
-                    prq.add_dependency(task)
-                    ipst += 1
-                # Now activate the task.
-                dbglogmsg(f"Activating chain {iend:4}: {taskname}")
-                task.get_future()
-                nactive_chain += 1
-                nactivated_chain += 1
+        for iend in range(nactivated_chain, nactivated_chain + nactivate):
+            taskname = end_tasknames[iend]
+            task = pg[taskname]
+            # If we have limit on the # concurrent starting tasks, then
+            # find the starting tasks for task and add prereqs to them.
+            if maxcst > 0:
+                start_tnams = get_starting_tasks(taskname, pg)
+                assert(len(start_tnams) == 1)
+                stask = start_tnams.pop()
+                prqnam = f"prereq{str(ipst).zfill(6)}{taskname[36:]}"
+                dbglogmsg(f"Assigning prereq {prqnam} to task {taskname}")
+                gwj = GenericWorkflowJob(prqnam)
+                pg[prqnam] = ParslJob(gwj, pg)
+                prq = pg[prqnam]
+                prq_log = prq.log_files()['stderr']
+                prq.future = prereq_starter(ipst, prq_log)
+                task.add_prereq(prq)
+                prq.add_dependency(task)
+                ipst += 1
+            # Now activate the task.
+            dbglogmsg(f"Activating chain {iend:4}: {taskname}")
+            task.get_future()
+            nactive_chain += 1
+            nactivated_chain += 1
         # Update the index used to hold prereqs.
         if maxcst > 0:
             new_prereq_index = ndone_start + maxcst
@@ -615,15 +623,15 @@ if doProc:
         time.sleep(tsleep)
 
 if doFina:
-    statlogmsg()
-    statlogmsg('Finalizing job...')
+    logmsg()
+    statlogmsg("Finalizing pipeline.")
     get_pg()
     pg.finalize()
     statlogmsg('Finalizing done')
 
 if showStatus:
     logmsg()
-    statlogmsg("Fetching status")
+    statlogmsg("Fetching pipeline status")
     get_pg(readonly=True)
     if pgro is None:
         statlogmsg('Workflow has not started.')
