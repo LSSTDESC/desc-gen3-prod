@@ -514,14 +514,14 @@ PIPEVAL=
     echo "  nodes_per_block: 1" >>config.yaml
     echo "  worker_options: \"--memory=${MEGB}000\"" >>config.yaml
     echo "  init_command: source task-setup.sh" >>config.yaml
-  elif [ $EXECOPTS0 = tp ]; then
-    NTHR=$EXECOPTS1
+  elif [ $EXECOPT0 = tp ]; then
+    NTHR=$EXECOPT1
     if [ -z "$NTHR" ]; then NTHR=1; fi
-    if [ -n "$EXECOPTS2" ]; then
-      WFARGS="$WFARGS maxcst=$EXECOPTS2"
+    if [ -n "$EXECOPT2" ]; then
+      WFARGS="$WFARGS maxcst=$EXECOPT2"
     fi
-    if [ -n "$EXECOPTS3" ]; then
-      WFARGS="$WFARGS maxact=$EXECOPTS3"
+    if [ -n "$EXECOPT3" ]; then
+      WFARGS="$WFARGS maxact=$EXECOPT3"
     fi
     echo "  executor: ThreadPool" >>config.yaml
     echo "  max_threads: $NTHR" >>config.yaml
