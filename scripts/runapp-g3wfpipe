@@ -234,7 +234,7 @@ if [[ -n $CJOB ]]; then
   for FIL in config.yaml submit runinfo repos local; do
     SRCFIL=$PDIR/$FIL
     if [ -r $SRCFIL ]; then
-      info_echo "Linking source $SRCFIL"
+      info_echo "Linking continuation source $SRCFIL"
       if ! ln -s $SRCFIL .; then
         err_echo "Unable to link $SRCFIL to $(pwd)"
         exit 1
@@ -245,8 +245,19 @@ if [[ -n $CJOB ]]; then
   done
   # Read the old configuration.
   # This should define CON_LVER, CON_PIPEVAL, CON_QUERY, CON_CSRC, CON_PREPEND
+  #  CON_SRC
+  #  CON_LVEROPTS
+  #  CON_QUERY
+  #  CON_PREPEND
+  #  CON_PIPE
+  #  CON_PMONDT
+  #  CON_STRACE
+  #  CON_COPROCESS
+  #  CON_PFSOPT
+  #  CON_WFOPTS
   SUPFIL=$PDIR/consetup.sh
   if [ ! -r $SUPFIL ]; then
+  #  CON_STRACE
     info_echo "ERROR: Unable to find continuation source setup $SUPFIL"
     exit 1
   fi
@@ -285,6 +296,7 @@ COPROCESS=$CON_COPROCESS
 COPROCESS=true
 REBUILD=false
 DESC_GEN3_PROD_LOC="git+https://github.com/LSSTDESC/desc-gen3-prod"
+WFOPTS=${CON_WFOPTS:-}
 for OPT in ${HOPTS[@]}; do
   info_echo Processing howfig opt $OPT
   if [ ${OPT:0:7} = shifter ]; then
@@ -391,18 +403,6 @@ if [ -n "$STRACE" ]; then
 fi
 #PREPEND="$PREPEND -t 5 --cpunum --procctxt"
 info_echo "Command prepend: \"$PREPEND\""
-
-# Record the setup for continuation jobs.
-info_echo Creating consetup.sh
-echo "CON_CSRC=$CSRC" >consetup.sh
-echo "CON_LVEROPTS=$LVEROPTS" >>consetup.sh
-echo "CON_QUERY=\"$QUERY\"" >>consetup.sh
-echo "CON_PREPEND=\"$PREPEND\"" >>consetup.sh
-echo "CON_PIPE=$PIPE" >>consetup.sh
-echo "CON_PMONDT=$PMONDT" >>consetup.sh
-echo "CON_STRACE=$STRACE" >>consetup.sh
-echo "CON_COPROCESS=$COPROCESS" >>consetup.sh
-echo "CON_PFSOPT=$PFSOPT" >>consetup.sh
 
 if [ $DOINIT = true ]; then
 PIPEVAL=
@@ -519,10 +519,10 @@ PIPEVAL=
     NTHR=$EXECOPT1
     if [ -z "$NTHR" ]; then NTHR=1; fi
     if [ -n "$EXECOPT2" ]; then
-      WFARGS="$WFARGS maxcst=$EXECOPT2"
+      WFOPTS="$WFOPTS maxcst=$EXECOPT2"
     fi
     if [ -n "$EXECOPT3" ]; then
-      WFARGS="$WFARGS maxact=$EXECOPT3"
+      WFOPTS="$WFOPTS maxact=$EXECOPT3"
     fi
     echo "  executor: ThreadPool" >>config.yaml
     echo "  max_threads: $NTHR" >>config.yaml
@@ -565,6 +565,19 @@ G3WF_BRANCH=
 #if [ $IVER -ge 2331 ]; then
 #  G3WF_BRANCH=u/jchiang/w_2023_32_qbb_changes
 #fi
+
+# Record the setup for continuation jobs.
+info_echo Creating consetup.sh
+echo "CON_CSRC=$CSRC" >consetup.sh
+echo "CON_LVEROPTS=$LVEROPTS" >>consetup.sh
+echo "CON_QUERY=\"$QUERY\"" >>consetup.sh
+echo "CON_PREPEND=\"$PREPEND\"" >>consetup.sh
+echo "CON_PIPE=$PIPE" >>consetup.sh
+echo "CON_PMONDT=$PMONDT" >>consetup.sh
+echo "CON_STRACE=$STRACE" >>consetup.sh
+echo "CON_COPROCESS=$COPROCESS" >>consetup.sh
+echo "CON_PFSOPT=$PFSOPT" >>consetup.sh
+echo "CON_WFOPTS=$WFOPTS" >>consetup.sh
 
 if [[ -n $WFARGS ]]; then
   info_echo Creating run script.
@@ -659,7 +672,7 @@ if [[ -n $WFARGS ]]; then
   echo 'source ./setup.sh' >>$RFIL
   echo 'echo run: Running pipeline.' >>$RFIL
   echo 'echo run: Location for g3wf-run-task: $(which g3wf-run-task)' >>$RFIL
-  echo "g3wfpipe-run $WFARGS" >>$RFIL
+  echo "g3wfpipe-run $WFARGS $WFOPTS" >>$RFIL
   chmod +x ./run
   # Create setup for the task for the WorkQueue worker.
   # This is commented out because this setup added in 0.0.49 development was found
@@ -682,7 +695,7 @@ if [[ -n $WFARGS ]]; then
   #echo 'echo task-setup: Location for g3wf-run-task: $(which g3wf-run-task)' >>$RFIL
   #echo "------ End task setup ------"
   # Start the run script.
-  info_echo Starting run script with steps $WFARGS.
+  info_echo Starting run script with steps $WFARGS $WFOPTS.
   $COM
   RSTAT=$?
 else

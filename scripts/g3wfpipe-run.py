@@ -305,7 +305,7 @@ def task_output_data_df(unitin='kiB'):
 logmsg(f"Executing {__file__}")
 statlogmsg(f"Running g3wfpipe version: {dg3prod.version()}")
 for opt in sys.argv[1:]:
-    logmsg("Processing argument {opt}")
+    logmsg(f"Processing argument {opt}")
     if opt in ["-h", "help"]:
         print('Usage:', sys.argv[0], '[OPTS]')
         print('  Supported valuse for OPTS:')
