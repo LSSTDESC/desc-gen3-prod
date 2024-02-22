@@ -577,7 +577,7 @@ echo "CON_PMONDT=$PMONDT" >>consetup.sh
 echo "CON_STRACE=$STRACE" >>consetup.sh
 echo "CON_COPROCESS=$COPROCESS" >>consetup.sh
 echo "CON_PFSOPT=$PFSOPT" >>consetup.sh
-echo "CON_WFOPTS=$WFOPTS" >>consetup.sh
+echo "CON_WFOPTS=\"$WFOPTS\"" >>consetup.sh
 
 if [[ -n $WFARGS ]]; then
   info_echo Creating run script.
