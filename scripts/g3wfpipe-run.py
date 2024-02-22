@@ -419,7 +419,7 @@ if doQgReport:
 
 if doProc:
     logmsg()
-    statlogmsg("Processing pipeline: maxact={maxact}, maxcst={maxcst}.")
+    statlogmsg(f"Processing pipeline: maxact={maxact}, maxcst={maxcst}.")
     logmsg()
     monexpUpdate = False
     statlogmsg('Fetching workflow QG.')
