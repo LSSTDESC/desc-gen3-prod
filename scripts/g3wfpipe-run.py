@@ -94,10 +94,16 @@ def prereq_starter(x, lognam):
     while x >= prereq_index:
         time.sleep(10)
     dbglogmsg(f"*** Starting prereq {x}")
-    fil = open(lognam, 'a')
-    fil.write('Elapsed time is {time.time() - mytime0:.3f} sec\n')
-    fil.write('success\n')
-    fil.close()
+    itry = 0
+    while itry < 10:
+    try:
+        fil = open(lognam, 'a')
+        fil.write(f"Elapsed time is {time.time() - mytime0:.3f} sec\n")
+        fil.write('success\n')
+        fil.close()
+    except:
+        itry += 1
+        time.sleep(itry)
     return x
 
 ######## Starting task code ########
@@ -522,6 +528,9 @@ if doProc:
                     else:
                         nlbad += 1
                         logmsg(f"WARNING: Unexpected log task status: {log_tstat}")
+            elif tstat in ('failed', 'dep_fail'):
+                logmsg(f"WARNING: Task {tnam} failed with status: {tstat}")
+                nfail += 1
             else:
                 if tstat == 'pending':
                     npend += 1
@@ -532,9 +541,6 @@ if doProc:
                 elif tstat == 'running':
                     nrunn += 1
                     if is_start: nrunn_start += 1
-                elif tstat == 'failed' or tstat == 'dep_fail':
-                    logmsg(f"WARNING: Task {tnam} failed with status: {tstat}")
-                    nfail += 1
                 else:
                     logmsg(f"WARNING: Task {tnam} has unexpected status: {tstat}")
                 newrems.append(tnam)
