@@ -338,9 +338,9 @@ for opt in sys.argv[1:]:
     elif opt == 'butler':
         doButlerTest = True
     elif opt[0:7] == 'maxcst=':
-        maxcst = int(opt[8:])
+        maxcst = int(opt[7:])
     elif opt[0:7] == 'maxact=':
-        maxact = int(opt[8:])
+        maxact = int(opt[7:])
     else:
         statlogmsg(f"Invalid option: '{opt}'")
         sys.exit(1)
