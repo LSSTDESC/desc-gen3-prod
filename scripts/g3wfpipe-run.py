@@ -21,7 +21,8 @@ import subprocess
 # on a separate line.
 loglev = 1   # Use 2 to get debugging messages
 def logmsglist(amsgs, lev=1, update_status=False):
-    if lev > loglev: return
+    dostd = lev <= 1 or lev <= loglev
+    dolog = True
     msgs = amsgs if type(amsgs) is list else [amsgs]
     out = open('runapp-g3wfpipe.log', 'a')
     dmsg = time.strftime('%Y-%m-%d %H:%M:%S:')
@@ -38,8 +39,8 @@ def logmsglist(amsgs, lev=1, update_status=False):
             lines.append(str(msg))
     for line in lines:
         fline = f"{dmsg} {line}"
-        out.write(fline + '\n')
-        print(fline, flush=True)
+        if dolog: out.write(fline + '\n')
+        if dostd: print(fline, flush=True)
     out.close()
     if update_status:
         fstat = open(statfilename, 'w')
