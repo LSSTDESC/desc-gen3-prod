@@ -487,7 +487,7 @@ if doProc:
             dbglogmsg(traceback.format_exc())
             nfail_update += 1
             if nfail_update >= maxfail_update:
-                logmsg(f"Aborting job for too many parsl graph update failures: {nfail_update} >= {maxfail_update}.")
+                statlogmsg(f"Aborting job for too many parsl graph update failures: {nfail_update} >= {maxfail_update}.")
                 os._exit(102)
             logmsg(f"Checking parsl graph job names.")
             logmsg(f"Count is {len(pg)}.")
