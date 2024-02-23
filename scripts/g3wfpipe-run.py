@@ -96,14 +96,14 @@ def prereq_starter(x, lognam):
     dbglogmsg(f"*** Starting prereq {x}")
     itry = 0
     while itry < 10:
-    try:
-        fil = open(lognam, 'a')
-        fil.write(f"Elapsed time is {time.time() - mytime0:.3f} sec\n")
-        fil.write('success\n')
-        fil.close()
-    except:
-        itry += 1
-        time.sleep(itry)
+        try:
+            fil = open(lognam, 'a')
+            fil.write(f"Elapsed time is {time.time() - mytime0:.3f} sec\n")
+            fil.write('success\n')
+            fil.close()
+        except:
+            itry += 1
+            time.sleep(itry)
     return x
 
 ######## Starting task code ########
