@@ -37,7 +37,11 @@ if [[ -z $1 || $1 = -h ]]; then
   echo "  pmsXXX: Append -pmsXXX to the user name for data output."
   echo "  cfsXXX: Append -cfsXXX to the user name for data output."
   echo HFG = HF1-HF2-... where HFi is any of
-  echo "  exec:XX where XX = tp or wq (XX is GB memory) or tp (XX is process count)"
+  echo "  wq:MGB: Yse the WorkQueue executor with toal memory MGB GB."
+  echo "  tp:NTHR:MAXCST:MAXACT: Use the ThreadPool executor with NTHR threads."
+  echo "    The last two flags are optional and, if provided, limit concurrent tassk:"
+  echo "      The maximum number of starting tasks (those with no prereqs) is MAXCST"
+  echo "      The maximum number of chains (no prereqs) is MAXACT"
   echo "  cpr: Use coprocesses with WQ (default). Ignored if not WQ"
   echo "  nocpr: Do not use coprocesses with WQ. Ignored if not WQ"
   echo "  rebuild: Rebuild the SW cache (cvmfs only)."

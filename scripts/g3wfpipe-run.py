@@ -16,6 +16,10 @@ import subprocess
 
 ######## Logging helpers ########
 
+# Messages at level 1 are sent to stdout.
+# All messages are sent to the runapp log runapp-g3wfpipe.log.
+# All messages are prepended with the ate and time.
+
 # Send a list of messages to the job log and optionally to the status log.
 # ff any messge has line separators, each of those sub-lines is printed
 # on a separate line.
@@ -46,15 +50,15 @@ def logmsglist(amsgs, lev=1, update_status=False):
         fstat = open(statfilename, 'w')
         fstat.write(lines[0] + '\n')
 
-# Send a message to the job log.
+# Log a level 1 message.
 def logmsg(*msgs):
     logmsglist(list(msgs), 1, False)
 
-# Send a debug message to the job log.
+# Log a level 2 message.
 def dbglogmsg(*msgs):
     logmsglist(list(msgs), 2, False)
 
-# Send a message to the job log and status log.
+# Log a level 1 message and append it to the status log.
 def statlogmsg(*msgs):
     logmsglist(list(msgs), 0, True)
 
