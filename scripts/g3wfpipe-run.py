@@ -95,8 +95,9 @@ def prereq_starter(x, lognam, dep_task_name):
     fil = open(lognam, 'w')
     dmsg = time.strftime('%Y-%m-%d %H:%M:%S:')
     fil.write(f"{dmsg} Waiting to the start chain {x}\n")
-    fil.write(f"{dmsg} Dependent task is {dep_task_name}")
+    fil.write(f"{dmsg} Dependent task is {dep_task_name}\n")
     while x >= prereq_index:
+        fil.write(f"...{dmsg} {x} > {prereq_index}")
         time.sleep(10)
     dbglogmsg(f"*** Starting prereq {x}")
     fil.write(f"Elapsed time is {time.time() - mytime0:.3f} sec\n")
