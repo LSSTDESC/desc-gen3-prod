@@ -96,7 +96,6 @@ def prereq_starter(x, lognam, dep_task_name):
     dmsg = time.strftime('%Y-%m-%d %H:%M:%S:')
     fil.write(f"{dmsg} Waiting to the start chain {x}\n")
     fil.write(f"{dmsg} Dependent task is {dep_task_name}")
-    fil.close()
     while x >= prereq_index:
         time.sleep(10)
     dbglogmsg(f"*** Starting prereq {x}")
@@ -513,8 +512,9 @@ if doProc:
             tstat = tstats[tnam]
             task = pg[tnam]
             tstat_pj = task.status
-            if tstat != tstat_pj:
-                dbglogmsg(f"{nstat_diff:3}: Status differs in table and object: {tstat} != {tstat_pj}")
+            #if tstat != tstat_pj:
+            #    dbglogmsg(f"{nstat_diff:3}: Status differs in table and object: {tstat} != {tstat_pj}")
+            #    nstat_diff += 1
             is_start = tnam in start_tasknames  # Is this a starting task?
             is_end = tnam in end_tasknames  # Is this an ending task?
             if tstat in ('exec_done'):
