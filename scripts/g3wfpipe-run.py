@@ -513,8 +513,13 @@ if doProc:
         npend_start = 0
         nlaun_start = 0
         nrunn_start = 0
+        nstat_diff = 0
         for tnam in rem_tasknames:
             tstat = tstats[tnam]
+            task = pg[tnam]
+            tstat_pj = task.status()
+            if tstat != tstat_pj:
+                dbglogmsg(f"{nstat_diff:3}: Status differs in table and object: {tstat} != {tstat_pj}")
             is_start = tnam in start_tasknames  # Is this a starting task?
             is_end = tnam in end_tasknames  # Is this an ending task?
             if tstat in ('exec_done'):
@@ -523,7 +528,6 @@ if doProc:
                 if is_start: ndone_start += 1
                 if is_end: nactive_chain -= 1
                 if getStatusFromLog:
-                    task = pg[tnam]
                     log_tstat = task.status
                     if log_tstat == 'succeeded':
                         nsucc += 1
@@ -628,7 +632,7 @@ if doProc:
         if maxcst > 0:
             new_prereq_index = ndone_start + maxcst
             if new_prereq_index > prereq_index:
-                logmsg(f"Increasing prereq index to {prereq_index}")
+                logmsg(f"Increasing prereq index to {new_prereq_index}")
                 prereq_index = new_prereq_index
         # Sleep.
         time.sleep(tsleep)
