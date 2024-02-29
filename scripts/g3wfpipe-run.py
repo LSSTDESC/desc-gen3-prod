@@ -569,12 +569,20 @@ if doProc:
             last_counts = counts
         # Activate new chains.
         nactivate = ntask_end - nactivated_chain
+        dbglogmsg(f"Chain counts:")
+        dbglogmsg(f"  nactive_chain_at_start: {nactive_chain_at_start}")
+        dbglogmsg(f"           nactive_chain: {nactive_chain}")
+        dbglogmsg(f"        nactivated_chain: {nactivated_chain}")
+        dbglogmsg(f"       Initial nactivate: {nactivate}")
         if maxact > 0:
             max_activate = maxact - nactive_chain
+            dbglogmsg(f"           ACT nactivate: {max_activate}")
             if max_activate < nactivate: nactivate = max_activate
         if maxcst > 0:
             max_activate = maxcst - nactive_chain_at_start
+            dbglogmsg(f"           CST nactivate: {max_activate}")
             if max_activate < nactivate: nactivate = max_activate
+        dbglogmsg(f"         Final nactivate: {nactivate}")
         for iend in range(nactivated_chain, nactivated_chain + nactivate):
             taskname = end_tasknames[iend]
             task = pg[taskname]
@@ -585,7 +593,6 @@ if doProc:
             nactivated_chain += 1
         # Sleep.
         time.sleep(tsleep)
-
 if doFina:
     logmsg()
     statlogmsg("Finalizing pipeline.")
