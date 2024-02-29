@@ -489,6 +489,7 @@ if doProc:
             if tstat in ('exec_done'):
                 dbglogmsg(f"Finished task {tnam}")
                 ndone += 1
+                is_done = True
                 if getStatusFromLog:
                     log_tstat = task.status
                     if log_tstat == 'succeeded':
@@ -501,6 +502,7 @@ if doProc:
             elif tstat in ('failed', 'dep_fail'):
                 logmsg(f"WARNING: Task {tnam} failed with status: {tstat}")
                 nfail += 1
+                is_done = True
             else:
                 if tstat == 'pending':
                     npend += 1
