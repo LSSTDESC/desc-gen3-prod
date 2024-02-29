@@ -88,26 +88,21 @@ prereq_tnams = []
 # Parsl app used to hold the starting tasks.
 from parsl import python_app
 @python_app
-def prereq_starter(x, lognam):
+def prereq_starter(x, lognam, dep_task_name):
     global prereq_index
     import time
     mytime = time.time()
     fil = open(lognam, 'w')
-    fil.write('Waiting for the start of chain {x}\n')
+    dmsg = time.strftime('%Y-%m-%d %H:%M:%S:')
+    fil.write(f"{dmsg} Waiting to the start chain {x}\n")
+    fil.write(f"{dmsg} Dependent task is {dep_task_name}")
     fil.close()
     while x >= prereq_index:
         time.sleep(10)
     dbglogmsg(f"*** Starting prereq {x}")
-    itry = 0
-    while itry < 10:
-        try:
-            fil = open(lognam, 'a')
-            fil.write(f"Elapsed time is {time.time() - mytime0:.3f} sec\n")
-            fil.write('success\n')
-            fil.close()
-        except:
-            itry += 1
-            time.sleep(itry)
+    fil.write(f"Elapsed time is {time.time() - mytime0:.3f} sec\n")
+    fil.write('success\n')
+    fil.close()
     return x
 
 ######## Starting task code ########
@@ -517,7 +512,7 @@ if doProc:
         for tnam in rem_tasknames:
             tstat = tstats[tnam]
             task = pg[tnam]
-            tstat_pj = task.status()
+            tstat_pj = task.status
             if tstat != tstat_pj:
                 dbglogmsg(f"{nstat_diff:3}: Status differs in table and object: {tstat} != {tstat_pj}")
             is_start = tnam in start_tasknames  # Is this a starting task?
@@ -619,7 +614,7 @@ if doProc:
                 pg[prqnam] = ParslJob(gwj, pg)
                 prq = pg[prqnam]
                 prq_log = prq.log_files()['stderr']
-                prq.future = prereq_starter(ipst, prq_log)
+                prq.future = prereq_starter(ipst, prq_log, taskname)
                 task.add_prereq(prq)
                 prq.add_dependency(task)
                 ipst += 1
