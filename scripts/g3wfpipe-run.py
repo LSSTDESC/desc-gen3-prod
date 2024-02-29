@@ -476,7 +476,6 @@ if doProc:
         nlaun_start = 0
         nrunn_start = 0
         nstat_diff = 0
-        nchain
         for tnam in rem_tasknames:
             tstat = tstats[tnam]
             task = pg[tnam]
