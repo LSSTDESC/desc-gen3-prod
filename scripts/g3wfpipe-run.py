@@ -71,40 +71,6 @@ def logmon(fnam, msg):
     except Exception as e:
         logmsg(f"{myname}: ERROR: {e}")
 
-######## Prereq code ########
-
-# Look for parsl graph pickle files.
-# Define parameters to optimize scheduling during task processing.
-maxcst = 0  # Max # of concurrent starting tasks. We should take this from the howfig.
-maxact = 0  # Max # of active task chains. We should take this from the howfig.
-# We initiate processing by requesting the futures for end tasks (those with no
-# dependencies) and limit this to maxact. No limit if 0.
-# We place an additional limit on the number of concurrently running starting tasks
-# (those with no prereqs) by adding artificial prereqs and releasing those here.
-# Disabled if 0.
-
-prereq_index = 0  # Starting tasks up to this index are released for processing
-prereq_tnams = []
-# Parsl app used to hold the starting tasks.
-from parsl import python_app
-@python_app
-def prereq_starter(x, lognam, dep_task_name):
-    global prereq_index
-    import time
-    mytime = time.time()
-    fil = open(lognam, 'w')
-    dmsg = time.strftime('%Y-%m-%d %H:%M:%S:')
-    fil.write(f"{dmsg} Waiting to the start chain {x}\n")
-    fil.write(f"{dmsg} Dependent task is {dep_task_name}\n")
-    while x >= prereq_index:
-        fil.write(f"...{dmsg} {x} > {prereq_index}")
-        time.sleep(10)
-    dbglogmsg(f"*** Starting prereq {x}")
-    fil.write(f"Elapsed time is {time.time() - mytime0:.3f} sec\n")
-    fil.write('success\n')
-    fil.close()
-    return x
-
 ######## Starting task code ########
 
 # Fetch the starting tasks for the subgraph of pg including task tnam.
@@ -474,8 +440,9 @@ if doProc:
     dfmap_last = None
     maxfail = 100
     nchain_rem = len(end_tasknames)
-    nactive_chain = 0
-    nactivated_chain = 0
+    nactive_chain = 0           # Number currently active
+    nactivated_chain = 0        # Number ever activated
+    nactive_chain_at_start = 0  # Number active that have not finished their first task
     # Loop until processing completes.
     while True:
         # Fetch the current processing status for all tasks.
@@ -509,6 +476,7 @@ if doProc:
         nlaun_start = 0
         nrunn_start = 0
         nstat_diff = 0
+        nchain
         for tnam in rem_tasknames:
             tstat = tstats[tnam]
             task = pg[tnam]
@@ -518,11 +486,10 @@ if doProc:
             #    nstat_diff += 1
             is_start = tnam in start_tasknames  # Is this a starting task?
             is_end = tnam in end_tasknames  # Is this an ending task?
+            is_done = False
             if tstat in ('exec_done'):
                 dbglogmsg(f"Finished task {tnam}")
                 ndone += 1
-                if is_start: ndone_start += 1
-                if is_end: nactive_chain -= 1
                 if getStatusFromLog:
                     log_tstat = task.status
                     if log_tstat == 'succeeded':
@@ -548,6 +515,12 @@ if doProc:
                 else:
                     logmsg(f"WARNING: Task {tnam} has unexpected status: {tstat}")
                 newrems.append(tnam)
+            if is_done:
+                if is_start:
+                    ndone_start += 1
+                    nactive_chain_at_start -= 1
+                if is_end:
+                    nactive_chain -= 1
         rem_tasknames = newrems
         # Display the processing status.
         msg = f"Finished {ndone} of {ntask} tasks."
@@ -600,36 +573,17 @@ if doProc:
         if maxact > 0:
             max_activate = maxact - nactive_chain
             if max_activate < nactivate: nactivate = max_activate
+        if maxcst > 0:
+            max_activate = maxcst - nactive_chain_at_start
+            if max_activate < nactivate: nactivate = max_activate
         for iend in range(nactivated_chain, nactivated_chain + nactivate):
             taskname = end_tasknames[iend]
             task = pg[taskname]
-            # If we have limit on the # concurrent starting tasks, then
-            # find the starting tasks for task and add prereqs to them.
-            if maxcst > 0:
-                start_tnams = get_starting_tasks(taskname, pg)
-                assert(len(start_tnams) == 1)
-                stask = start_tnams.pop()
-                prqnam = f"prereq{str(ipst).zfill(6)}{taskname[36:]}"
-                dbglogmsg(f"Assigning prereq {prqnam} to task {taskname}")
-                gwj = GenericWorkflowJob(prqnam)
-                pg[prqnam] = ParslJob(gwj, pg)
-                prq = pg[prqnam]
-                prq_log = prq.log_files()['stderr']
-                prq.future = prereq_starter(ipst, prq_log, taskname)
-                task.add_prereq(prq)
-                prq.add_dependency(task)
-                ipst += 1
-            # Now activate the task.
             dbglogmsg(f"Activating chain {iend:4}: {taskname}")
             task.get_future()
             nactive_chain += 1
+            nactive_chain_at_start += 1
             nactivated_chain += 1
-        # Update the index used to hold prereqs.
-        if maxcst > 0:
-            new_prereq_index = ndone_start + maxcst
-            if new_prereq_index > prereq_index:
-                logmsg(f"Increasing prereq index to {new_prereq_index}")
-                prereq_index = new_prereq_index
         # Sleep.
         time.sleep(tsleep)
 
