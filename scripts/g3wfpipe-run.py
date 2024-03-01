@@ -23,7 +23,7 @@ import subprocess
 # Send a list of messages to the job log and optionally to the status log.
 # ff any messge has line separators, each of those sub-lines is printed
 # on a separate line.
-loglev = 1   # Use 2 to get debugging messages
+loglev = 1   # Use 2 to get debugging messages on stdout
 def logmsglist(amsgs, lev=1, update_status=False):
     dostd = lev <= 1 or lev <= loglev
     dolog = True
@@ -50,11 +50,11 @@ def logmsglist(amsgs, lev=1, update_status=False):
         fstat = open(statfilename, 'w')
         fstat.write(lines[0] + '\n')
 
-# Log a level 1 message.
+# Log a level 1 (info) message.
 def logmsg(*msgs):
     logmsglist(list(msgs), 1, False)
 
-# Log a level 2 message.
+# Log a level 2 (debug) message.
 def dbglogmsg(*msgs):
     logmsglist(list(msgs), 2, False)
 
@@ -73,7 +73,8 @@ def logmon(fnam, msg):
 
 ######## Starting task code ########
 
-# Fetch the starting tasks for the subgraph of pg including task tnam.
+# Fetch the starting tasks (those with no prerequisite tasks)
+# for the subgraph of pg including task tnam.
 def get_starting_tasks(tnam, pg):
     tnams1 = {tnam}
     outnams = set()
@@ -407,8 +408,8 @@ if doProc:
         type_tasknames[typename] = pg.get_jobs(typename)
         all_tasknames += type_tasknames[typename]
     ntask = len(all_tasknames)
-    start_tasknames = []
-    end_tasknames = []
+    start_tasknames = []      # Tasks with no prerequisites
+    end_tasknames = []        # Tasks with no dependencies
     for taskname in all_tasknames:
         task = pg[taskname]
         if not task.dependencies:
@@ -479,13 +480,17 @@ if doProc:
         for tnam in rem_tasknames:
             tstat = tstats[tnam]
             task = pg[tnam]
-            tstat_pj = task.status
-            #if tstat != tstat_pj:
-            #    dbglogmsg(f"{nstat_diff:3}: Status differs in table and object: {tstat} != {tstat_pj}")
-            #    nstat_diff += 1
+            # This compares the status in the status table with that reported by the
+            # ParslGraph object.
+            # Disabled because there are many differences.
+            if False:
+                tstat_pj = task.status
+                if tstat != tstat_pj:
+                    dbglogmsg(f"{nstat_diff:3}: Status differs in table and object: {tstat} != {tstat_pj}")
+                    nstat_diff += 1
             is_start = tnam in start_tasknames  # Is this a starting task?
-            is_end = tnam in end_tasknames  # Is this an ending task?
-            is_done = False
+            is_end = tnam in end_tasknames      # Is this an ending task?
+            is_done = False                     # Is the task completed
             if tstat in ('exec_done'):
                 dbglogmsg(f"Finished task {tnam}")
                 ndone += 1
@@ -531,6 +536,8 @@ if doProc:
             if counts[i]:
                 msg += f" {counts[i]} {clabs[i]}."
         statlogmsg(msg)
+        # Display the outpur directory usage, rate and free space.
+        # We also update the file monitoring the output size: task-output-size.log.
         nbyte = task_output_data_size()
         ngib = nbyte/(1024*1024*1024)
         dfmap = task_output_data_df('GiB')
@@ -595,6 +602,7 @@ if doProc:
             nactivated_chain += 1
         # Sleep.
         time.sleep(tsleep)
+
 if doFina:
     logmsg()
     statlogmsg("Finalizing pipeline.")
