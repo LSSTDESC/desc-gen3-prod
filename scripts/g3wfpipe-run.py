@@ -533,7 +533,7 @@ if doProc:
                     nactive_chain -= 1
         rem_tasknames = newrems
         timenow = time.time()
-        if timenow > time_procshow + dtime_procshow
+        if timenow > time_procshow + dtime_procshow:
             time_proshow = timenow
             # Display the processing status.
             msg = f"Finished {ndone} of {ntask} tasks."
