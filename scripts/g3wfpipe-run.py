@@ -113,6 +113,7 @@ doButlerTest = False
 getStatusFromLog = True  # If true, task status is retrieved from the task log file
 maxcst = 0
 maxact = 0
+procsleep = 1.0
 
 thisdir = os.getcwd()
 haveQG = False
@@ -437,7 +438,6 @@ if doProc:
     ndone_start = 0
     rem_tasknames = all_tasknames
     logmsg(f"Monitoring DB: {pg.monitoring_db}")
-    tsleep = 10
     last_counts = []
     nsame_counts = 0
     dfmap_last = None
@@ -466,7 +466,7 @@ if doProc:
                     print(f"ERROR: Task has unexpected type: {type(tnam)}")
                 print(f"{icnt:>4}: {tnam}")
                 icnt += 1
-            time.sleep(tsleep)
+            time.sleep(procsleep)
             continue
         tstats = pg.df.set_index('job_name').status.to_dict()
         # Use this to fetch the number of tasks in each state and update
@@ -603,7 +603,7 @@ if doProc:
             nactive_chain_at_start += 1
             nactivated_chain += 1
         # Sleep.
-        time.sleep(tsleep)
+        time.sleep(procsleep)
 
 if doFina:
     logmsg()
