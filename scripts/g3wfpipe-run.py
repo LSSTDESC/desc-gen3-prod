@@ -21,7 +21,7 @@ import subprocess
 # All messages are prepended with the ate and time.
 
 # Send a list of messages to the job log and optionally to the status log.
-# ff any messge has line separators, each of those sub-lines is printed
+# If any messge has line separators, each of those sub-lines is printed
 # on a separate line.
 loglev = 1   # Use 2 to get debugging messages on stdout
 def logmsglist(amsgs, lev=1, update_status=False):
@@ -111,6 +111,8 @@ doWorkflow = True
 doTest = False
 doButlerTest = False
 getStatusFromLog = True  # If true, task status is retrieved from the task log file
+maxcst = 0
+maxact = 0
 
 thisdir = os.getcwd()
 haveQG = False
@@ -288,8 +290,8 @@ for opt in sys.argv[1:]:
         print('    qgre - Prepare report describing the existing QG.')
         print('    tables - Prepare report describing the parsl tables.')
         print('    finalize - Register output datasets for existing QG.')
-        print('    maxcst=VAL - Set maxcst to VAL.')
-        print('    maxact=VAL - Set maxact to VAL.')
+        print('    maxcst=VAL - Maximum # concurrent starting tasks. Default 0 disables.')
+        print('    maxact=VAL - Maximum # concurrent chains. Default 0 disables.')
         sys.exit()
     elif opt == 'init':
         doInit = True
