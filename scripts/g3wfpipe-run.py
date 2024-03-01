@@ -592,8 +592,7 @@ if doProc:
             dbglogmsg(f"           nactive_chain: {nactive_chain}")
             dbglogmsg(f"        nactivated_chain: {nactivated_chain}")
             dbglogmsg(f"       Initial nactivate: {nactivate}")
-        amsg = f"Activated counts: {nactive_chain_at_start:3}/{nactive_chain:3}/{nactivated:6}: {nactivate}"
-        xmsg = ""
+        amsg = f"Activated counts: {nactive_chain_at_start:3}/{nactive_chain:3}/{nactivated_chain:6}: {nactivate}"
         if maxact > 0:
             max_activate = maxact - nactive_chain
             if bigshow: dbglogmsg(f"           ACT nactivate: {max_activate}")
