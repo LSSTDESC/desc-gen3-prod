@@ -585,20 +585,31 @@ if doProc:
             last_counts = counts
         # Activate new chains.
         nactivate = ntask_end - nactivated_chain
-        dbglogmsg(f"Chain counts:")
-        dbglogmsg(f"  nactive_chain_at_start: {nactive_chain_at_start}")
-        dbglogmsg(f"           nactive_chain: {nactive_chain}")
-        dbglogmsg(f"        nactivated_chain: {nactivated_chain}")
-        dbglogmsg(f"       Initial nactivate: {nactivate}")
+        bigshow = 0
+        if bigshow:
+            dbglogmsg(f"Chain counts:")
+            dbglogmsg(f"  nactive_chain_at_start: {nactive_chain_at_start}")
+            dbglogmsg(f"           nactive_chain: {nactive_chain}")
+            dbglogmsg(f"        nactivated_chain: {nactivated_chain}")
+            dbglogmsg(f"       Initial nactivate: {nactivate}")
+        amsg = f"Activated counts: {nactive_chain_at_start:3}/{nactive_chain:3}/{nactivated:6}: {nactivate}"
+        xmsg = ""
         if maxact > 0:
             max_activate = maxact - nactive_chain
-            dbglogmsg(f"           ACT nactivate: {max_activate}")
+            if bigshow: dbglogmsg(f"           ACT nactivate: {max_activate}")
             if max_activate < nactivate: nactivate = max_activate
+            xmsg += f",{max_activate:3}"
         if maxcst > 0:
             max_activate = maxcst - nactive_chain_at_start
-            dbglogmsg(f"           CST nactivate: {max_activate}")
+            if bigshow: dbglogmsg(f"           CST nactivate: {max_activate}")
             if max_activate < nactivate: nactivate = max_activate
-        dbglogmsg(f"         Final nactivate: {nactivate}")
+            xmsg += f",{max_activate:3}"
+        if bigshow:
+            dbglogmsg(f"         Final nactivate: {nactivate}")
+        else:
+           if len(xmsg):
+               amsg = "{amsg}{xmsg} --> {nactivate}"
+           dbglogmsg(amsg)
         for iend in range(nactivated_chain, nactivated_chain + nactivate):
             taskname = end_tasknames[iend]
             task = pg[taskname]
