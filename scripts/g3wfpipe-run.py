@@ -14,6 +14,91 @@ from desc.wfmon import MonDbReader
 import traceback
 import subprocess
 
+######## Logging helpers ########
+
+# Messages at level 1 are sent to stdout.
+# All messages are sent to the runapp log runapp-g3wfpipe.log.
+# All messages are prepended with the ate and time.
+
+# Send a list of messages to the job log and optionally to the status log.
+# If any messge has line separators, each of those sub-lines is printed
+# on a separate line.
+loglev = 1   # Use 2 to get debugging messages on stdout
+def logmsglist(amsgs, lev=1, update_status=False):
+    dostd = lev <= 1 or lev <= loglev
+    dolog = True
+    msgs = amsgs if type(amsgs) is list else [amsgs]
+    out = open('runapp-g3wfpipe.log', 'a')
+    dmsg = time.strftime('%Y-%m-%d %H:%M:%S:')
+    lines = []
+    for msg in msgs:
+        if type(msg) is str:
+            if msg.find('\n'):
+                lines += msg.split('\n')
+                if lines[-1] == '':
+                    lines = lines[0:-1]
+            else:
+                lines.append(msg.rstrip())
+        else:
+            lines.append(str(msg))
+    for line in lines:
+        fline = f"{dmsg} {line}"
+        if dolog: out.write(fline + '\n')
+        if dostd: print(fline, flush=True)
+    out.close()
+    if update_status:
+        fstat = open(statfilename, 'w')
+        fstat.write(lines[0] + '\n')
+
+# Log a level 1 (info) message.
+def logmsg(*msgs):
+    logmsglist(list(msgs), 1, False)
+
+# Log a level 2 (debug) message.
+def dbglogmsg(*msgs):
+    logmsglist(list(msgs), 2, False)
+
+# Log a level 1 message and append it to the status log.
+def statlogmsg(*msgs):
+    logmsglist(list(msgs), 0, True)
+
+# Update monitor log fnam.
+def logmon(fnam, msg):
+    myname = 'logmon'
+    try:
+        with open(fnam, 'a') as fil:
+            fil.write(f"{time.time():18.6f} {msg}\n")
+    except Exception as e:
+        logmsg(f"{myname}: ERROR: {e}")
+
+######## Starting task code ########
+
+# Fetch the starting tasks (those with no prerequisite tasks)
+# for the subgraph of pg including task tnam.
+def get_starting_tasks(tnam, pg):
+    tnams1 = {tnam}
+    outnams = set()
+    while True:
+        tnams2 = set()
+        done = True
+        for tnam1 in tnams1:
+            prqs = pg[tnam1].prereqs
+            if len(prqs):
+                done = False
+                for prq in prqs:
+                    prqnam = prq.gwf_job.name
+                    assert(type(prqnam) is str)
+                    tnams2.add(prqnam)
+            else:
+                outnams.add(tnam1)
+        if len(tnams2):
+            tnams1 = tnams2
+        else:
+            break
+    return outnams
+
+######## Config and globals ########
+
 statfilename = 'current-status.txt'
 doInit = False
 doProc = False
@@ -26,6 +111,9 @@ doWorkflow = True
 doTest = False
 doButlerTest = False
 getStatusFromLog = True  # If true, task status is retrieved from the task log file
+maxcst = 0
+maxact = 0
+procsleep = 0.0
 
 thisdir = os.getcwd()
 haveQG = False
@@ -36,39 +124,8 @@ pg_pickle_path = None     # Full path to the pg pickle file
 pg = None                 # ParlslGraph used for processing
 pgro = None               # ParslGraph for checking status
 
-# Send a list of messages to the job log and optionally to the status log.
-def logmsglist(msgs, update_status=False):
-    out = open('runapp-g3wfpipe.log', 'a')
-    dmsg = time.strftime('%Y-%m-%d %H:%M:%S:')
-    rmsg = msgs[0] if len(msgs) else ''
-    for msg in msgs[1:]:
-        rmsg += ' ' + str(msg)
-    dmsg += ' ' + rmsg
-    out.write(dmsg + '\n')
-    out.close()
-    print(dmsg, flush=True)
-    if update_status:
-        fstat = open(statfilename, 'w')
-        fstat.write(rmsg + '\n')
+######## Parsl graph helpers ########
 
-# Send a message to the job log.
-def logmsg(*msgs, update_status=False):
-    logmsglist(list(msgs), update_status)
-
-# Send a message to the job log and status log.
-def statlogmsg(*msgs):
-    logmsglist(list(msgs), update_status=True)
-
-# Update monitor log fnam.
-def logmon(fnam, msg):
-    myname = 'logmon'
-    try:
-        with open(fnam, 'a') as fil:
-            fil.write(f"{time.time():18.6f} {msg}\n")
-    except Exception as e:
-        logmsg(f"{myname}: ERROR: {e}")
-
-# Look for parsl graph pickle files.
 def get_pg_pickle_path():
     global pg_pickle_path
     pg_pickle_paths = []
@@ -141,6 +198,8 @@ def update_monexp():
         traceback.print_tb(e.__traceback__)
         return False
     return True
+
+######## Task directory helpers ########
 
 # Return the directory holding the output task data for this job.
 _task_output_data_dir = None
@@ -217,12 +276,12 @@ def task_output_data_df(unitin='kiB'):
         out['error'] = str(e)
     return out
 
-#################################################################################
+######## Main code ########
 
 logmsg(f"Executing {__file__}")
 statlogmsg(f"Running g3wfpipe version: {dg3prod.version()}")
 for opt in sys.argv[1:]:
-    logmsg("Processing argument", opt)
+    logmsg(f"Processing argument {opt}")
     if opt in ["-h", "help"]:
         print('Usage:', sys.argv[0], '[OPTS]')
         print('  Supported valuse for OPTS:')
@@ -232,6 +291,8 @@ for opt in sys.argv[1:]:
         print('    qgre - Prepare report describing the existing QG.')
         print('    tables - Prepare report describing the parsl tables.')
         print('    finalize - Register output datasets for existing QG.')
+        print('    maxcst=VAL - Maximum # concurrent starting tasks. Default 0 disables.')
+        print('    maxact=VAL - Maximum # concurrent chains. Default 0 disables.')
         sys.exit()
     elif opt == 'init':
         doInit = True
@@ -251,13 +312,13 @@ for opt in sys.argv[1:]:
         sys.exit(0)
     elif opt == 'butler':
         doButlerTest = True
+    elif opt[0:7] == 'maxcst=':
+        maxcst = int(opt[7:])
+    elif opt[0:7] == 'maxact=':
+        maxact = int(opt[7:])
     else:
         statlogmsg(f"Invalid option: '{opt}'")
         sys.exit(1)
-
-doProc0 = False
-doProc1 = False
-doProc2 = doProc
 
 import parsl
 from desc.wfmon import MonDbReader
@@ -286,6 +347,7 @@ if doTest:
     logmsg('test')
 
 if doButlerTest:
+    logmsg()
     statlogmsg("Setting up to test the butler.")
     import lsst.daf.butler as daf_butler
     repo = '/global/cfs/cdirs/lsst/production/gen3/DC2/Run2.2i/repo'
@@ -295,6 +357,8 @@ if doButlerTest:
     statlogmsg(f"Butler has {len(collections)} collections.")
 
 if doInit:
+    logmsg()
+    statlogmsg("Initializing pipeline.")
     get_pg(require=False)
     if len(pg_pickle_path):
         statlogmsg("Remove existing job before starting a new one.")
@@ -318,6 +382,8 @@ if doInit:
         update_monexp()
 
 if doQgReport:
+    logmsg()
+    statlogmsg("Creating pipeline QG report.")
     if not haveQG:
         statlogmsg("ERROR: Quantum graph not found.")
         sys.exit(1)
@@ -327,7 +393,9 @@ if doQgReport:
     ofil.write(f"  Input node count: {len(pg.qgraph.inputQuanta)}\n")
     ofil.write(f" Output node count: {len(pg.qgraph.oputputQuanta)}\n")
 
-if doProc2:
+if doProc:
+    logmsg()
+    statlogmsg(f"Processing pipeline: maxact={maxact}, maxcst={maxcst}.")
     logmsg()
     monexpUpdate = False
     statlogmsg('Fetching workflow QG.')
@@ -343,50 +411,95 @@ if doProc2:
         type_tasknames[typename] = pg.get_jobs(typename)
         all_tasknames += type_tasknames[typename]
     ntask = len(all_tasknames)
-    end_tasknames = []
+    start_tasknames = []      # Tasks with no prerequisites
+    end_tasknames = []        # Tasks with no dependencies
     for taskname in all_tasknames:
         task = pg[taskname]
         if not task.dependencies:
             end_tasknames.append(taskname)
+        if not task.prereqs:
+            start_tasknames.append(taskname)
+    ntask_start = len(start_tasknames)
+    ntask_end = len(end_tasknames)
     logmsg(f"Total task count is {len(all_tasknames)}")
-    logmsg(f"Endpoint task count is {len(end_tasknames)}")
-    nend_start = 0
-    task_output_data_dir()
-    for taskname in end_tasknames:
-        task = pg[taskname]
-        task.get_future()
-        nend_start += 1
-    task_output_data_dir()
-    logmsg(f"Endpoint start count is {len(end_tasknames)}")
+    logmsg(f"Starting task count is {ntask_start}")
+    logmsg(f"Endpoint task count is {ntask_end}")
+    from lsst.ctrl.bps import GenericWorkflowJob
+    from lsst.ctrl.bps import GenericWorkflowExec
+    from desc.gen3_workflow import ParslJob
+    ipst = 0
+    # Loop until all tasks are complete or a problem arises.
     ndone = 0
     nsucc = 0
     nfail = 0
     nlbad = 0
+    nfail_update = 0
+    maxfail_update = 2
+    ndone_start = 0
     rem_tasknames = all_tasknames
     logmsg(f"Monitoring DB: {pg.monitoring_db}")
-    tsleep = 10
     last_counts = []
     nsame_counts = 0
     dfmap_last = None
     maxfail = 100
+    nchain_rem = len(end_tasknames)
+    nactive_chain = 0           # Number currently active
+    nactivated_chain = 0        # Number ever activated
+    nactive_chain_at_start = 0  # Number active that have not finished their first task
+    time_procshow = 0
+    dtime_procshow = 10
+    # Loop until processing completes.
     while True:
-        newrems = []
+        # Fetch the current processing status for all tasks.
         try:
             pg._update_status()
-        except:
-            logmsg(f"WARNING: Unable to update status for ParlsGraph.")
-            time.sleep(tsleep)
+        except Exception as e:
+            logmsg(f"WARNING: Unable to update status for ParlsGraph: {str(e)}")
+            dbglogmsg(traceback.format_exc())
+            nfail_update += 1
+            if nfail_update >= maxfail_update:
+                statlogmsg(f"Aborting job for too many parsl graph update failures: {nfail_update} >= {maxfail_update}.")
+                os._exit(102)
+            logmsg(f"Checking parsl graph job names.")
+            logmsg(f"Count is {len(pg)}.")
+            icnt = 0
+            for tnam in pg:
+                if type(tnam) is not str:
+                    print(f"ERROR: Task has unexpected type: {type(tnam)}")
+                print(f"{icnt:>4}: {tnam}")
+                icnt += 1
+            time.sleep(procsleep)
             continue
         tstats = pg.df.set_index('job_name').status.to_dict()
+        # Use this to fetch the number of tasks in each state and update
+        # the remaining list of tasks to be processed.
+        newrems = []
         npend = 0
         nlaun = 0
         nrunn = 0
+        npend_start = 0
+        nlaun_start = 0
+        nrunn_start = 0
+        nstat_diff = 0
         for tnam in rem_tasknames:
             tstat = tstats[tnam]
+            task = pg[tnam]
+            # This compares the status in the status table with that reported by the
+            # ParslGraph object.
+            # Disabled because there are many differences.
+            if False:
+                tstat_pj = task.status
+                if tstat != tstat_pj:
+                    dbglogmsg(f"{nstat_diff:3}: Status differs in table and object: {tstat} != {tstat_pj}")
+                    nstat_diff += 1
+            is_start = tnam in start_tasknames  # Is this a starting task?
+            is_end = tnam in end_tasknames      # Is this an ending task?
+            is_done = False                     # Is the task completed
             if tstat in ('exec_done'):
+                dbglogmsg(f"Finished task {tnam}")
                 ndone += 1
+                is_done = True
                 if getStatusFromLog:
-                    task = pg[tnam]
                     log_tstat = task.status
                     if log_tstat == 'succeeded':
                         nsucc += 1
@@ -395,54 +508,73 @@ if doProc2:
                     else:
                         nlbad += 1
                         logmsg(f"WARNING: Unexpected log task status: {log_tstat}")
+            elif tstat in ('failed', 'dep_fail'):
+                logmsg(f"WARNING: Task {tnam} failed with status: {tstat}")
+                nfail += 1
+                is_done = True
             else:
                 if tstat == 'pending':
                     npend += 1
+                    if is_start: npend_start += 1
                 elif tstat == 'launched':
                     nlaun += 1
+                    if is_start: nlaun_start += 1
                 elif tstat == 'running':
                     nrunn += 1
-                elif tstat == 'failed' or tstat == 'dep_fail':
-                    logmsg(f"WARNING: Task failed with status: {tstat}")
-                    nfail += 1
+                    if is_start: nrunn_start += 1
                 else:
-                    logmsg(f"WARNING: Unexpected task status: {tstat}")
+                    logmsg(f"WARNING: Task {tnam} has unexpected status: {tstat}")
                 newrems.append(tnam)
+            if is_done:
+                if is_start:
+                    ndone_start += 1
+                    nactive_chain_at_start -= 1
+                if is_end:
+                    nactive_chain -= 1
         rem_tasknames = newrems
-        msg = f"Finished {ndone} of {ntask} tasks."
-        counts = [nfail,    nlbad,     npend,     nlaun,      nrunn]
-        clabs =  ['failed', 'bad log', 'pending', 'launched', 'running']
-        for i in range(len(counts)):
-            if counts[i]:
-                msg += f" {counts[i]} {clabs[i]}."
-        statlogmsg(msg)
-        nbyte = task_output_data_size()
-        ngib = nbyte/(1024*1024*1024)
-        dfmap = task_output_data_df('GiB')
-        dfmap['task'] = ngib
-        ngibfree = -1
-        if 'free' in dfmap:
-            ngibfree = dfmap['free']
-            freemsg = f"available: {dfmap['free']:.0f} {dfmap['unit']} on {dfmap['mount']}"
-        else:
-            freemsg = dfmap['error']
-        rate = 0
-        if dfmap_last is not None:
-            try:
-                dngib = dfmap['task'] - dfmap_last['task']
-                dtime = dfmap['time'] - dfmap_last['time']
-                rate = dngib/dtime
-            except Exception as e:
-                logmsg(f"Error calculating outpur rate: {e}")
-        dfmap_last = dfmap
-        ratemsg = f"rate: {rate:7.3f} GiB/sec"
-        logmsg(f"Task output size: {ngib:10.3f} GiB, {ratemsg}, {freemsg}")
-        logmon('task-output-size.log', f"{ngib:13.6f} {ngibfree:15.6f}")
+        timenow = time.time()
+        if timenow > time_procshow + dtime_procshow:
+            time_proshow = timenow
+            # Display the processing status.
+            msg = f"Finished {ndone} of {ntask} tasks."
+            counts = [nfail,    nlbad,     npend,     nlaun,      nrunn]
+            clabs =  ['failed', 'bad log', 'pending', 'launched', 'running']
+            for i in range(len(counts)):
+                if counts[i]:
+                    msg += f" {counts[i]} {clabs[i]}."
+            statlogmsg(msg)
+            # Display the output directory usage, rate and free space.
+            # We also update the file monitoring the output size: task-output-size.log.
+            nbyte = task_output_data_size()
+            ngib = nbyte/(1024*1024*1024)
+            dfmap = task_output_data_df('GiB')
+            dfmap['task'] = ngib
+            ngibfree = -1
+            if 'free' in dfmap:
+                ngibfree = dfmap['free']
+                freemsg = f"available: {dfmap['free']:.0f} {dfmap['unit']} on {dfmap['mount']}"
+            else:
+                freemsg = dfmap['error']
+            rate = 0
+            if dfmap_last is not None:
+                try:
+                    dngib = dfmap['task'] - dfmap_last['task']
+                    dtime = dfmap['time'] - dfmap_last['time']
+                    rate = dngib/dtime
+                except Exception as e:
+                    logmsg(f"Error calculating outpur rate: {e}")
+            dfmap_last = dfmap
+            ratemsg = f"rate: {rate:7.3f} GiB/sec"
+            logmsg(f"Task output size: {ngib:10.3f} GiB, {ratemsg}, {freemsg}")
+            logmon('task-output-size.log', f"{ngib:13.6f} {ngibfree:15.6f}")
         update_monexp()
+        # Exit if there are too many failures.
         if nfail >= maxfail:
             logmsg(f"Aborting job for too many task failures: {nfail} >= {maxfail}.")
             os._exit(101)
+        # Exit loop if processing is done.
         if len(rem_tasknames) == 0: break
+        # Exit if we are not making progress.
         if counts == last_counts:
             nsame_counts += 1
             if  nsame_counts > 5 and nlaun == 0 and nrunn == 0:
@@ -451,96 +583,54 @@ if doProc2:
         else:
             nsame_counts = 0
             last_counts = counts
-        task_output_data_dir()
-        time.sleep(tsleep)
-
-if doProc1:
-    logmsg()
-    monexpUpdate = False
-    statlogmsg('Fetching workflow QG.')
-    get_pg()
-    if not haveQG:
-        statlogmsg("ERROR: Quantum graph not found.")
-        sys.exit(1)
-    statlogmsg('Starting new workflow')
-    tasks = pg.values()
-    ntask = len(tasks)
-    endpoints = [task for task in tasks if not task.dependencies]
-    for task in endpoints:
-        task.get_future()
-    ndone = 0
-    nfail = 0
-    remtasks = tasks
-    while True:
-        newrems = []
-        for task in remtasks:
-            tstat = task.status
-            if tstat in ('succeeded', 'failed'):
-                if tstat == 'failed': nfail += 1
-                ndone += 1
-            else:
-                if tstat not in ('pending', 'scheduled', 'running'):
-                    logmsg(f"WARNING: Unexpected task status: {tstat}")
-                newrems += [task]
-        remtasks = newrems
-        msg = f"Finished {ndone} of {ntask} tasks."
-        if nfail:
-            msg += f" {nfail} failed."
-        statlogmsg(msg)
-        update_monexp()
-        if len(remtasks) == 0: break
-        time.sleep(10)
-
-if doProc0:
-    logmsg()
-    monexpUpdate = False
-    statlogmsg('Fetching workflow QG.')
-    get_pg()
-    if not haveQG:
-        statlogmsg("ERROR: Quantum graph not found.")
-        sys.exit(1)
-    statlogmsg('Starting old workflow')
-    pg.run()
-    count = 0
-    futures = None
-    statlogmsg('Retrieving futures.')
-    while futures is None:
-        count += 1
-        try:
-            ntskall = len(pg.values())
-            statlogmsg(f"Try {count} task count: {ntskall}")
-            #futures = [job.get_future() for job in pg.values() if not job.dependencies]
-            futures = [job.get_future() for job in pg.values()]
-            #traceback.print(e.__traceback__)
-        except Exception as e:
-            logmsg(f"Try {count} raised exception: {e}")
-            if count > 100:
-                statlogmsg("Unable to retrieve futures.")
-                sys.exit(1)
-            futures = None
-    ntsk = len(futures)
-    statlogmsg(f"Ready/total task count: {ntsk}/{ntskall}")
-    ndone = 0
-    while ndone < ntsk:
-        update_monexp()
-        ndone = 0
-        for fut in futures:
-            if fut.done(): ndone += 1
-        statlogmsg(f"Finished {ndone} of {ntsk} tasks.")
-        time.sleep(10)
-    statlogmsg(f"Workflow complete: {ndone}/{ntsk} tasks.")
-    update_monexp()
+        # Activate new chains.
+        nactivate = ntask_end - nactivated_chain
+        bigshow = 0
+        if bigshow:
+            dbglogmsg(f"Chain counts:")
+            dbglogmsg(f"  nactive_chain_at_start: {nactive_chain_at_start}")
+            dbglogmsg(f"           nactive_chain: {nactive_chain}")
+            dbglogmsg(f"        nactivated_chain: {nactivated_chain}")
+            dbglogmsg(f"       Initial nactivate: {nactivate}")
+        amsg = f"Activated counts: {nactive_chain_at_start:3}/{nactive_chain:3}/{nactivated_chain:6}: {nactivate}"
+        xmsg = ''
+        if maxact > 0:
+            max_activate = maxact - nactive_chain
+            if bigshow: dbglogmsg(f"           ACT nactivate: {max_activate}")
+            if max_activate < nactivate: nactivate = max_activate
+            xmsg += f",{max_activate:3}"
+        if maxcst > 0:
+            max_activate = maxcst - nactive_chain_at_start
+            if bigshow: dbglogmsg(f"           CST nactivate: {max_activate}")
+            if max_activate < nactivate: nactivate = max_activate
+            xmsg += f",{max_activate:3}"
+        if bigshow:
+            dbglogmsg(f"         Final nactivate: {nactivate}")
+        else:
+           if len(xmsg):
+               amsg = "{amsg}{xmsg} --> {nactivate}"
+           dbglogmsg(amsg)
+        for iend in range(nactivated_chain, nactivated_chain + nactivate):
+            taskname = end_tasknames[iend]
+            task = pg[taskname]
+            dbglogmsg(f"Activating chain {iend:4}: {taskname}")
+            task.get_future()
+            nactive_chain += 1
+            nactive_chain_at_start += 1
+            nactivated_chain += 1
+        # Sleep.
+        time.sleep(procsleep)
 
 if doFina:
-    statlogmsg()
-    statlogmsg('Finalizing job...')
+    logmsg()
+    statlogmsg("Finalizing pipeline.")
     get_pg()
     pg.finalize()
     statlogmsg('Finalizing done')
 
 if showStatus:
     logmsg()
-    statlogmsg("Fetching status")
+    statlogmsg("Fetching pipeline status")
     get_pg(readonly=True)
     if pgro is None:
         statlogmsg('Workflow has not started.')

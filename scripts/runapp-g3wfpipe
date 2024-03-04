@@ -37,7 +37,11 @@ if [[ -z $1 || $1 = -h ]]; then
   echo "  pmsXXX: Append -pmsXXX to the user name for data output."
   echo "  cfsXXX: Append -cfsXXX to the user name for data output."
   echo HFG = HF1-HF2-... where HFi is any of
-  echo "  exec:XX where XX = wq (XX is GB memory) or tp (XX is process count)"
+  echo "  wq:MGB: Yse the WorkQueue executor with toal memory MGB GB."
+  echo "  tp:NTHR:MAXCST:MAXACT: Use the ThreadPool executor with NTHR threads."
+  echo "    The last two flags are optional and, if provided, limit concurrent tassk:"
+  echo "      The maximum number of starting tasks (those with no prereqs) is MAXCST"
+  echo "      The maximum number of chains (no prereqs) is MAXACT"
   echo "  cpr: Use coprocesses with WQ (default). Ignored if not WQ"
   echo "  nocpr: Do not use coprocesses with WQ. Ignored if not WQ"
   echo "  rebuild: Rebuild the SW cache (cvmfs only)."
@@ -65,6 +69,11 @@ if [[ -z $1 || $1 = -h ]]; then
   echo "  strace:V1:V2:...: Run strace with trace=V1,V2,... for each task."
   echo "  stracet: Create an strace system time summary."
   echo "  iotrace: Run iotrace on each task."
+  echo "  dgp:OPT1:OPT2:...: Instructions for installing desc-gen3-prod. OPTi:"
+  echo "    dev: Use the dev branch (default is main)."
+  echo "    vVVV: Use tag VVV (not yet implemented)."
+  echo "    local: Use clone at $HOME/descprod/repos/descprod-gen3-prod."
+  echo "    localLLL: Use clone at $HOME/descprod/repos/descprod-gen3-prod-LLL."
   echo "DC2 data is processed and output data is written to"
   echo "  /global/cfs/cdirs/lsst/production/gen3/DC2/Run2.2i/repo/u/UOUT"
   echo "where UOUT is USER where USER is user name"
@@ -113,7 +122,7 @@ decode_query() {
   fi
 }
 
-info_echo Running app g3wfpipe
+info_echo Running app g3wfpipe $(desc-gen3-prod-version)
 CFG=$1
 HFG=$2
 COPTS=(${CFG//-/ })
@@ -229,7 +238,7 @@ if [[ -n $CJOB ]]; then
   for FIL in config.yaml submit runinfo repos local; do
     SRCFIL=$PDIR/$FIL
     if [ -r $SRCFIL ]; then
-      info_echo "Linking source $SRCFIL"
+      info_echo "Linking continuation source $SRCFIL"
       if ! ln -s $SRCFIL .; then
         err_echo "Unable to link $SRCFIL to $(pwd)"
         exit 1
@@ -240,8 +249,19 @@ if [[ -n $CJOB ]]; then
   done
   # Read the old configuration.
   # This should define CON_LVER, CON_PIPEVAL, CON_QUERY, CON_CSRC, CON_PREPEND
+  #  CON_SRC
+  #  CON_LVEROPTS
+  #  CON_QUERY
+  #  CON_PREPEND
+  #  CON_PIPE
+  #  CON_PMONDT
+  #  CON_STRACE
+  #  CON_COPROCESS
+  #  CON_PFSOPT
+  #  CON_WFOPTS
   SUPFIL=$PDIR/consetup.sh
   if [ ! -r $SUPFIL ]; then
+  #  CON_STRACE
     info_echo "ERROR: Unable to find continuation source setup $SUPFIL"
     exit 1
   fi
@@ -261,11 +281,11 @@ fi
 
 echo $PLOT_TITLE >plot-title.txt
 
-# Extract the list of processing steps.
+# Extract the list of processing steps and options.
 WFARGS="${WFARGS_ARR[*]}"
 
-
 # Parse the howfig.
+BADOPT=
 BUTLER_DIR=/global/cfs/cdirs/lsst/production/gen3/DC2/Run2.2i/repo
 TMAXS=()
 NTMAX=0
@@ -279,6 +299,8 @@ STRACE=$CON_STRACE
 COPROCESS=$CON_COPROCESS
 COPROCESS=true
 REBUILD=false
+DESC_GEN3_PROD_LOC="git+https://github.com/LSSTDESC/desc-gen3-prod"
+WFOPTS=${CON_WFOPTS:-}
 for OPT in ${HOPTS[@]}; do
   info_echo Processing howfig opt $OPT
   if [ ${OPT:0:7} = shifter ]; then
@@ -295,7 +317,7 @@ for OPT in ${HOPTS[@]}; do
     PMONDT=${OPT:5}
   elif [ ${OPT} = cpr ]; then
     COPROCESS=true
-  elif [ ${OPT} = 'nocpr']; then
+  elif [ ${OPT} = nocpr ]; then
     COPROCESS=false
   elif [ ${OPT:0:5} = tmax: ]; then
     IFS=':' read -ra TMAXS <<< "${OPT:5}"
@@ -347,11 +369,27 @@ for OPT in ${HOPTS[@]}; do
     STRACE=$OPT
   elif [ $OPT = iotrace ]; then
     STRACE=$OPT
+  elif [ ${#OPT} -gt 4 -a ${OPT:0:4} = dgp: ]; then
+    DGPOPT=${OPT:4}
+    if [ $DGPOPT = dev ]; then
+      DESC_GEN3_PROD_LOC="${DESC_GEN3_PROD_LOC}@dev"
+    elif [ ${DGPOPT:0:5} = local ]; then
+      DESC_GEN3_PROD_LOC="$HOME/descprod/repos/desc-gen3-prod"
+      DGPSUF=${DGPOPT:5}
+      if [ -n "$DGPSUF" ]; then
+        DESC_GEN3_PROD_LOC="${DESC_GEN3_PROD_LOC}-$DGPSUF"
+      fi
+  fi
   else
-    err_echo Invalid howfig field: $OPT
-    exit 13
+    BADOPT=$OPT
+    break
   fi
 done
+
+if [ -n "$BADOPT" ]; then
+  err_echo Invalid howfig field: $OPT
+  exit 13
+fi
 
 if [ $PMONDT != false ] && [ $PMONDT != $PMONDT ]; then
   err_echo Invalid parsl monitoring interval: $PMONDT
@@ -369,18 +407,6 @@ if [ -n "$STRACE" ]; then
 fi
 #PREPEND="$PREPEND -t 5 --cpunum --procctxt"
 info_echo "Command prepend: \"$PREPEND\""
-
-# Record the setup for continuation jobs.
-info_echo Creating consetup.sh
-echo "CON_CSRC=$CSRC" >consetup.sh
-echo "CON_LVEROPTS=$LVEROPTS" >>consetup.sh
-echo "CON_QUERY=\"$QUERY\"" >>consetup.sh
-echo "CON_PREPEND=\"$PREPEND\"" >>consetup.sh
-echo "CON_PIPE=$PIPE" >>consetup.sh
-echo "CON_PMONDT=$PMONDT" >>consetup.sh
-echo "CON_STRACE=$STRACE" >>consetup.sh
-echo "CON_COPROCESS=$COPROCESS" >>consetup.sh
-echo "CON_PFSOPT=$PFSOPT" >>consetup.sh
 
 if [ $DOINIT = true ]; then
 PIPEVAL=
@@ -474,7 +500,13 @@ PIPEVAL=
   #       ),
   #  initialize_logging:
   
-  if [ ${EXEC:0:3} = wq: ]; then
+  EXECOPTS=(${EXEC//:/ })
+  NEXECOPT=${#EXECOPTS[*]}
+  EXECOPT0=${EXECOPTS[0]}
+  EXECOPT1=${EXECOPTS[1]}
+  EXECOPT2=${EXECOPTS[2]}
+  EXECOPT3=${EXECOPTS[3]}
+  if [ ${EXEC:0:3} = wq: -a $NEXECOPT -eq 2 ]; then
     MEGB=${EXEC:3}
     # Make sure the memory limit is not blank and is numeric.
     if ! [ "$MEGB" -eq "$MEGB" ] 2>/dev/null; then
@@ -487,9 +519,15 @@ PIPEVAL=
     echo "  nodes_per_block: 1" >>config.yaml
     echo "  worker_options: \"--memory=${MEGB}000\"" >>config.yaml
     echo "  init_command: source task-setup.sh" >>config.yaml
-  elif [ ${EXEC:0:3} = tp: ]; then
-    NTHR=${EXEC:3}
+  elif [ $EXECOPT0 = tp -a $NEXECOPT -gt 1 ]; then
+    NTHR=$EXECOPT1
     if [ -z "$NTHR" ]; then NTHR=1; fi
+    if [ -n "$EXECOPT2" ]; then
+      WFOPTS="$WFOPTS maxcst=$EXECOPT2"
+    fi
+    if [ -n "$EXECOPT3" ]; then
+      WFOPTS="$WFOPTS maxact=$EXECOPT3"
+    fi
     echo "  executor: ThreadPool" >>config.yaml
     echo "  max_threads: $NTHR" >>config.yaml
   else
@@ -532,6 +570,19 @@ G3WF_BRANCH=
 #  G3WF_BRANCH=u/jchiang/w_2023_32_qbb_changes
 #fi
 
+# Record the setup for continuation jobs.
+info_echo Creating consetup.sh
+echo "CON_CSRC=$CSRC" >consetup.sh
+echo "CON_LVEROPTS=$LVEROPTS" >>consetup.sh
+echo "CON_QUERY=\"$QUERY\"" >>consetup.sh
+echo "CON_PREPEND=\"$PREPEND\"" >>consetup.sh
+echo "CON_PIPE=$PIPE" >>consetup.sh
+echo "CON_PMONDT=$PMONDT" >>consetup.sh
+echo "CON_STRACE=$STRACE" >>consetup.sh
+echo "CON_COPROCESS=$COPROCESS" >>consetup.sh
+echo "CON_PFSOPT=$PFSOPT" >>consetup.sh
+echo "CON_WFOPTS=\"$WFOPTS\"" >>consetup.sh
+
 if [[ -n $WFARGS ]]; then
   info_echo Creating run script.
   if [ -z "$CSRC" ]; then
@@ -567,6 +618,7 @@ if [[ -n $WFARGS ]]; then
   JOBDIR=$(pwd)
   RFIL=./setup.sh
   rm -f $RFIL
+  SEPLINE="--------------------------------------------------------------------------"
   echo "# This script was generated $(date) on $(hostname)" >>$RFIL
   echo 'export PYTHONPATH' >>$RFIL
   if [ $CSRC = shifter ]; then
@@ -575,8 +627,10 @@ if [[ -n $WFARGS ]]; then
   fi
   echo "if [ ! -r $JOBDIR/local/desc-wfmon ]; then" >>$RFIL
   echo "  echo setup: Installing desc-wfmon." >>$RFIL
+  echo "  echo $SEPLINE" >>$RFIL
   echo '  (mkdir repos && cd repos && git clone https://github.com/LSSTDESC/desc-wfmon && cd ..)' >>$RFIL
   echo "  pip install -t $JOBDIR/local/desc-wfmon $JOBDIR/repos/desc-wfmon" >>$RFIL
+  echo "  echo $SEPLINE" >>$RFIL
   echo "fi" >>$RFIL
   echo "PATH=$JOBDIR/local/desc-wfmon/bin:\$PATH" >>$RFIL
   echo "PYTHONPATH=$JOBDIR/local/desc-wfmon:\$PYTHONPATH" >>$RFIL
@@ -586,9 +640,11 @@ if [[ -n $WFARGS ]]; then
   echo 'cp $IPYDIR/monexp.py .' >>$RFIL
   echo 'basename $(pwd) | sed "s/job0*/Job /g" > README.txt' >>$RFIL
   echo "if [ ! -r $JOBDIR/local/desc-gen3-prod ]; then" >>$RFIL
-  echo "  echo setup: Installing desc-gen3-prod." >>$RFIL
-  echo "  pip install -t $JOBDIR/local/desc-gen3-prod git+https://github.com/LSSTDESC/desc-gen3-prod" >>$RFIL
-  echo "fi" >>$RFIL
+  echo "  echo setup: Installing $DESC_GEN3_PROD_LOC." >>$RFIL
+  echo "  echo $SEPLINE" >>$RFIL
+  echo "  pip install -t $JOBDIR/local/desc-gen3-prod $DESC_GEN3_PROD_LOC" >>$RFIL
+  echo "  echo $SEPLINE" >>$RFIL
+  echo 'fi' >>$RFIL
   echo "PATH=$JOBDIR/local/desc-gen3-prod/bin:\$PATH" >>$RFIL
   echo "PYTHONPATH=$JOBDIR/local/desc-gen3-prod:\$PYTHONPATH" >>$RFIL
   echo 'echo setup: Running with desc-gen3-prod version $(desc-gen3-prod-version)' >>$RFIL
@@ -620,7 +676,7 @@ if [[ -n $WFARGS ]]; then
   echo 'source ./setup.sh' >>$RFIL
   echo 'echo run: Running pipeline.' >>$RFIL
   echo 'echo run: Location for g3wf-run-task: $(which g3wf-run-task)' >>$RFIL
-  echo "g3wfpipe-run $WFARGS" >>$RFIL
+  echo "g3wfpipe-run $WFARGS $WFOPTS" >>$RFIL
   chmod +x ./run
   # Create setup for the task for the WorkQueue worker.
   # This is commented out because this setup added in 0.0.49 development was found
@@ -643,7 +699,7 @@ if [[ -n $WFARGS ]]; then
   #echo 'echo task-setup: Location for g3wf-run-task: $(which g3wf-run-task)' >>$RFIL
   #echo "------ End task setup ------"
   # Start the run script.
-  info_echo Starting run script with steps $WFARGS.
+  info_echo Starting run script with steps $WFARGS $WFOPTS.
   $COM
   RSTAT=$?
 else
