@@ -113,6 +113,7 @@ doButlerTest = False
 getStatusFromLog = True  # If true, task status is retrieved from the task log file
 maxcst = 0
 maxact = 0
+tdssec = 0
 procsleep = 0.0
 
 thisdir = os.getcwd()
@@ -293,6 +294,7 @@ for opt in sys.argv[1:]:
         print('    finalize - Register output datasets for existing QG.')
         print('    maxcst=VAL - Maximum # concurrent starting tasks. Default 0 disables.')
         print('    maxact=VAL - Maximum # concurrent chains. Default 0 disables.')
+        print('    tdsms=VAL - Minimum interval [ms] between chain startss. Default 0 disables.')
         sys.exit()
     elif opt == 'init':
         doInit = True
@@ -316,6 +318,8 @@ for opt in sys.argv[1:]:
         maxcst = int(opt[7:])
     elif opt[0:7] == 'maxact=':
         maxact = int(opt[7:])
+    elif opt[0:6] == 'tdsms=':
+        tdssec = float(opt[6:])/60.0
     else:
         statlogmsg(f"Invalid option: '{opt}'")
         sys.exit(1)
@@ -395,7 +399,7 @@ if doQgReport:
 
 if doProc:
     logmsg()
-    statlogmsg(f"Processing pipeline: maxact={maxact}, maxcst={maxcst}.")
+    statlogmsg(f"Processing pipeline: maxact={maxact}, maxcst={maxcst}, tdssec={tdssec}.")
     logmsg()
     monexpUpdate = False
     statlogmsg('Fetching workflow QG.')
@@ -448,6 +452,7 @@ if doProc:
     nactive_chain_at_start = 0  # Number active that have not finished their first task
     time_procshow = 0
     dtime_procshow = 10
+    chain_start_time = 0
     # Loop until processing completes.
     while True:
         # Fetch the current processing status for all tasks.
@@ -614,7 +619,12 @@ if doProc:
             taskname = end_tasknames[iend]
             task = pg[taskname]
             dbglogmsg(f"Activating chain {iend:4}: {taskname}")
+            now = time.time()
+            if tdssec > 0.0:
+                tdswait = chain_start_time + tdssec - now
+                if tdswait > 0.0: time.sleep(tdswait)
             task.get_future()
+            chain_start_time = now
             nactive_chain += 1
             nactive_chain_at_start += 1
             nactivated_chain += 1
