@@ -627,8 +627,8 @@ if doProc:
                 else:
                     dbglogmsg(f"NOT Desychronizing {chain_start_time:.2f} + {tdssec:.2f} - {now:.2f} = {tdswait:.2f} sec")
             dbglogmsg(f"      Activating chain {iend:4}: {taskname}")
+            chain_start_time = time.time()
             task.get_future()
-            chain_start_time = now
             nactive_chain += 1
             nactive_chain_at_start += 1
             nactivated_chain += 1
