@@ -319,7 +319,7 @@ for opt in sys.argv[1:]:
     elif opt[0:7] == 'maxact=':
         maxact = int(opt[7:])
     elif opt[0:6] == 'tdsms=':
-        tdssec = float(opt[6:])/60.0
+        tdssec = float(opt[6:])/1000.0
     else:
         statlogmsg(f"Invalid option: '{opt}'")
         sys.exit(1)
@@ -618,11 +618,13 @@ if doProc:
         for iend in range(nactivated_chain, nactivated_chain + nactivate):
             taskname = end_tasknames[iend]
             task = pg[taskname]
-            dbglogmsg(f"Activating chain {iend:4}: {taskname}")
             now = time.time()
             if tdssec > 0.0:
                 tdswait = chain_start_time + tdssec - now
-                if tdswait > 0.0: time.sleep(tdswait)
+                if tdswait > 0.0:
+                    dbglogmsg(f"    Desychronizing {chain_start_time:.2f} + {tdsses:.2f} - {now:.2f} = {tdswait:.2f} sec")
+                    time.sleep(tdswait)
+            dbglogmsg(f"      Activating chain {iend:4}: {taskname}")
             task.get_future()
             chain_start_time = now
             nactive_chain += 1
