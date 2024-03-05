@@ -438,7 +438,7 @@ if doProc:
     nfail = 0
     nlbad = 0
     nfail_update = 0
-    maxfail_update = 2
+    maxfail_update = 20
     ndone_start = 0
     rem_tasknames = all_tasknames
     logmsg(f"Monitoring DB: {pg.monitoring_db}")
