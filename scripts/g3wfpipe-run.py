@@ -570,7 +570,7 @@ if doProc:
                     logmsg(f"Error calculating outpur rate: {e}")
             dfmap_last = dfmap
             ratemsg = f"rate: {rate:7.3f} GiB/sec"
-            logmsg(f"Task output size: {ngib:10.3f} GiB, {ratemsg}, {freemsg}")
+            dbglogmsg(f"Task output size: {ngib:10.3f} GiB, {ratemsg}, {freemsg}")
             logmon('task-output-size.log', f"{ngib:13.6f} {ngibfree:15.6f}")
         update_monexp()
         # Exit if there are too many failures.
@@ -619,14 +619,13 @@ if doProc:
             taskname = end_tasknames[iend]
             task = pg[taskname]
             now = time.time()
+            msg_suf = ''
             if tdssec > 0.0:
                 tdswait = chain_start_time + tdssec - now
                 if tdswait > 0.0:
-                    dbglogmsg(f"    Desychronizing {chain_start_time:.2f} + {tdssec:.2f} - {now:.2f} = {tdswait:.2f} sec")
                     time.sleep(tdswait)
-                else:
-                    dbglogmsg(f"NOT Desychronizing {chain_start_time:.2f} + {tdssec:.2f} - {now:.2f} = {tdswait:.2f} sec")
-            dbglogmsg(f"      Activating chain {iend:4}: {taskname}")
+                    msg_suf = " after {tdswait:4.2f} sec"
+            dbglogmsg(f"      Activating chain {iend:4}: {taskname}{msg_suf}")
             chain_start_time = time.time()
             task.get_future()
             nactive_chain += 1
