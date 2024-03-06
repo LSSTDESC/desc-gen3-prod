@@ -42,6 +42,7 @@ if [[ -z $1 || $1 = -h ]]; then
   echo "    The last two flags are optional and, if provided, limit concurrent tassk:"
   echo "      The maximum number of starting tasks (those with no prereqs) is MAXCST"
   echo "      The maximum number of chains (no prereqs) is MAXACT"
+  echo "  tds:TMS: Desynchronize by inserting a delay of TMS ms for each task chain."
   echo "  cpr: Use coprocesses with WQ (default). Ignored if not WQ"
   echo "  nocpr: Do not use coprocesses with WQ. Ignored if not WQ"
   echo "  rebuild: Rebuild the SW cache (cvmfs only)."
@@ -301,6 +302,7 @@ COPROCESS=true
 REBUILD=false
 DESC_GEN3_PROD_LOC="git+https://github.com/LSSTDESC/desc-gen3-prod"
 WFOPTS=${CON_WFOPTS:-}
+TDSMS=0
 for OPT in ${HOPTS[@]}; do
   info_echo Processing howfig opt $OPT
   if [ ${OPT:0:7} = shifter ]; then
@@ -313,6 +315,8 @@ for OPT in ${HOPTS[@]}; do
     EXEC=$OPT
   elif [ ${OPT:0:3} = tp: ]; then
     EXEC=$OPT
+  elif [ ${OPT:0:4} = tds: ]; then
+    TDSMS=${OPT:4}
   elif [ ${OPT:0:5} = pmon: ]; then
     PMONDT=${OPT:5}
   elif [ ${OPT} = cpr ]; then
@@ -530,6 +534,9 @@ PIPEVAL=
     fi
     echo "  executor: ThreadPool" >>config.yaml
     echo "  max_threads: $NTHR" >>config.yaml
+    if [ $TDSMS -gt 0 ]; then
+      WFOPTS="$WFOPTS tdsms=$TDSMS"
+    fi
   else
     err_echo Unknown executor: $EXEC
     exit 1
